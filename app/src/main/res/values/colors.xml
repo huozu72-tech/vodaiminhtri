@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Primary Colors matching screenshot -->
+    <color name="header_bg">#FFF5EC</color>
+    <color name="banner_red">#E60000</color>
+    <color name="banner_red_dark">#B30000</color>
+
+    <!-- AI Box Colors -->
+    <color name="ai_box_bg">#FFF9F3</color>
+    <color name="ai_border_orange">#FF9800</color>
+    <color name="ai_button_orange">#FF5722</color>
+
+    <!-- Tab & Button Colors -->
+    <color name="tab_active_red">#E60000</color>
+    <color name="price_red">#E60000</color>
+    <color name="btn_add_cart_bg">#F2F2F2</color>
+    <color name="btn_add_cart_text">#333333</color>
+
+    <!-- Badge Colors -->
+    <color name="badge_mon_chinh_bg">#FFEBEE</color>
+    <color name="badge_mon_chinh_text">#D32F2F</color>
+
+    <color name="badge_mon_phu_bg">#FFF3E0</color>
+    <color name="badge_mon_phu_text">#E65100</color>
+
+    <color name="badge_do_uong_bg">#FCE4EC</color>
+    <color name="badge_do_uong_text">#C2185B</color>
+
+    <!-- Admin DeskApp Colors matching Screenshot -->
+    <color name="admin_navy_dark">#1B253B</color>
+    <color name="admin_navy_light">#283552</color>
+    <color name="admin_blue_accent">#1890FF</color>
+    <color name="admin_purple_accent">#722ED1</color>
+    <color name="admin_cyan_accent">#13C2C2</color>
+    <color name="admin_pink_badge">#EB2F96</color>
+    <color name="admin_bg_gray">#F4F6F9</color>
+    <color name="admin_status_pending">#FAAD14</color>
+    <color name="admin_status_complete">#52C41A</color>
+
+    <!-- Basic Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#212121</color>
+    <color name="gray_text">#757575</color>
+    <color name="gray_light">#F5F5F5</color>
+    <color name="gray_border">#E0E0E0</color>
+</resources>

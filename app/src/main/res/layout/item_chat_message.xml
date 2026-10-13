@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/chatBubbleContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="4dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvChatMessageText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_header_button"
+        android:maxWidth="280dp"
+        android:padding="10dp"
+        android:textColor="@color/black"
+        android:textSize="13sp"
+        tools:text="Xin chào! Tôi có thể giúp bạn chọn món ngon phù hợp hôm nay." />
+
+</LinearLayout>

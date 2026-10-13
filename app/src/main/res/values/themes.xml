@@ -1,0 +1,12 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.ChieuThu3KetThucMonHoc" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/banner_red</item>
+        <item name="colorSecondary">@color/ai_button_orange</item>
+        <item name="android:statusBarColor">@color/header_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="Theme.ChieuThu3KetThucMonHoc" parent="Base.Theme.ChieuThu3KetThucMonHoc" />
+</resources>
