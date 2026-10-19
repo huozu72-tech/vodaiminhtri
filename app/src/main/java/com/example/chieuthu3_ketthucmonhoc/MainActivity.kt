@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.chieuthu3_ketthucmonhoc.adapters.AIRecommendationAdapter
 import com.example.chieuthu3_ketthucmonhoc.adapters.CartAdapter
 import com.example.chieuthu3_ketthucmonhoc.adapters.ChatAdapter
 import com.example.chieuthu3_ketthucmonhoc.adapters.FoodAdapter
@@ -21,9 +22,10 @@ import com.example.chieuthu3_ketthucmonhoc.databinding.DialogAiChatBinding
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCartBottomSheetBinding
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogLoginBinding
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogPaymentQrBinding
-import com.example.chieuthu3_ketthucmonhoc.models.CartItem
-import com.example.chieuthu3_ketthucmonhoc.models.ChatMessage
-import com.example.chieuthu3_ketthucmonhoc.models.FoodItem
+import com.example.chieuthu3_ketthucmonhoc.di.AppServiceLocator
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory
+import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem
+import com.example.chieuthu3_ketthucmonhoc.domain.services.AuthResult
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Locale
 
@@ -31,10 +33,15 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var foodAdapter: FoodAdapter
+    private lateinit var aiRecAdapter: AIRecommendationAdapter
 
-    private val allFoodList = ArrayList<FoodItem>()
-    private val cartList = ArrayList<CartItem>()
-    private val chatList = ArrayList<ChatMessage>()
+    // Services via AppServiceLocator (Clean OOP Architecture)
+    private val menuService = AppServiceLocator.menuService
+    private val cartService = AppServiceLocator.cartService
+    private val orderService = AppServiceLocator.orderService
+    private val authService = AppServiceLocator.authService
+    private val aiRecService = AppServiceLocator.aiRecommendationService
+    private val aiChatService = AppServiceLocator.aiChatbotService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,76 +55,92 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        initSampleData()
         setupFoodGrid()
-        setupCategoryChips()
+        setupAiRecommendations()
+        setupSearchAndFilters()
         setupListeners()
+        updateCartBadge()
+        updateUserHeader()
     }
 
-    private fun initSampleData() {
-        allFoodList.clear()
-        // 15 Food items matching the provided screenshot
-        allFoodList.add(FoodItem(1, "Chân Giò Muối Chiên Giòn", "Món chính", 120000, "120.000 đ", "Chân Giò Muối Chiên Giòn đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(2, "Ếch Nướng Muối Ớt Lá Chanh", "Món chính", 85000, "85.000 đ", "Ếch Nướng Muối Ớt Lá Chanh đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(3, "Gà Nướng Mật Ong", "Món chính", 150000, "150.000 đ", "Gà Nướng Mật Ong đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(4, "Gà Quay Bánh Bao", "Món chính", 160000, "160.000 đ", "Gà Quay Bánh Bao đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(5, "Tôm Chiên Xù", "Món chính", 95000, "95.000 đ", "Tôm Chiên Xù đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(6, "Tôm Nướng Muối Ớt", "Món chính", 105000, "105.000 đ", "Tôm Nướng Muối Ớt đậm đà hương vị truyền thống thơm ngon"))
-        
-        allFoodList.add(FoodItem(7, "Chân Gà Sả Tắc", "Món phụ", 60000, "60.000 đ", "Chân Gà Sả Tắc đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(8, "Chân Gà Sốt Thái", "Món phụ", 65000, "65.000 đ", "Chân Gà Sốt Thái đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(9, "Gỏi Ngó Sen", "Món phụ", 55000, "55.000 đ", "Gỏi Ngó Sen đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(10, "Gỏi Xoài Tôm Khô", "Món phụ", 70000, "70.000 đ", "Gỏi Xoài Tôm Khô đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(11, "Gỏi Xoài Tôm Thịt", "Món phụ", 80000, "80.000 đ", "Gỏi Xoài Tôm Thịt đậm đà hương vị truyền thống thơm ngon"))
-        
-        allFoodList.add(FoodItem(12, "7Up", "Nước uống", 15000, "15.000 đ", "7Up đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(13, "Coca Cola", "Nước uống", 15000, "15.000 đ", "Coca Cola đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(14, "Pepsi", "Nước uống", 15000, "15.000 đ", "Pepsi đậm đà hương vị truyền thống thơm ngon"))
-        allFoodList.add(FoodItem(15, "Sting", "Nước uống", 15000, "15.000 đ", "Sting đậm đà hương vị truyền thống thơm ngon"))
-
-        // Welcome chat message from AI
-        chatList.add(ChatMessage("Xin chào! Tôi là AI Trợ Lý Đề Món. Bạn muốn tìm món ăn gì hôm nay?", isUser = false))
+    override fun onResume() {
+        super.onResume()
+        refreshFoodList()
+        refreshAiRecommendations()
+        updateCartBadge()
+        updateUserHeader()
     }
 
     private fun setupFoodGrid() {
-        foodAdapter = FoodAdapter(allFoodList) { food ->
-            addToCart(food)
+        foodAdapter = FoodAdapter(menuService.getAvailableMenuItems()) { menuItem ->
+            cartService.addItem(menuItem, 1)
+            updateCartBadge()
+            refreshAiRecommendations()
+            Toast.makeText(this, "Đã thêm '${menuItem.name}' vào giỏ!", Toast.LENGTH_SHORT).show()
         }
         binding.rvFoodGrid.layoutManager = GridLayoutManager(this, 2)
         binding.rvFoodGrid.adapter = foodAdapter
     }
 
-    private fun setupCategoryChips() {
+    private fun setupAiRecommendations() {
+        val currentCustomerId = authService.getCurrentCustomer()?.id
+        val recommendations = aiRecService.getPersonalizedRecommendations(currentCustomerId, limit = 5)
+        aiRecAdapter = AIRecommendationAdapter(recommendations) { menuItem ->
+            cartService.addItem(menuItem, 1)
+            updateCartBadge()
+            Toast.makeText(this, "Đã thêm '${menuItem.name}' vào giỏ!", Toast.LENGTH_SHORT).show()
+        }
+        binding.rvAiRecommendations.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvAiRecommendations.adapter = aiRecAdapter
+    }
+
+    private fun refreshFoodList() {
+        val currentCategory = when (binding.chipGroupCategory.checkedChipId) {
+            R.id.chipMain -> FoodCategory.MAIN_DISH
+            R.id.chipSide -> FoodCategory.SIDE_DISH
+            R.id.chipDrink -> FoodCategory.BEVERAGE
+            else -> null
+        }
+        val items = if (currentCategory != null) {
+            menuService.getMenuItemsByCategory(currentCategory)
+        } else {
+            menuService.getAvailableMenuItems()
+        }
+        foodAdapter.updateList(items)
+    }
+
+    private fun refreshAiRecommendations() {
+        val currentCustomerId = authService.getCurrentCustomer()?.id
+        val updatedRecs = aiRecService.getPersonalizedRecommendations(currentCustomerId, limit = 5)
+        aiRecAdapter.updateList(updatedRecs)
+    }
+
+    private fun setupSearchAndFilters() {
+        binding.etSearchFood.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                val query = s?.toString().orEmpty()
+                if (query.isBlank()) {
+                    refreshFoodList()
+                } else {
+                    val filtered = menuService.searchMenuItems(query).filter { it.isAvailable }
+                    foodAdapter.updateList(filtered)
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
         binding.chipGroupCategory.setOnCheckedStateChangeListener { _, checkedIds ->
             if (checkedIds.isEmpty()) return@setOnCheckedStateChangeListener
+            binding.etSearchFood.text?.clear()
             when (checkedIds[0]) {
-                R.id.chipMain -> filterByCategory("Món chính")
-                R.id.chipSide -> filterByCategory("Món phụ")
-                R.id.chipDrink -> filterByCategory("Nước uống")
-                else -> foodAdapter.updateList(allFoodList)
+                R.id.chipMain -> foodAdapter.updateList(menuService.getMenuItemsByCategory(FoodCategory.MAIN_DISH))
+                R.id.chipSide -> foodAdapter.updateList(menuService.getMenuItemsByCategory(FoodCategory.SIDE_DISH))
+                R.id.chipDrink -> foodAdapter.updateList(menuService.getMenuItemsByCategory(FoodCategory.BEVERAGE))
+                else -> foodAdapter.updateList(menuService.getAvailableMenuItems())
             }
         }
-    }
-
-    private fun filterByCategory(category: String) {
-        val filtered = allFoodList.filter { it.category == category }
-        foodAdapter.updateList(filtered)
-    }
-
-    private fun addToCart(food: FoodItem) {
-        val existing = cartList.find { it.foodItem.id == food.id }
-        if (existing != null) {
-            existing.quantity++
-        } else {
-            cartList.add(CartItem(food, 1))
-        }
-        updateCartBadge()
-        Toast.makeText(this, "Đã thêm '${food.name}' vào giỏ!", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun updateCartBadge() {
-        val totalCount = cartList.sumOf { it.quantity }
-        binding.tvHeaderCartCount.text = String.format(Locale.getDefault(), "Giỏ Hàng (%d)", totalCount)
     }
 
     private fun setupListeners() {
@@ -125,14 +148,14 @@ class MainActivity : AppCompatActivity() {
         binding.btnHeaderPayment.setOnClickListener { showPaymentDialog() }
         binding.btnHeaderUser.setOnClickListener { showLoginDialog() }
 
-        binding.btnAiUploadPhoto.setOnClickListener { showAiChatDialog() }
+        binding.btnAiUploadPhoto.setOnClickListener { showImageRecognitionDialog() }
         binding.fabAiChatbot.setOnClickListener { showAiChatDialog() }
 
         binding.bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
                     binding.chipAll.isChecked = true
-                    foodAdapter.updateList(allFoodList)
+                    foodAdapter.updateList(menuService.getAvailableMenuItems())
                     true
                 }
                 R.id.nav_ai -> {
@@ -156,31 +179,56 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateCartBadge() {
+        val count = cartService.getTotalItemCount()
+        binding.tvHeaderCartCount.text = String.format(Locale.getDefault(), "Giỏ Hàng (%d)", count)
+    }
+
+    private fun updateUserHeader() {
+        val customer = authService.getCurrentCustomer()
+        if (customer != null) {
+            binding.tvHeaderUserName.text = customer.fullName
+        } else {
+            binding.tvHeaderUserName.text = "Đăng Nhập"
+        }
+    }
+
     private fun showCartBottomSheet() {
         val bottomSheet = BottomSheetDialog(this)
         val dialogBinding = DialogCartBottomSheetBinding.inflate(LayoutInflater.from(this))
         bottomSheet.setContentView(dialogBinding.root)
 
-        val cartAdapter = CartAdapter(cartList) {
-            updateCartBadge()
-            calculateCartTotal(dialogBinding)
-        }
+        lateinit var cartAdapter: CartAdapter
+        cartAdapter = CartAdapter(
+            cartList = cartService.getCartItems(),
+            onQuantityPlus = { cartItem ->
+                cartService.updateQuantity(cartItem.menuItem.id, cartItem.quantity + 1)
+                cartAdapter.updateList(cartService.getCartItems())
+                updateCartBadge()
+                calculateCartTotal(dialogBinding)
+            },
+            onQuantityMinus = { cartItem ->
+                cartService.updateQuantity(cartItem.menuItem.id, cartItem.quantity - 1)
+                cartAdapter.updateList(cartService.getCartItems())
+                updateCartBadge()
+                calculateCartTotal(dialogBinding)
+            }
+        )
         dialogBinding.rvCartItems.layoutManager = LinearLayoutManager(this)
         dialogBinding.rvCartItems.adapter = cartAdapter
 
         calculateCartTotal(dialogBinding)
 
         dialogBinding.tvClearCart.setOnClickListener {
-            val count = cartList.size
-            cartList.clear()
-            cartAdapter.notifyItemRangeRemoved(0, count)
+            cartService.clearCart()
+            cartAdapter.updateList(emptyList())
             updateCartBadge()
             calculateCartTotal(dialogBinding)
             Toast.makeText(this, "Đã xóa toàn bộ giỏ hàng!", Toast.LENGTH_SHORT).show()
         }
 
         dialogBinding.btnCheckout.setOnClickListener {
-            if (cartList.isEmpty()) {
+            if (cartService.isEmpty()) {
                 Toast.makeText(this, "Giỏ hàng đang trống!", Toast.LENGTH_SHORT).show()
             } else {
                 bottomSheet.dismiss()
@@ -192,19 +240,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun calculateCartTotal(dialogBinding: DialogCartBottomSheetBinding) {
-        val totalSum = cartList.sumOf { it.foodItem.price * it.quantity }
-        dialogBinding.tvCartTotalPrice.text = String.format(Locale.getDefault(), "%,d đ", totalSum)
+        val total = cartService.getTotalAmount()
+        dialogBinding.tvCartTotalPrice.text = String.format(Locale.getDefault(), "%,d đ", total)
     }
 
     private fun showPaymentDialog() {
-        val totalSum = cartList.sumOf { it.foodItem.price * it.quantity }
+        if (cartService.isEmpty()) {
+            Toast.makeText(this, "Giỏ hàng đang trống! Vui lòng chọn món trước.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val totalAmount = cartService.getTotalAmount()
+        val itemCount = cartService.getTotalItemCount()
         val dialogBinding = DialogPaymentQrBinding.inflate(LayoutInflater.from(this))
-        
+
         dialogBinding.tvOrderSummary.text = String.format(
             Locale.getDefault(),
             "Hóa đơn Bàn 12 • Tổng cộng: %,d đ (%d món)",
-            totalSum,
-            cartList.sumOf { it.quantity },
+            totalAmount,
+            itemCount
         )
 
         val dialog = AlertDialog.Builder(this)
@@ -212,10 +266,23 @@ class MainActivity : AppCompatActivity() {
             .create()
 
         dialogBinding.btnConfirmPayment.setOnClickListener {
-            Toast.makeText(this, "Thanh toán thành công! Đơn hàng đang được chế biến.", Toast.LENGTH_LONG).show()
-            cartList.clear()
+            val customer = authService.getCurrentCustomer()
+            val order = orderService.createOrder(
+                tableNumber = "Bàn 12",
+                customerId = customer?.id,
+                cartItems = cartService.getCartItems()
+            )
+
+            cartService.clearCart()
             updateCartBadge()
+            refreshAiRecommendations()
             dialog.dismiss()
+
+            Toast.makeText(
+                this,
+                "Thanh toán thành công đơn ${order.orderId}! Bếp đang chế biến món ăn.",
+                Toast.LENGTH_LONG
+            ).show()
         }
 
         dialog.show()
@@ -223,11 +290,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun showAiChatDialog() {
         val dialogBinding = DialogAiChatBinding.inflate(LayoutInflater.from(this))
-        
-        val chatAdapter = ChatAdapter(chatList)
+
+        val chatAdapter = ChatAdapter(
+            chatList = aiChatService.getChatHistory(),
+            onAddSuggestedItemClick = { item ->
+                cartService.addItem(item, 1)
+                updateCartBadge()
+                Toast.makeText(this, "Đã thêm '${item.name}' vào giỏ hàng!", Toast.LENGTH_SHORT).show()
+            }
+        )
         dialogBinding.rvChatMessages.layoutManager = LinearLayoutManager(this)
         dialogBinding.rvChatMessages.adapter = chatAdapter
-        dialogBinding.rvChatMessages.scrollToPosition(chatList.size - 1)
+        dialogBinding.rvChatMessages.scrollToPosition(aiChatService.getChatHistory().size - 1)
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogBinding.root)
@@ -236,35 +310,41 @@ class MainActivity : AppCompatActivity() {
         dialogBinding.btnCloseChat.setOnClickListener { dialog.dismiss() }
 
         dialogBinding.btnChatCamera.setOnClickListener {
-            val startPos = chatList.size
-            chatList.add(ChatMessage("📷 [Đã tải lên ảnh thực đơn món ăn]", isUser = true))
-            chatList.add(ChatMessage("🤖 AI đã phân tích ảnh! Đề xuất cho bạn: 'Tôm Nướng Muối Ớt' và 'Chân Giò Muối Chiên Giòn' rất hợp khẩu vị hôm nay.", isUser = false))
-            chatAdapter.notifyItemRangeInserted(startPos, 2)
-            dialogBinding.rvChatMessages.scrollToPosition(chatList.size - 1)
+            val aiMsg = aiChatService.analyzeFoodImage("thực đơn món nướng và món chiên giòn")
+            chatAdapter.updateList(aiChatService.getChatHistory())
+            dialogBinding.rvChatMessages.scrollToPosition(aiChatService.getChatHistory().size - 1)
         }
 
         dialogBinding.btnSendChat.setOnClickListener {
             val userText = dialogBinding.etChatMessage.text.toString().trim()
             if (userText.isNotEmpty()) {
-                val startPos = chatList.size
-                chatList.add(ChatMessage(userText, isUser = true))
-                dialogBinding.etChatMessage.setText("")
-
-                val aiResponse = when {
-                    userText.contains("cay", ignoreCase = true) -> 
-                        "🤖 Dựa trên yêu cầu món cay, AI gợi ý: 'Ếch Nướng Muối Ớt' (85k) hoặc 'Chân Gà Sốt Thái' (65k)!"
-                    userText.contains("nước", ignoreCase = true) || userText.contains("uống", ignoreCase = true) ->
-                        "🤖 Nước uống giải nhiệt tuyệt vời: Coca Cola, Pepsi, 7Up đồng giá 15.000 đ!"
-                    else -> 
-                        "🤖 AI khuyến nghị bạn thử 'Gà Nướng Mật Ong' (150k) - món bán chạy nhất của Nhà Hàng Việt!"
-                }
-                chatList.add(ChatMessage(aiResponse, isUser = false))
-                chatAdapter.notifyItemRangeInserted(startPos, 2)
-                dialogBinding.rvChatMessages.scrollToPosition(chatList.size - 1)
+                aiChatService.sendMessage(userText)
+                dialogBinding.etChatMessage.text?.clear()
+                chatAdapter.updateList(aiChatService.getChatHistory())
+                dialogBinding.rvChatMessages.scrollToPosition(aiChatService.getChatHistory().size - 1)
             }
         }
 
         dialog.show()
+    }
+
+    private fun showImageRecognitionDialog() {
+        val sampleImages = arrayOf(
+            "Ảnh 1: Món Chiên Giòn (Chân giò, Tôm chiên)",
+            "Ảnh 2: Món Nướng Muối Ớt (Ếch nướng, Gà nướng, Tôm nướng)",
+            "Ảnh 3: Món Gỏi Khai Vị & Chân Gà Sốt Thái",
+            "Ảnh 4: Nước Ngọt Giải Khát (Coca, 7Up, Pepsi)"
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle("📷 Chọn Ảnh Món Ăn Cần Nhận Diện")
+            .setItems(sampleImages) { _, which ->
+                val selectedHint = sampleImages[which]
+                aiChatService.analyzeFoodImage(selectedHint)
+                showAiChatDialog()
+            }
+            .setNegativeButton("Đóng", null)
+            .show()
     }
 
     private fun showLoginDialog() {
@@ -273,48 +353,47 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogBinding.root)
             .create()
 
-        // Real-time error validation
-        dialogBinding.etPhone.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s.isNullOrEmpty() || s.length < 9) {
-                    dialogBinding.tilPhone.error = "Số điện thoại / Email chưa đúng định dạng"
-                } else {
-                    dialogBinding.tilPhone.error = null
-                }
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        dialogBinding.etPassword.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s.isNullOrEmpty() || s.length < 6) {
-                    dialogBinding.tilPassword.error = "Mật khẩu tối thiểu 6 ký tự"
-                } else {
-                    dialogBinding.tilPassword.error = null
-                }
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
         dialogBinding.btnLoginSubmit.setOnClickListener {
-            val phone = dialogBinding.etPhone.text.toString()
-            val pass = dialogBinding.etPassword.text.toString()
-            if (phone.length >= 9 && pass.length >= 6) {
-                val userName = dialogBinding.etFullName.text.toString().ifEmpty { "1.viet" }
-                binding.tvHeaderUserName.text = userName
-                Toast.makeText(this, "Đăng nhập thành công! Chào $userName", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            } else {
-                Toast.makeText(this, "Vui lòng nhập đúng thông tin tài khoản", Toast.LENGTH_SHORT).show()
+            val phoneOrEmail = dialogBinding.etPhone.text.toString().trim()
+            val password = dialogBinding.etPassword.text.toString().trim()
+
+            when (val result = authService.loginCustomer(phoneOrEmail, password)) {
+                is AuthResult.Success -> {
+                    updateUserHeader()
+                    refreshAiRecommendations()
+                    dialog.dismiss()
+                    Toast.makeText(this, "Đăng nhập thành công! Chào ${result.data.fullName}", Toast.LENGTH_SHORT).show()
+                }
+                is AuthResult.Error -> {
+                    Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        dialogBinding.btnRegisterSubmit.setOnClickListener {
+            val fullName = dialogBinding.etFullName.text.toString().trim()
+            val phoneOrEmail = dialogBinding.etPhone.text.toString().trim()
+            val password = dialogBinding.etPassword.text.toString().trim()
+
+            val email = if (phoneOrEmail.contains("@")) phoneOrEmail else ""
+            val phone = if (!phoneOrEmail.contains("@")) phoneOrEmail else "090" + System.currentTimeMillis() % 10000000
+
+            when (val result = authService.register(fullName, email, phone, password)) {
+                is AuthResult.Success -> {
+                    updateUserHeader()
+                    refreshAiRecommendations()
+                    dialog.dismiss()
+                    Toast.makeText(this, "Đăng ký thành công! Chào ${result.data.fullName}", Toast.LENGTH_SHORT).show()
+                }
+                is AuthResult.Error -> {
+                    Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
         dialogBinding.btnSwitchToAdmin.setOnClickListener {
             dialog.dismiss()
-            val intent = Intent(this, AdminActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, AdminActivity::class.java))
         }
 
         dialog.show()

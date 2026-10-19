@@ -9,6 +9,7 @@
     android:padding="20dp">
 
     <TextView
+        android:id="@+id/tvAuthTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -17,14 +18,14 @@
         android:textSize="18sp"
         android:textStyle="bold" />
 
-    <!-- Full Name Input (Optional for Register) -->
+    <!-- Full Name Input (for Register) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilFullName"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:hint="Họ và tên">
+        android:hint="Họ và tên (khi đăng ký)">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etFullName"
@@ -68,25 +69,50 @@
             android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnLoginSubmit"
+    <!-- Buttons Row: Login & Register -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:backgroundTint="@color/banner_red"
-        android:text="Đăng Nhập Khách Hàng"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:cornerRadius="10dp" />
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLoginSubmit"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:backgroundTint="@color/primary_orange"
+            android:text="Đăng Nhập"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:cornerRadius="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRegisterSubmit"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="Đăng Ký"
+            android:textAllCaps="false"
+            android:textColor="@color/primary_orange"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:cornerRadius="10dp"
+            app:strokeColor="@color/primary_orange" />
+    </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSwitchToAdmin"
         style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="10dp"
         android:backgroundTint="@color/admin_navy_dark"
         android:text="🛠️ Quản Lý Admin DeskApp"
         android:textAllCaps="false"

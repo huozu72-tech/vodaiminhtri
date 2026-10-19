@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.chieuthu3_ketthucmonhoc"
-    compileSdk = 37
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.chieuthu3_ketthucmonhoc"

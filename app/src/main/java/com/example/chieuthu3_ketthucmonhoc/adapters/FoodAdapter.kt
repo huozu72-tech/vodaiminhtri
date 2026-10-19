@@ -6,11 +6,12 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.chieuthu3_ketthucmonhoc.R
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemFoodCardBinding
-import com.example.chieuthu3_ketthucmonhoc.models.FoodItem
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory
+import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem
 
 class FoodAdapter(
-    private var foodList: List<FoodItem>,
-    private val onAddToCartClick: (FoodItem) -> Unit
+    private var foodList: List<MenuItem>,
+    private val onAddToCartClick: (MenuItem) -> Unit
 ) : RecyclerView.Adapter<FoodAdapter.FoodViewHolder>() {
 
     inner class FoodViewHolder(val binding: ItemFoodCardBinding) :
@@ -24,45 +25,38 @@ class FoodAdapter(
     }
 
     override fun onBindViewHolder(holder: FoodViewHolder, position: Int) {
-        val food = foodList[position]
+        val item = foodList[position]
+
+        holder.binding.tvFoodName.text = item.name
+        holder.binding.tvFoodDesc.text = item.description
+        holder.binding.tvFoodPrice.text = item.formattedPrice
+        holder.binding.tvCategoryBadge.text = item.category.displayName
+
         val context = holder.itemView.context
-
-        holder.binding.tvFoodName.text = food.name
-        holder.binding.tvCategoryBadge.text = food.category
-        holder.binding.tvFoodDesc.text = food.description
-        holder.binding.tvFoodPrice.text = food.priceFormatted
-
-        // Set badge background based on category
-        when (food.category) {
-            "Món chính" -> {
-                holder.binding.tvCategoryBadge.setBackgroundResource(R.drawable.bg_badge_mon_chinh)
-                holder.binding.tvCategoryBadge.setTextColor(
-                    ContextCompat.getColor(context, R.color.badge_mon_chinh_text)
-                )
+        when (item.category) {
+            FoodCategory.MAIN_DISH -> {
+                holder.binding.tvCategoryBadge.background = ContextCompat.getDrawable(context, R.drawable.bg_badge_mon_chinh)
+                holder.binding.tvCategoryBadge.setTextColor(ContextCompat.getColor(context, R.color.badge_mon_chinh_text))
             }
-            "Món phụ" -> {
-                holder.binding.tvCategoryBadge.setBackgroundResource(R.drawable.bg_badge_mon_phu)
-                holder.binding.tvCategoryBadge.setTextColor(
-                    ContextCompat.getColor(context, R.color.badge_mon_phu_text)
-                )
+            FoodCategory.SIDE_DISH -> {
+                holder.binding.tvCategoryBadge.background = ContextCompat.getDrawable(context, R.drawable.bg_badge_mon_phu)
+                holder.binding.tvCategoryBadge.setTextColor(ContextCompat.getColor(context, R.color.badge_mon_phu_text))
             }
-            else -> {
-                holder.binding.tvCategoryBadge.setBackgroundResource(R.drawable.bg_badge_do_uong)
-                holder.binding.tvCategoryBadge.setTextColor(
-                    ContextCompat.getColor(context, R.color.badge_do_uong_text)
-                )
+            FoodCategory.BEVERAGE -> {
+                holder.binding.tvCategoryBadge.background = ContextCompat.getDrawable(context, R.drawable.bg_badge_do_uong)
+                holder.binding.tvCategoryBadge.setTextColor(ContextCompat.getColor(context, R.color.badge_do_uong_text))
             }
         }
 
         holder.binding.btnAddToCart.setOnClickListener {
-            onAddToCartClick(food)
+            onAddToCartClick(item)
         }
     }
 
     override fun getItemCount(): Int = foodList.size
 
-    fun updateList(newList: List<FoodItem>) {
-        foodList = newList
+    fun updateList(newList: List<MenuItem>) {
+        this.foodList = newList
         notifyDataSetChanged()
     }
 }

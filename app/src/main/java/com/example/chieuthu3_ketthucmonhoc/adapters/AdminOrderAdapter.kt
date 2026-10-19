@@ -1,12 +1,14 @@
 package com.example.chieuthu3_ketthucmonhoc.adapters
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.chieuthu3_ketthucmonhoc.R
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemAdminOrderBinding
-import com.example.chieuthu3_ketthucmonhoc.models.Order
+import com.example.chieuthu3_ketthucmonhoc.domain.models.Order
+import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus
 
 class AdminOrderAdapter(
     private var orderList: List<Order>,
@@ -27,22 +29,16 @@ class AdminOrderAdapter(
         val order = orderList[position]
         val context = holder.itemView.context
 
-        holder.binding.tvOrderId.text = "${order.id} • ${order.tableName}"
-        holder.binding.tvOrderTime.text = "Thời gian: ${order.timeString}"
+        holder.binding.tvOrderId.text = "${order.orderId} • ${order.tableNumber}"
+        holder.binding.tvOrderTime.text = "Thời gian: ${order.formattedTime}"
         holder.binding.tvOrderItemsSummary.text = "Món: ${order.itemsSummary}"
-        holder.binding.tvOrderTotalPrice.text = order.totalPriceFormatted
-        holder.binding.tvOrderStatusBadge.text = order.status
+        holder.binding.tvOrderTotalPrice.text = order.formattedTotal
+        holder.binding.tvOrderStatusBadge.text = order.status.displayName
 
-        if (order.status == "Hoàn Thành") {
-            holder.binding.tvOrderStatusBadge.setBackgroundResource(R.drawable.bg_badge_mon_chinh)
-            holder.binding.tvOrderStatusBadge.setTextColor(
-                ContextCompat.getColor(context, R.color.admin_status_complete)
-            )
-        } else {
-            holder.binding.tvOrderStatusBadge.setBackgroundResource(R.drawable.bg_badge_mon_phu)
-            holder.binding.tvOrderStatusBadge.setTextColor(
-                ContextCompat.getColor(context, R.color.admin_status_pending)
-            )
+        try {
+            holder.binding.tvOrderStatusBadge.setTextColor(Color.parseColor(order.status.colorHex))
+        } catch (_: Exception) {
+            holder.binding.tvOrderStatusBadge.setTextColor(ContextCompat.getColor(context, R.color.admin_status_pending))
         }
 
         holder.binding.btnChangeStatus.setOnClickListener { onChangeStatusClick(order) }

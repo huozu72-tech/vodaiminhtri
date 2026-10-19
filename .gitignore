@@ -70,3 +70,7 @@ Thumbs.db
 
 # Local helper scripts
 push_to_main.bat
+
+# Document files containing personal info
+*.docx
+*.drawio

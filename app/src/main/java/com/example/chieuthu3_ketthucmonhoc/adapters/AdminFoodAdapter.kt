@@ -6,12 +6,13 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.chieuthu3_ketthucmonhoc.R
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemAdminFoodBinding
-import com.example.chieuthu3_ketthucmonhoc.models.FoodItem
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory
+import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem
 
 class AdminFoodAdapter(
-    private var foodList: List<FoodItem>,
-    private val onEditClick: (FoodItem) -> Unit,
-    private val onDeleteClick: (FoodItem) -> Unit
+    private var foodList: List<MenuItem>,
+    private val onEditClick: (MenuItem) -> Unit,
+    private val onDeleteClick: (MenuItem) -> Unit
 ) : RecyclerView.Adapter<AdminFoodAdapter.AdminFoodViewHolder>() {
 
     class AdminFoodViewHolder(val binding: ItemAdminFoodBinding) :
@@ -29,23 +30,23 @@ class AdminFoodAdapter(
         val context = holder.itemView.context
 
         holder.binding.tvAdminFoodName.text = food.name
-        holder.binding.tvAdminFoodCategory.text = food.category
-        holder.binding.tvAdminFoodPrice.text = food.priceFormatted
+        holder.binding.tvAdminFoodCategory.text = food.category.displayName
+        holder.binding.tvAdminFoodPrice.text = food.formattedPrice
 
         when (food.category) {
-            "Món chính" -> {
+            FoodCategory.MAIN_DISH -> {
                 holder.binding.tvAdminFoodCategory.setBackgroundResource(R.drawable.bg_badge_mon_chinh)
                 holder.binding.tvAdminFoodCategory.setTextColor(
                     ContextCompat.getColor(context, R.color.badge_mon_chinh_text)
                 )
             }
-            "Món phụ" -> {
+            FoodCategory.SIDE_DISH -> {
                 holder.binding.tvAdminFoodCategory.setBackgroundResource(R.drawable.bg_badge_mon_phu)
                 holder.binding.tvAdminFoodCategory.setTextColor(
                     ContextCompat.getColor(context, R.color.badge_mon_phu_text)
                 )
             }
-            else -> {
+            FoodCategory.BEVERAGE -> {
                 holder.binding.tvAdminFoodCategory.setBackgroundResource(R.drawable.bg_badge_do_uong)
                 holder.binding.tvAdminFoodCategory.setTextColor(
                     ContextCompat.getColor(context, R.color.badge_do_uong_text)
@@ -59,7 +60,7 @@ class AdminFoodAdapter(
 
     override fun getItemCount(): Int = foodList.size
 
-    fun updateList(newList: List<FoodItem>) {
+    fun updateList(newList: List<MenuItem>) {
         foodList = newList
         notifyDataSetChanged()
     }

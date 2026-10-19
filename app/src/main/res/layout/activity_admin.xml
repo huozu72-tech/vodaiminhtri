@@ -135,16 +135,17 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Chào Cậu Chủ"
+                                android:text="Bảng Điều Khiển Quản Trị"
                                 android:textColor="@color/black"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvAdminGreeting"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="minhtri"
+                                android:text="Quản Trị Viên"
                                 android:textColor="@color/admin_blue_accent"
                                 android:textSize="22sp"
                                 android:textStyle="bold" />
@@ -179,9 +180,10 @@
                                 android:padding="12dp">
 
                                 <TextView
+                                    android:id="@+id/tvStatTotalOrders"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="2"
+                                    android:text="3"
                                     android:textColor="@color/admin_purple_accent"
                                     android:textSize="24sp"
                                     android:textStyle="bold" />
@@ -190,7 +192,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Liên Hệ / Đơn"
+                                    android:text="Tổng Đơn Hàng"
                                     android:textColor="@color/gray_text"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -216,6 +218,7 @@
                                 android:padding="12dp">
 
                                 <TextView
+                                    android:id="@+id/tvStatPendingOrders"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="1"
@@ -291,9 +294,10 @@
                                 android:padding="12dp">
 
                                 <TextView
+                                    android:id="@+id/tvStatTotalRevenue"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="355.000 đ"
+                                    android:text="0 đ"
                                     android:textColor="@color/admin_blue_accent"
                                     android:textSize="20sp"
                                     android:textStyle="bold" />
@@ -334,10 +338,11 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvStatCompletionRate"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="12dp"
-                                android:text="Mục Tiêu Doanh Thu: 73% Achieve Goals 🎯"
+                                android:text="Tỷ Lệ Hoàn Thành Đơn: 100% 🎯"
                                 android:textColor="@color/admin_blue_accent"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
