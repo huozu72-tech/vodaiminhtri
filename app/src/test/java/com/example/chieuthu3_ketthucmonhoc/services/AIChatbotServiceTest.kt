@@ -57,4 +57,47 @@ class AIChatbotServiceTest {
         assertTrue(response.suggestedItems.isNotEmpty())
         assertEquals(dishSpicy.id, response.suggestedItems[0].id)
     }
+
+    @Test
+    fun `image analysis with unmatched hint admits no match instead of claiming success`() {
+        val response = chatbotService.analyzeFoodImage("anh_mon_an_chan_ga.jpg")
+
+        assertFalse(response.isUser)
+        // Hint không chứa từ khóa có dấu -> phải nói thật là chưa nhận diện được
+        assertTrue(response.text.contains("chưa nhận diện"))
+        assertTrue(response.suggestedItems.isNotEmpty())
+    }
+
+    @Test
+    fun `blank message is rejected without adding empty user bubble`() {
+        val response = chatbotService.sendMessage("   ")
+
+        assertFalse(response.isUser)
+        assertTrue(response.text.isNotBlank())
+        // Chỉ còn 1 tin chào + 1 tin nhắc nhở của AI, không có bubble người dùng rỗng
+        val history = chatbotService.getChatHistory()
+        assertEquals(2, history.size)
+        assertFalse(history.any { it.isUser })
+    }
+
+    @Test
+    fun `budget below every item price returns honest no match answer with cheapest item`() {
+        val response = chatbotService.sendMessage("Có món nào dưới 1k không?")
+
+        assertFalse(response.isUser)
+        assertTrue(response.text.contains("không có món"))
+        // Đề xuất đúng món rẻ nhất thay vì rơi về gợi ý mặc định đắt hơn ngân sách
+        assertEquals(listOf(dishCheap.id), response.suggestedItems.map { it.id })
+    }
+
+    @Test
+    fun `full seven digit vnd amount is parsed as one million not one thousand`() {
+        val response = chatbotService.sendMessage("Có món nào dưới 1000000 không?")
+
+        assertFalse(response.isUser)
+        assertTrue(response.text.contains("1000k"))
+        // Ngân sách 1.000.000đ phải phủ được món đắt nhất 120k (trước đây bị cắt sai thành 1.000đ)
+        assertTrue(response.suggestedItems.any { it.id == dishCrispy.id })
+        assertTrue(response.suggestedItems.all { it.price <= 1000000L })
+    }
 }

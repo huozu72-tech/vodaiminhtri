@@ -73,4 +73,35 @@ class AIRecommendationServiceTest {
         assertEquals(dishCrispy2.id, similar[0].menuItem.id)
         assertTrue(similar[0].reason.contains("Vị tương đồng"))
     }
+
+    @Test
+    fun `similar dishes always have non blank reason for unrelated items`() {
+        // 7Up (nước, thanh mát) không cùng nhóm và không chung vị với các món mặn
+        // -> trước đây reason là chuỗi rỗng
+        val similar = aiService.getSimilarDishes(dishDrink.id, 3)
+
+        assertEquals(3, similar.size)
+        assertTrue(similar.all { it.reason.isNotBlank() })
+        assertTrue(similar.any { it.reason.contains("yêu thích") })
+    }
+
+    @Test
+    fun `personalized score is capped at 1 point 0`() {
+        // Khách 7 đã ăn dishCrispy1 (MAIN_DISH, giòn + đậm đà)
+        orderRepository.saveOrder(
+            Order(
+                orderId = "#ORD-010",
+                tableNumber = "Bàn 1",
+                customerId = 7,
+                items = listOf(OrderItem(1, dishCrispy1, 2))
+            )
+        )
+
+        val recs = aiService.getPersonalizedRecommendations(7, 4)
+        assertTrue(recs.isNotEmpty())
+        // Tổng trọng số thô của dishCrispy2 (cùng nhóm + cùng khẩu vị + chưa ăn + rating cao) là 1.092
+        // -> phải bị chặn lại ở 1.0 thay vì vượt thang điểm
+        assertTrue(recs.all { it.score <= 1.0 })
+        assertEquals(1.0, recs.maxOf { it.score }, 0.001)
+    }
 }

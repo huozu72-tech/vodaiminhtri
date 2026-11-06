@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemCartEntryBinding
 import com.example.chieuthu3_ketthucmonhoc.domain.models.CartItem
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver
 
 class CartAdapter(
     private var cartList: List<CartItem>,
@@ -25,6 +26,7 @@ class CartAdapter(
     override fun onBindViewHolder(holder: CartViewHolder, position: Int) {
         val item = cartList[position]
 
+        holder.binding.imgCartFood.setImageResource(FoodImageResolver.resolveImage(item.menuItem))
         holder.binding.tvCartItemName.text = item.menuItem.name
         holder.binding.tvCartItemPrice.text = item.formattedSubtotal
         holder.binding.tvQuantity.text = item.quantity.toString()

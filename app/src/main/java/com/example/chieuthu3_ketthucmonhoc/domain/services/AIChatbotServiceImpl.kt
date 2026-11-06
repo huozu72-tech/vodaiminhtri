@@ -25,6 +25,17 @@ class AIChatbotServiceImpl(
 
     override fun sendMessage(userText: String): ChatMessage {
         val trimmed = userText.trim()
+        if (trimmed.isEmpty()) {
+            // Chuỗi rỗng/toàn khoảng trắng: không thêm bubble người dùng rỗng vào lịch sử,
+            // chỉ trả về lời nhắc nhập nội dung
+            val reminder = ChatMessage(
+                text = "Bạn chưa nhập nội dung rồi! Hãy cho Trợ Lý AI biết bạn muốn ăn món gì (khẩu vị, ngân sách, hình ảnh...) nhé!",
+                isUser = false
+            )
+            history.add(reminder)
+            return reminder
+        }
+
         val userMsg = ChatMessage(text = trimmed, isUser = true)
         history.add(userMsg)
 
@@ -43,22 +54,33 @@ class AIChatbotServiceImpl(
 
         val lowerHint = imageNameOrHint.lowercase()
         val allItems = menuRepository.getAllMenuItems().filter { it.isAvailable }
-        val matched = allItems.filter { item ->
+        val matchedByKeyword = allItems.filter { item ->
             lowerHint.contains("tôm") && item.name.lowercase().contains("tôm") ||
                     lowerHint.contains("gà") && item.name.lowercase().contains("gà") ||
                     lowerHint.contains("ếch") && item.name.lowercase().contains("ếch") ||
                     lowerHint.contains("gỏi") && item.name.lowercase().contains("gỏi") ||
                     lowerHint.contains("chân giò") && item.name.lowercase().contains("chân giò") ||
                     lowerHint.contains("nước") && item.category == FoodCategory.BEVERAGE
-        }.ifEmpty {
-            // Default top 2 recommendations if no specific keyword matched
-            allItems.take(2)
+        }
+
+        val suggestedItems: List<MenuItem>
+        val responseText: String
+        if (allItems.isEmpty()) {
+            suggestedItems = emptyList()
+            responseText = "🤖 Xin lỗi, hiện tại thực đơn nhà hàng chưa có món nào để gợi ý bạn nhé!"
+        } else if (matchedByKeyword.isNotEmpty()) {
+            suggestedItems = matchedByKeyword
+            responseText = "🤖 AI đã phân tích ảnh! Dựa trên món ăn trong ảnh, hệ thống nhận diện thấy các món rất khớp với thực đơn nhà hàng dưới đây:"
+        } else {
+            // Không khớp từ khóa nào: nói thật thay vì khẳng định đã nhận diện thành công
+            suggestedItems = allItems.take(2)
+            responseText = "🤖 AI chưa nhận diện được món cụ thể trong ảnh. Mình gửi bạn 2 món được yêu thích nhiều nhất của nhà hàng thay nhé:"
         }
 
         val aiMsg = ChatMessage(
-            text = "🤖 AI đã phân tích ảnh! Dựa trên món ăn trong ảnh, hệ thống nhận diện thấy các món rất khớp với thực đơn nhà hàng dưới đây:",
+            text = responseText,
             isUser = false,
-            suggestedItems = matched
+            suggestedItems = suggestedItems
         )
         history.add(aiMsg)
         return aiMsg
@@ -80,11 +102,9 @@ class AIChatbotServiceImpl(
         val lower = query.lowercase()
         val allItems = menuRepository.getAllMenuItems().filter { it.isAvailable }
 
-        // 1. Budget queries (dưới 100k, rẻ, dưới 50k, ...)
-        val budgetMatch = Regex("(\\d+)\\s*(k|nghìn|nghin|000)").find(lower)
-        if (budgetMatch != null) {
-            val num = budgetMatch.groupValues[1].toLongOrNull() ?: 100
-            val budget = if (num < 1000) num * 1000 else num
+        // 1. Budget queries (dưới 100k, rẻ, dưới 50k, 1000000đ, ...)
+        val budget = parseBudget(lower)
+        if (budget != null) {
             val affordable = allItems.filter { it.price <= budget }.sortedByDescending { it.rating }
             if (affordable.isNotEmpty()) {
                 val topChoices = affordable.take(3)
@@ -94,6 +114,21 @@ class AIChatbotServiceImpl(
                     suggestedItems = topChoices
                 )
             }
+            // Không món nào trong ngân sách: trả lời thẳng kèm món rẻ nhất,
+            // không rơi về gợi ý mặc định vốn đắt hơn ngân sách
+            if (allItems.isEmpty()) {
+                return ChatMessage(
+                    text = "Dạ xin lỗi, hiện tại thực đơn nhà hàng đang trống, bạn vui lòng quay lại sau nhé!",
+                    isUser = false
+                )
+            }
+            val cheapest = allItems.minByOrNull { it.price }
+                ?: return ChatMessage(text = "Dạ hiện tại không có món phù hợp với ngân sách của bạn!", isUser = false)
+            return ChatMessage(
+                text = "Dạ xin lỗi, hiện không có món nào dưới ${budget / 1000}k. Món rẻ nhất hiện có là ${cheapest.name} (${cheapest.formattedPrice}), bạn tham khảo nhé:",
+                isUser = false,
+                suggestedItems = listOf(cheapest)
+            )
         }
 
         // 2. Taste attribute queries
@@ -138,5 +173,24 @@ class AIChatbotServiceImpl(
             isUser = false,
             suggestedItems = topPicks
         )
+    }
+
+    /**
+     * Đọc ngân sách (VND) từ câu hỏi:
+     * - Hậu tố "k" / "nghìn" / "nghin" (phải là từ độc lập, không phải chữ "k" đầu của "không"...):
+     *   số × 1000 — ví dụ "50k", "100 nghìn", "1000k".
+     * - Nếu không có hậu tố, chỉ nhận số tiền VND đầy đủ từ 4 chữ số trở lên
+     *   ("100000", "1000000") và dùng nguyên giá trị — tránh lỗi cũ khi "1000000"
+     *   bị regex cắt sai thành 1.000đ.
+     */
+    private fun parseBudget(lowerQuery: String): Long? {
+        val thousandSuffix = Regex("(\\d+)\\s*(?:k|nghìn|nghin)(?!\\w)").find(lowerQuery)
+        if (thousandSuffix != null) {
+            val num = thousandSuffix.groupValues[1].toLongOrNull() ?: return null
+            return (num * 1000).takeIf { it > 0 }
+        }
+        val plainAmount = Regex("\\d{4,}").find(lowerQuery)
+        val amount = plainAmount?.value?.toLongOrNull() ?: return null
+        return amount.takeIf { it > 0 }
     }
 }

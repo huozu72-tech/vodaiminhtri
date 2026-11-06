@@ -1,10 +1,13 @@
 package com.example.chieuthu3_ketthucmonhoc
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
@@ -20,12 +23,17 @@ import com.example.chieuthu3_ketthucmonhoc.adapters.FoodAdapter
 import com.example.chieuthu3_ketthucmonhoc.databinding.ActivityMainBinding
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogAiChatBinding
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCartBottomSheetBinding
+import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCustomerProfileBinding
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogLoginBinding
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogPaymentQrBinding
 import com.example.chieuthu3_ketthucmonhoc.di.AppServiceLocator
+import com.example.chieuthu3_ketthucmonhoc.domain.models.Customer
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem
+import com.example.chieuthu3_ketthucmonhoc.domain.models.Order
+import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AuthResult
+import com.example.chieuthu3_ketthucmonhoc.domain.services.QrBitmapGenerator
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Locale
 
@@ -145,8 +153,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         binding.btnHeaderCart.setOnClickListener { showCartBottomSheet() }
-        binding.btnHeaderPayment.setOnClickListener { showPaymentDialog() }
-        binding.btnHeaderUser.setOnClickListener { showLoginDialog() }
+        binding.btnHeaderUser.setOnClickListener { handleUserClick() }
 
         binding.btnAiUploadPhoto.setOnClickListener { showImageRecognitionDialog() }
         binding.fabAiChatbot.setOnClickListener { showAiChatDialog() }
@@ -171,7 +178,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_profile -> {
-                    showLoginDialog()
+                    handleUserClick()
                     true
                 }
                 else -> false
@@ -181,16 +188,95 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateCartBadge() {
         val count = cartService.getTotalItemCount()
-        binding.tvHeaderCartCount.text = String.format(Locale.getDefault(), "Giỏ Hàng (%d)", count)
+        binding.tvHeaderCartCount.text = String.format(Locale.getDefault(), "Giỏ (%d)", count)
     }
 
     private fun updateUserHeader() {
         val customer = authService.getCurrentCustomer()
-        if (customer != null) {
-            binding.tvHeaderUserName.text = customer.fullName
-        } else {
-            binding.tvHeaderUserName.text = "Đăng Nhập"
+        val admin = authService.getCurrentAdmin()
+        when {
+            customer != null -> binding.tvHeaderUserName.text = customer.fullName
+            admin != null -> binding.tvHeaderUserName.text = "Admin: ${admin.fullName}"
+            else -> binding.tvHeaderUserName.text = "Đăng Nhập"
         }
+    }
+
+    private fun handleUserClick() {
+        val customer = authService.getCurrentCustomer()
+        val admin = authService.getCurrentAdmin()
+        when {
+            customer != null -> showCustomerProfileDialog(customer)
+            admin != null -> {
+                AlertDialog.Builder(this)
+                    .setTitle("🛠️ Phiên Quản Trị: ${admin.fullName}")
+                    .setMessage("Bạn đang đăng nhập với quyền quản trị viên (${admin.role.displayName}).")
+                    .setPositiveButton("Vào Quản Trị") { _, _ ->
+                        startActivity(Intent(this, AdminActivity::class.java))
+                    }
+                    .setNegativeButton("Đăng Xuất") { _, _ ->
+                        authService.logout()
+                        updateUserHeader()
+                        Toast.makeText(this, "Đã đăng xuất phiên quản trị!", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNeutralButton("Đóng", null)
+                    .show()
+            }
+            else -> showLoginDialog()
+        }
+    }
+
+    private fun showCustomerProfileDialog(customer: Customer) {
+        val dialogBinding = DialogCustomerProfileBinding.inflate(LayoutInflater.from(this))
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogBinding.root)
+            .create()
+
+        dialogBinding.tvProfileFullName.text = customer.fullName
+        dialogBinding.tvProfilePhone.text = "Số điện thoại: ${customer.phoneNumber}"
+        dialogBinding.tvProfileEmail.text = if (customer.email.isNotBlank()) "Email: ${customer.email}" else "Email: Chưa cập nhật"
+
+        val orders = orderService.getCustomerOrders(customer.id)
+        if (orders.isEmpty()) {
+            dialogBinding.tvNoOrdersHint.visibility = View.VISIBLE
+        } else {
+            dialogBinding.tvNoOrdersHint.visibility = View.GONE
+            for (order in orders.take(5)) {
+                val orderItemView = android.widget.TextView(this).apply {
+                    val statusText = when (order.status) {
+                        OrderStatus.PENDING -> "Chờ xác nhận"
+                        OrderStatus.PREPARING -> "Bếp đang nấu"
+                        OrderStatus.COMPLETED -> "Đã hoàn thành ✓"
+                        OrderStatus.CANCELLED -> "Đã hủy"
+                    }
+                    text = "${order.orderId} • ${order.formattedTotal} • $statusText\n(${order.items.joinToString { "${it.menuItem.name} x${it.quantity}" }})"
+                    textSize = 12f
+                    setPadding(24, 16, 24, 16)
+                    setBackgroundResource(R.drawable.bg_card_food)
+                    val params = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 8, 0, 8)
+                    }
+                    layoutParams = params
+                }
+                dialogBinding.layoutCustomerOrders.addView(orderItemView)
+            }
+        }
+
+        dialogBinding.btnLogoutCustomer.setOnClickListener {
+            authService.logout()
+            updateUserHeader()
+            refreshAiRecommendations()
+            dialog.dismiss()
+            Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
+        }
+
+        dialogBinding.btnCloseProfile.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun showCartBottomSheet() {
@@ -254,24 +340,86 @@ class MainActivity : AppCompatActivity() {
         val itemCount = cartService.getTotalItemCount()
         val dialogBinding = DialogPaymentQrBinding.inflate(LayoutInflater.from(this))
 
-        dialogBinding.tvOrderSummary.text = String.format(
-            Locale.getDefault(),
-            "Hóa đơn Bàn 12 • Tổng cộng: %,d đ (%d món)",
-            totalAmount,
-            itemCount
-        )
+        fun tableLabelFromInput(): String? {
+            val tableRaw = dialogBinding.etTableNumber.text.toString().trim()
+            if (tableRaw.isEmpty()) return null
+            return "Bàn $tableRaw"
+        }
+
+        fun updateOrderSummary() {
+            val tableLabel = tableLabelFromInput() ?: "Bàn ?"
+            dialogBinding.tvOrderSummary.text = String.format(
+                Locale.getDefault(),
+                "Hóa đơn %s • Tổng cộng: %,d đ (%d món)",
+                tableLabel,
+                totalAmount,
+                itemCount
+            )
+        }
+
+        dialogBinding.etTableNumber.setText("12")
+        updateOrderSummary()
+        dialogBinding.etTableNumber.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                dialogBinding.tilTableNumber.error = null
+                updateOrderSummary()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogBinding.root)
             .create()
 
-        dialogBinding.btnConfirmPayment.setOnClickListener {
+        // Đơn được tạo (PENDING) ngay khi khách yêu cầu mã QR; giỏ chỉ được xóa sau khi xác nhận thanh toán.
+        var createdOrder: Order? = null
+
+        fun createPendingOrderAndShowQr(): Order? {
+            createdOrder?.let { return it }
+            val tableLabel = tableLabelFromInput()
+            if (tableLabel == null) {
+                dialogBinding.tilTableNumber.error = "Vui lòng nhập số bàn trước khi thanh toán"
+                return null
+            }
             val customer = authService.getCurrentCustomer()
             val order = orderService.createOrder(
-                tableNumber = "Bàn 12",
+                tableNumber = tableLabel,
                 customerId = customer?.id,
                 cartItems = cartService.getCartItems()
             )
+            createdOrder = order
+
+            dialogBinding.tilTableNumber.isEnabled = false
+            dialogBinding.imgQrCode.setImageBitmap(QrBitmapGenerator.generateQrBitmap(order.qrPayloadUrl.orEmpty()))
+            dialogBinding.tvQrUrl.text = "Link VietQR: ${order.qrPayloadUrl}"
+            dialogBinding.tvQrUrl.visibility = View.VISIBLE
+            dialogBinding.btnOpenQrUrl.visibility = View.VISIBLE
+            dialogBinding.btnCreateOrderQr.text = "Đã tạo đơn ${order.orderId} ✓"
+            dialogBinding.btnCreateOrderQr.isEnabled = false
+            return order
+        }
+
+        dialogBinding.btnCreateOrderQr.setOnClickListener {
+            createPendingOrderAndShowQr()
+        }
+
+        dialogBinding.btnOpenQrUrl.setOnClickListener {
+            val url = createdOrder?.qrPayloadUrl
+            if (url.isNullOrBlank()) return@setOnClickListener
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(
+                    this,
+                    "Thiết bị không có trình duyệt để mở mã QR. Bạn có thể nhấn giữ link ở trên để sao chép.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
+        dialogBinding.btnConfirmPayment.setOnClickListener {
+            val order = createdOrder ?: createPendingOrderAndShowQr() ?: return@setOnClickListener
 
             cartService.clearCart()
             updateCartBadge()
@@ -280,7 +428,7 @@ class MainActivity : AppCompatActivity() {
 
             Toast.makeText(
                 this,
-                "Thanh toán thành công đơn ${order.orderId}! Bếp đang chế biến món ăn.",
+                "Thanh toán thành công đơn ${order.orderId} (${order.tableNumber})! Bếp đang chế biến món ăn.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -330,10 +478,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun showImageRecognitionDialog() {
         val sampleImages = arrayOf(
-            "Ảnh 1: Món Chiên Giòn (Chân giò, Tôm chiên)",
-            "Ảnh 2: Món Nướng Muối Ớt (Ếch nướng, Gà nướng, Tôm nướng)",
-            "Ảnh 3: Món Gỏi Khai Vị & Chân Gà Sốt Thái",
-            "Ảnh 4: Nước Ngọt Giải Khát (Coca, 7Up, Pepsi)"
+            "Chân Giò Muối Chiên Giòn (Món chiên đặc sản)",
+            "Ếch Nướng Muối Ớt Lá Chanh & Gà Nướng Mật Ong (Món nướng)",
+            "Chân Gà Sốt Thái & Gỏi Ngó Sen Tôm Thịt (Món phụ chua cay)",
+            "Nước Ngọt Giải Khát (Coca Cola, 7Up, Pepsi, Sting)",
+            "Lẩu Gà Lá Giang (Món lẩu đặc biệt)"
         )
 
         AlertDialog.Builder(this)
@@ -372,11 +521,18 @@ class MainActivity : AppCompatActivity() {
 
         dialogBinding.btnRegisterSubmit.setOnClickListener {
             val fullName = dialogBinding.etFullName.text.toString().trim()
-            val phoneOrEmail = dialogBinding.etPhone.text.toString().trim()
+            val phone = dialogBinding.etPhone.text.toString().trim()
+            val email = dialogBinding.etEmail.text.toString().trim()
             val password = dialogBinding.etPassword.text.toString().trim()
 
-            val email = if (phoneOrEmail.contains("@")) phoneOrEmail else ""
-            val phone = if (!phoneOrEmail.contains("@")) phoneOrEmail else "090" + System.currentTimeMillis() % 10000000
+            if (fullName.isEmpty()) {
+                Toast.makeText(this, "Vui lòng nhập họ và tên khi đăng ký!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (phone.length < 9) {
+                Toast.makeText(this, "Vui lòng nhập số điện thoại hợp lệ (tối thiểu 9 chữ số)!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             when (val result = authService.register(fullName, email, phone, password)) {
                 is AuthResult.Success -> {
@@ -392,8 +548,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialogBinding.btnSwitchToAdmin.setOnClickListener {
-            dialog.dismiss()
-            startActivity(Intent(this, AdminActivity::class.java))
+            val username = dialogBinding.etAdminUsername.text.toString().trim()
+            val password = dialogBinding.etAdminPassword.text.toString()
+
+            when (val result = authService.loginAdmin(username, password)) {
+                is AuthResult.Success -> {
+                    dialog.dismiss()
+                    Toast.makeText(
+                        this,
+                        "Đăng nhập quản trị thành công! Xin chào ${result.data.fullName}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    startActivity(Intent(this, AdminActivity::class.java))
+                }
+                is AuthResult.Error -> {
+                    Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         dialog.show()

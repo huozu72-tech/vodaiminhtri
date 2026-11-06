@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemAiRecommendationCardBinding
 import com.example.chieuthu3_ketthucmonhoc.domain.models.AIRecommendation
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem
 
 class AIRecommendationAdapter(
@@ -25,6 +26,7 @@ class AIRecommendationAdapter(
     override fun onBindViewHolder(holder: RecViewHolder, position: Int) {
         val item = recommendationList[position]
 
+        holder.binding.imgAiDish.setImageResource(FoodImageResolver.resolveImage(item.menuItem))
         holder.binding.tvAiReasonBadge.text = item.reason
         holder.binding.tvAiDishName.text = item.menuItem.name
         holder.binding.tvAiDishPrice.text = item.menuItem.formattedPrice

@@ -36,6 +36,14 @@ class AdminActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Cổng kiểm tra phiên quản trị: chỉ cho phép vào khi đã đăng nhập qua authService.loginAdmin()
+        if (authService.getCurrentAdmin() == null) {
+            Toast.makeText(this, "Bạn cần đăng nhập quản trị để truy cập màn hình này!", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
         enableEdgeToEdge()
         binding = ActivityAdminBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -123,6 +131,33 @@ class AdminActivity : AppCompatActivity() {
         binding.btnSwitchToUserApp.setOnClickListener {
             finish()
         }
+        binding.btnSwitchToUserApp.setOnLongClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Đăng Xuất Quản Trị")
+                .setMessage("Bạn có muốn đăng xuất tài khoản quản trị không?")
+                .setPositiveButton("Đăng Xuất") { _, _ ->
+                    authService.logout()
+                    Toast.makeText(this, "Đã đăng xuất quản trị!", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+                .setNegativeButton("Hủy", null)
+                .show()
+            true
+        }
+
+        binding.tvAdminGreeting.setOnClickListener {
+            val admin = authService.getCurrentAdmin()
+            AlertDialog.Builder(this)
+                .setTitle("Tài Khoản Quản Trị")
+                .setMessage("Đang đăng nhập: ${admin?.fullName ?: "Admin"}\nVai trò: ${admin?.role?.displayName ?: "Quản trị viên"}")
+                .setPositiveButton("Đăng Xuất") { _, _ ->
+                    authService.logout()
+                    Toast.makeText(this, "Đã đăng xuất quản trị!", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+                .setNegativeButton("Đóng", null)
+                .show()
+        }
 
         binding.btnAddProduct.setOnClickListener {
             showAddEditFoodDialog(null)
@@ -207,10 +242,14 @@ class AdminActivity : AppCompatActivity() {
             .setTitle("Xác Nhận Xóa")
             .setMessage("Bạn có chắc chắn muốn xóa món '${food.name}' khỏi thực đơn?")
             .setPositiveButton("Xóa") { _, _ ->
-                menuService.deleteMenuItem(food.id)
+                val deleted = menuService.deleteMenuItem(food.id)
                 adminFoodAdapter.updateList(menuService.getAllMenuItems())
                 refreshDashboardMetrics()
-                Toast.makeText(this, "Đã xóa món '${food.name}'!", Toast.LENGTH_SHORT).show()
+                if (deleted) {
+                    Toast.makeText(this, "Đã cập nhật thực đơn (món đã có trong đơn được ẩn để bảo vệ lịch sử)!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Không thể xóa món ăn!", Toast.LENGTH_SHORT).show()
+                }
             }
             .setNegativeButton("Hủy", null)
             .show()
@@ -234,10 +273,18 @@ class AdminActivity : AppCompatActivity() {
                     else -> OrderStatus.PENDING
                 }
 
-                orderService.updateOrderStatus(order.orderId, newStatus)
-                adminOrderAdapter.updateList(orderService.getAllOrders())
-                refreshDashboardMetrics()
-                Toast.makeText(this, "Đã chuyển đơn ${order.orderId} sang '${newStatus.displayName}'", Toast.LENGTH_SHORT).show()
+                val success = orderService.updateOrderStatus(order.orderId, newStatus)
+                if (success) {
+                    adminOrderAdapter.updateList(orderService.getAllOrders())
+                    refreshDashboardMetrics()
+                    Toast.makeText(this, "Đã chuyển đơn ${order.orderId} sang '${newStatus.displayName}'", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Không thể chuyển trạng thái từ '${order.status.displayName}' sang '${newStatus.displayName}'!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
             .setNegativeButton("Đóng", null)
             .show()

@@ -60,7 +60,7 @@ class AIRecommendationServiceImpl(
             }
 
             val finalReason = if (reasons.isNotEmpty()) reasons.joinToString(" • ") else "Món ăn nổi bật tại nhà hàng"
-            AIRecommendation(item, (score * 100).toInt() / 100.0, finalReason)
+            AIRecommendation(item, (score.coerceAtMost(MAX_SCORE) * 100).toInt() / 100.0, finalReason)
         }
 
         return scored.sortedByDescending { it.score }.take(limit)
@@ -86,7 +86,8 @@ class AIRecommendationServiceImpl(
             }
 
             score += 0.2 * (item.rating / 5.0)
-            AIRecommendation(item, (score * 100).toInt() / 100.0, reasons.joinToString(" • "))
+            val finalReason = if (reasons.isNotEmpty()) reasons.joinToString(" • ") else "Món được khách yêu thích tại nhà hàng"
+            AIRecommendation(item, (score.coerceAtMost(MAX_SCORE) * 100).toInt() / 100.0, finalReason)
         }
 
         return scored.sortedByDescending { it.score }.take(limit)
@@ -104,5 +105,10 @@ class AIRecommendationServiceImpl(
                     reason = "Món ăn bán chạy & được yêu thích nhất (⭐ ${it.rating})"
                 )
             }
+    }
+
+    private companion object {
+        /** Thang điểm hiển thị là 0..1 — tổng trọng số thô có thể vượt 1.0 nên phải chặn lại. */
+        const val MAX_SCORE = 1.0
     }
 }

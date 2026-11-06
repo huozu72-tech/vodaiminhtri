@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.chieuthu3_ketthucmonhoc.R
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemAdminFoodBinding
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem
 
 class AdminFoodAdapter(
@@ -29,6 +30,7 @@ class AdminFoodAdapter(
         val food = foodList[position]
         val context = holder.itemView.context
 
+        holder.binding.imgAdminFood.setImageResource(FoodImageResolver.resolveImage(food))
         holder.binding.tvAdminFoodName.text = food.name
         holder.binding.tvAdminFoodCategory.text = food.category.displayName
         holder.binding.tvAdminFoodPrice.text = food.formattedPrice

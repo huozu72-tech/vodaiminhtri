@@ -19,6 +19,15 @@
         android:orientation="horizontal"
         android:padding="8dp">
 
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imgSuggestFood"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_food_placeholder"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Small" />
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"

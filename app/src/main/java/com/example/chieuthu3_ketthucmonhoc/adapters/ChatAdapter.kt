@@ -11,6 +11,7 @@ import com.example.chieuthu3_ketthucmonhoc.R
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemChatMessageBinding
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemChatSuggestionBinding
 import com.example.chieuthu3_ketthucmonhoc.domain.models.ChatMessage
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem
 
 class ChatAdapter(
@@ -55,6 +56,7 @@ class ChatAdapter(
                 val inflater = LayoutInflater.from(context)
                 for (item in message.suggestedItems) {
                     val itemBinding = ItemChatSuggestionBinding.inflate(inflater, holder.binding.layoutSuggestedItems, false)
+                    itemBinding.imgSuggestFood.setImageResource(FoodImageResolver.resolveImage(item))
                     itemBinding.tvSuggestName.text = item.name
                     itemBinding.tvSuggestPrice.text = item.formattedPrice
                     itemBinding.btnSuggestAdd.setOnClickListener {

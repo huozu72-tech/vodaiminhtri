@@ -24,7 +24,8 @@ class OrderRepositoryImpl(
     }
 
     override fun saveOrder(order: Order): Order {
-        val existingIdx = orderList.indexOfFirst { it.orderId == order.orderId }
+        // Đồng bộ với getOrderById: so sánh không phân biệt hoa/thường để mã khác case vẫn là cập nhật, không tạo đơn trùng
+        val existingIdx = orderList.indexOfFirst { it.orderId.equals(order.orderId, ignoreCase = true) }
         if (existingIdx >= 0) {
             orderList[existingIdx] = order
         } else {

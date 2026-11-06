@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.chieuthu3_ketthucmonhoc.R
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemFoodCardBinding
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem
 
 class FoodAdapter(
@@ -27,6 +28,7 @@ class FoodAdapter(
     override fun onBindViewHolder(holder: FoodViewHolder, position: Int) {
         val item = foodList[position]
 
+        holder.binding.imgFood.setImageResource(FoodImageResolver.resolveImage(item))
         holder.binding.tvFoodName.text = item.name
         holder.binding.tvFoodDesc.text = item.description
         holder.binding.tvFoodPrice.text = item.formattedPrice

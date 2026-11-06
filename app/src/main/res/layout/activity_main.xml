@@ -23,37 +23,41 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingHorizontal="14dp"
-            android:paddingVertical="12dp">
+            android:paddingVertical="10dp">
 
             <!-- Logo & Brand Name -->
             <ImageView
-                android:layout_width="26dp"
-                android:layout_height="26dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
                 android:contentDescription="Logo"
-                android:src="@drawable/ic_restaurant" />
+                android:src="@drawable/logo_app" />
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_weight="1"
+                android:singleLine="true"
                 android:text="AI Restaurant"
                 android:textColor="@color/primary_orange"
-                android:textSize="17sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <!-- Header Buttons: Cart, Payment, User -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Header Buttons: Cart, User -->
             <LinearLayout
                 android:id="@+id/btnHeaderCart"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
                 android:background="@drawable/bg_header_button"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="6dp">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="10dp">
 
                 <ImageView
                     android:layout_width="16dp"
@@ -65,34 +69,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="Giỏ Hàng (0)"
-                    android:textColor="@color/primary_orange"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/btnHeaderPayment"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_header_button"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="6dp">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/ic_payment" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:text="Thanh Toán"
+                    android:text="Giỏ (0)"
                     android:textColor="@color/primary_orange"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -101,16 +78,16 @@
             <LinearLayout
                 android:id="@+id/btnHeaderUser"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_header_button"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="6dp">
+                android:gravity="center_vertical"
+                android:paddingHorizontal="10dp">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:src="@drawable/ic_user" />
 
                 <TextView
@@ -118,6 +95,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:maxWidth="110dp"
                     android:text="Đăng Nhập"
                     android:textColor="@color/black"
                     android:textSize="12sp"
@@ -358,7 +338,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="72dp"
+        android:layout_marginBottom="96dp"
         android:contentDescription="AI Assistant"
         android:src="@drawable/ic_robot"
         app:backgroundTint="@color/primary_orange"

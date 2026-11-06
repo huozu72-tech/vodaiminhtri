@@ -1,5 +1,6 @@
 package com.example.chieuthu3_ketthucmonhoc.data.datasource
 
+import com.example.chieuthu3_ketthucmonhoc.R
 import com.example.chieuthu3_ketthucmonhoc.domain.models.AdminAccount
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Customer
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory
@@ -24,6 +25,13 @@ object InitialDataFactory {
             ),
             AdminAccount(
                 id = 2,
+                username = "0900000000",
+                passwordHash = SecurityHelper.hashPassword("admin123"),
+                fullName = "Quản Trị Viên (SĐT)",
+                role = UserRole.SUPER_ADMIN
+            ),
+            AdminAccount(
+                id = 3,
                 username = "manager",
                 passwordHash = SecurityHelper.hashPassword("manager123"),
                 fullName = "Quản Lý Nhà Hàng",
@@ -55,7 +63,8 @@ object InitialDataFactory {
                 category = FoodCategory.MAIN_DISH,
                 tasteAttributes = listOf(TasteAttribute.CRISPY, TasteAttribute.SAVORY, TasteAttribute.FRIED),
                 rating = 4.9,
-                orderCount = 45
+                orderCount = 45,
+                imageResId = R.drawable.food_chan_gio_muoi_chien_gion
             ),
             MenuItem(
                 id = 2,
@@ -65,7 +74,8 @@ object InitialDataFactory {
                 category = FoodCategory.MAIN_DISH,
                 tasteAttributes = listOf(TasteAttribute.SPICY, TasteAttribute.SAVORY, TasteAttribute.GRILLED),
                 rating = 4.7,
-                orderCount = 38
+                orderCount = 38,
+                imageResId = R.drawable.food_ech_nuong_muoi_ot_la_chanh
             ),
             MenuItem(
                 id = 3,
@@ -75,7 +85,8 @@ object InitialDataFactory {
                 category = FoodCategory.MAIN_DISH,
                 tasteAttributes = listOf(TasteAttribute.SWEET, TasteAttribute.SAVORY, TasteAttribute.GRILLED),
                 rating = 4.9,
-                orderCount = 62
+                orderCount = 62,
+                imageResId = R.drawable.food_ga_nuong_mat_ong
             ),
             MenuItem(
                 id = 4,
@@ -85,7 +96,8 @@ object InitialDataFactory {
                 category = FoodCategory.MAIN_DISH,
                 tasteAttributes = listOf(TasteAttribute.SAVORY, TasteAttribute.CRISPY),
                 rating = 4.8,
-                orderCount = 50
+                orderCount = 50,
+                imageResId = R.drawable.food_ga_quay_banh_bao
             ),
             MenuItem(
                 id = 5,
@@ -95,7 +107,8 @@ object InitialDataFactory {
                 category = FoodCategory.MAIN_DISH,
                 tasteAttributes = listOf(TasteAttribute.CRISPY, TasteAttribute.SAVORY, TasteAttribute.FRIED),
                 rating = 4.7,
-                orderCount = 41
+                orderCount = 41,
+                imageResId = R.drawable.food_tom_chien_xu
             ),
             MenuItem(
                 id = 6,
@@ -105,7 +118,8 @@ object InitialDataFactory {
                 category = FoodCategory.MAIN_DISH,
                 tasteAttributes = listOf(TasteAttribute.SPICY, TasteAttribute.SAVORY, TasteAttribute.GRILLED),
                 rating = 4.8,
-                orderCount = 53
+                orderCount = 53,
+                imageResId = R.drawable.food_tom_nuong_muoi_ot
             ),
             MenuItem(
                 id = 7,
@@ -115,7 +129,8 @@ object InitialDataFactory {
                 category = FoodCategory.SIDE_DISH,
                 tasteAttributes = listOf(TasteAttribute.SOUR, TasteAttribute.SPICY, TasteAttribute.REFRESHING, TasteAttribute.CRISPY),
                 rating = 4.8,
-                orderCount = 70
+                orderCount = 70,
+                imageResId = R.drawable.food_chan_ga_sa_tac
             ),
             MenuItem(
                 id = 8,
@@ -125,7 +140,8 @@ object InitialDataFactory {
                 category = FoodCategory.SIDE_DISH,
                 tasteAttributes = listOf(TasteAttribute.SPICY, TasteAttribute.SOUR, TasteAttribute.SWEET),
                 rating = 4.9,
-                orderCount = 82
+                orderCount = 82,
+                imageResId = R.drawable.food_chan_ga_sot_thai
             ),
             MenuItem(
                 id = 9,
@@ -135,7 +151,8 @@ object InitialDataFactory {
                 category = FoodCategory.SIDE_DISH,
                 tasteAttributes = listOf(TasteAttribute.SOUR, TasteAttribute.SWEET, TasteAttribute.REFRESHING, TasteAttribute.CRISPY),
                 rating = 4.6,
-                orderCount = 33
+                orderCount = 33,
+                imageResId = R.drawable.food_goi_ngo_sen
             ),
             MenuItem(
                 id = 10,
@@ -145,7 +162,8 @@ object InitialDataFactory {
                 category = FoodCategory.SIDE_DISH,
                 tasteAttributes = listOf(TasteAttribute.SOUR, TasteAttribute.SPICY, TasteAttribute.CRISPY),
                 rating = 4.7,
-                orderCount = 29
+                orderCount = 29,
+                imageResId = R.drawable.food_goi_xoai_tom_kho
             ),
             MenuItem(
                 id = 11,
@@ -155,7 +173,8 @@ object InitialDataFactory {
                 category = FoodCategory.SIDE_DISH,
                 tasteAttributes = listOf(TasteAttribute.SOUR, TasteAttribute.SPICY, TasteAttribute.SAVORY),
                 rating = 4.8,
-                orderCount = 44
+                orderCount = 44,
+                imageResId = R.drawable.food_goi_xoai_tom_thit
             ),
             MenuItem(
                 id = 12,
@@ -165,7 +184,8 @@ object InitialDataFactory {
                 category = FoodCategory.BEVERAGE,
                 tasteAttributes = listOf(TasteAttribute.SWEET, TasteAttribute.REFRESHING),
                 rating = 4.9,
-                orderCount = 110
+                orderCount = 110,
+                imageResId = R.drawable.food_7up
             ),
             MenuItem(
                 id = 13,
@@ -175,7 +195,8 @@ object InitialDataFactory {
                 category = FoodCategory.BEVERAGE,
                 tasteAttributes = listOf(TasteAttribute.SWEET, TasteAttribute.REFRESHING),
                 rating = 4.9,
-                orderCount = 135
+                orderCount = 135,
+                imageResId = R.drawable.food_cocacola
             ),
             MenuItem(
                 id = 14,
@@ -185,7 +206,8 @@ object InitialDataFactory {
                 category = FoodCategory.BEVERAGE,
                 tasteAttributes = listOf(TasteAttribute.SWEET, TasteAttribute.REFRESHING),
                 rating = 4.8,
-                orderCount = 98
+                orderCount = 98,
+                imageResId = R.drawable.food_pepsi
             ),
             MenuItem(
                 id = 15,
@@ -195,7 +217,19 @@ object InitialDataFactory {
                 category = FoodCategory.BEVERAGE,
                 tasteAttributes = listOf(TasteAttribute.SWEET, TasteAttribute.REFRESHING),
                 rating = 4.8,
-                orderCount = 88
+                orderCount = 88,
+                imageResId = R.drawable.food_sting
+            ),
+            MenuItem(
+                id = 16,
+                name = "Lẩu Gà Lá Giang",
+                description = "Lẩu gà lá giang chua cay đậm đà, thịt gà ta dai ngon nước lẩu thanh tao",
+                price = 180000,
+                category = FoodCategory.MAIN_DISH,
+                tasteAttributes = listOf(TasteAttribute.SOUR, TasteAttribute.SAVORY, TasteAttribute.SPICY),
+                rating = 4.9,
+                orderCount = 65,
+                imageResId = R.drawable.food_lau_ga_la_giang
             )
         )
     }
