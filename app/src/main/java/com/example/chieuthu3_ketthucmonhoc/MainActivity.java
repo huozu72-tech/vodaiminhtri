@@ -11,9 +11,14 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,11 +50,18 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.CartItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Customer;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.LoyaltyProfile;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.PromoVoucher;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.RestaurantTable;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.SmartComboProposal;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.TableServiceRequest;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.TableStatus;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
+import com.example.chieuthu3_ketthucmonhoc.utils.VietnameseTelexHelper;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AuthResult;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IAIChatbotService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IAIRecommendationService;
@@ -57,6 +69,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.services.IAuthenticationServic
 import com.example.chieuthu3_ketthucmonhoc.domain.services.ICartService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IMenuService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IOrderService;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.IRestaurantOperationsService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.QrBitmapGenerator;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
@@ -78,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private IAuthenticationService authService;
     private IAIRecommendationService aiRecService;
     private IAIChatbotService aiChatService;
+    private IRestaurantOperationsService opsService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
         authService = AppServiceLocator.getAuthService();
         aiRecService = AppServiceLocator.getAiRecommendationService();
         aiChatService = AppServiceLocator.getAiChatbotService();
+        opsService = AppServiceLocator.getOperationsService();
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -106,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
         setupListeners();
         updateCartBadge();
         updateUserHeader();
+        updateTableButtonLabel();
     }
 
     @Override
@@ -115,6 +131,15 @@ public class MainActivity extends AppCompatActivity {
         refreshAiRecommendations();
         updateCartBadge();
         updateUserHeader();
+        updateTableButtonLabel();
+    }
+
+    private void updateTableButtonLabel() {
+        String tbl = opsService.getSelectedTableNumber();
+        String label = (tbl.toLowerCase().startsWith("bàn") || tbl.toUpperCase().startsWith("VIP"))
+                ? tbl
+                : "Bàn " + tbl;
+        binding.btnQuickTableMap.setText("🪑 Sơ Đồ Bàn (" + label + ")");
     }
 
     private void setupFoodGrid() {
@@ -166,19 +191,28 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             int checkedId = binding.chipGroupCategory.getCheckedChipId();
-            FoodCategory currentCategory = null;
-            if (checkedId == R.id.chipMain) {
-                currentCategory = FoodCategory.MAIN_DISH;
-            } else if (checkedId == R.id.chipSide) {
-                currentCategory = FoodCategory.SIDE_DISH;
-            } else if (checkedId == R.id.chipDrink) {
-                currentCategory = FoodCategory.BEVERAGE;
-            }
-
-            if (currentCategory != null) {
-                items = new ArrayList<>(menuService.getMenuItemsByCategory(currentCategory));
+            if (checkedId == R.id.chipFavorites) {
+                items = new ArrayList<>();
+                for (MenuItem fav : opsService.getFavoriteDishes()) {
+                    if (fav.isAvailable()) {
+                        items.add(fav);
+                    }
+                }
             } else {
-                items = new ArrayList<>(menuService.getAvailableMenuItems());
+                FoodCategory currentCategory = null;
+                if (checkedId == R.id.chipMain) {
+                    currentCategory = FoodCategory.MAIN_DISH;
+                } else if (checkedId == R.id.chipSide) {
+                    currentCategory = FoodCategory.SIDE_DISH;
+                } else if (checkedId == R.id.chipDrink) {
+                    currentCategory = FoodCategory.BEVERAGE;
+                }
+
+                if (currentCategory != null) {
+                    items = new ArrayList<>(menuService.getMenuItemsByCategory(currentCategory));
+                } else {
+                    items = new ArrayList<>(menuService.getAvailableMenuItems());
+                }
             }
         }
 
@@ -216,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSearchAndFilters() {
+        VietnameseTelexHelper.attachToEditText(binding.etSearchFood, null);
         binding.etSearchFood.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -245,6 +280,11 @@ public class MainActivity extends AppCompatActivity {
     private void setupListeners() {
         binding.btnHeaderCart.setOnClickListener(v -> showCartBottomSheet());
         binding.btnHeaderUser.setOnClickListener(v -> handleUserClick());
+
+        binding.btnQuickTableMap.setOnClickListener(v -> showTableReservationDialog());
+        binding.btnQuickAiCombo.setOnClickListener(v -> showAiSmartComboBuilderDialog());
+        binding.btnQuickVouchers.setOnClickListener(v -> showVoucherWalletDialog(null));
+        binding.btnQuickCallWaiter.setOnClickListener(v -> showCallWaiterDialog());
 
         binding.btnAiUploadPhoto.setOnClickListener(v -> showImageRecognitionDialog());
         binding.fabAiChatbot.setOnClickListener(v -> showAiChatDialog());
@@ -290,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Xem chi tiết món ăn (Hình 10 Activity Diagram) + Đánh giá món ăn (UC-07) + Món tương tự AI
+     * Xem chi tiết món ăn (Hình 10 Activity Diagram) + Đánh giá món ăn (UC-07) + Dinh dưỡng Calo + Yêu thích + Món tương tự AI
      */
     private void showFoodDetailDialog(MenuItem initialItem) {
         MenuItem latest = menuService.getMenuItemById(initialItem.getId());
@@ -313,6 +353,17 @@ public class MainActivity extends AppCompatActivity {
                     String.format(Locale.US, "⭐ %.1f / 5.0 • 🔥 Đã phục vụ %d phần", dish.getRating(), dish.getOrderCount())
             );
             dialogBinding.tvDetailFoodDesc.setText(dish.getDescription());
+
+            int kcal = aiRecService.estimateDishCalories(dish);
+            String servingHint = dish.getCategory() == FoodCategory.MAIN_DISH
+                    ? "Khẩu phần 2–3 người"
+                    : (dish.getCategory() == FoodCategory.SIDE_DISH ? "Khẩu phần 1–2 người" : "Giải khát cá nhân");
+            dialogBinding.tvDetailNutritionInfo.setText(
+                    String.format(Locale.getDefault(), "🥗 Dinh dưỡng ước tính: ~%d kcal/phần • %s", kcal, servingHint)
+            );
+
+            boolean isFav = opsService.isFavoriteDish(dish.getId());
+            dialogBinding.btnToggleFavorite.setText(isFav ? "❤️ Đã thích" : "🤍 Yêu thích");
 
             List<TasteAttribute> tastes = dish.getTasteAttributes();
             if (tastes != null && !tastes.isEmpty()) {
@@ -337,6 +388,18 @@ public class MainActivity extends AppCompatActivity {
         bindDishData.run();
 
         dialogBinding.btnCloseDetail.setOnClickListener(v -> dialog.dismiss());
+
+        dialogBinding.btnToggleFavorite.setOnClickListener(v -> {
+            MenuItem dish = dishHolder[0];
+            boolean nowFav = opsService.toggleFavoriteDish(dish.getId());
+            bindDishData.run();
+            refreshFoodList();
+            Toast.makeText(
+                    MainActivity.this,
+                    nowFav ? "❤️ Đã lưu '" + dish.getName() + "' vào danh sách Yêu Thích!" : "Đã bỏ '" + dish.getName() + "' khỏi Yêu Thích",
+                    Toast.LENGTH_SHORT
+            ).show();
+        });
 
         dialogBinding.btnDetailMinus.setOnClickListener(v -> {
             if (quantityHolder[0] > 1) {
@@ -439,6 +502,427 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    /**
+     * Tính năng mới 1: Sơ đồ bàn trực quan & Đặt bàn trước (Table Floor Map & Reservation)
+     */
+    private void showTableReservationDialog() {
+        List<RestaurantTable> allTables = opsService.getAllTables();
+        ScrollView scrollView = new ScrollView(this);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(36, 24, 36, 24);
+        scrollView.addView(container);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("🪑 Sơ Đồ Bàn & Đặt Chỗ Trước")
+                .setView(scrollView)
+                .setNegativeButton("Đóng", null)
+                .create();
+
+        Runnable renderTables = new Runnable() {
+            @Override
+            public void run() {
+                container.removeAllViews();
+                TextView tvHeader = new TextView(MainActivity.this);
+                tvHeader.setText(
+                        "📍 Bàn đang chọn của bạn: Bàn " + opsService.getSelectedTableNumber()
+                                + "\nChạm vào bàn trống để đổi bàn ngồi hoặc đặt lịch hẹn trước:"
+                );
+                tvHeader.setTextSize(12f);
+                tvHeader.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.gray_text));
+                tvHeader.setPadding(0, 0, 0, 16);
+                container.addView(tvHeader);
+
+                for (RestaurantTable table : opsService.getAllTables()) {
+                    LinearLayout card = new LinearLayout(MainActivity.this);
+                    card.setOrientation(LinearLayout.VERTICAL);
+                    card.setPadding(24, 18, 24, 18);
+                    card.setBackgroundResource(R.drawable.bg_card_food);
+
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    lp.setMargins(0, 8, 0, 8);
+                    card.setLayoutParams(lp);
+
+                    String statusBadge;
+                    String statusColor;
+                    if (table.getStatus() == TableStatus.AVAILABLE) {
+                        statusBadge = "🟢 " + table.getStatus().getDisplayName();
+                        statusColor = "#15803D";
+                    } else if (table.getStatus() == TableStatus.RESERVED) {
+                        statusBadge = "🟡 " + table.getStatus().getDisplayName() + " (" + table.getReservationTime() + ")";
+                        statusColor = "#D97706";
+                    } else {
+                        statusBadge = "🔴 " + table.getStatus().getDisplayName();
+                        statusColor = "#DC2626";
+                    }
+
+                    TextView tvTitle = new TextView(MainActivity.this);
+                    tvTitle.setText("🪑 " + table.getTableNumber() + " • " + table.getZone() + " (Sức chứa: " + table.getCapacity() + " khách)");
+                    tvTitle.setTextSize(13f);
+                    tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+                    tvTitle.setTextColor(Color.BLACK);
+
+                    TextView tvStatus = new TextView(MainActivity.this);
+                    String detail = statusBadge;
+                    if (!table.getReservedByName().isEmpty()) {
+                        detail += " • Khách: " + table.getReservedByName();
+                    }
+                    if (!table.getNote().isEmpty()) {
+                        detail += " (" + table.getNote() + ")";
+                    }
+                    tvStatus.setText(detail);
+                    tvStatus.setTextSize(11f);
+                    tvStatus.setTextColor(Color.parseColor(statusColor));
+                    tvStatus.setPadding(0, 4, 0, 8);
+
+                    LinearLayout btnRow = new LinearLayout(MainActivity.this);
+                    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+
+                    MaterialButton btnSitHere = new MaterialButton(MainActivity.this);
+                    btnSitHere.setText("📍 Chọn Ngồi Bàn Này");
+                    btnSitHere.setAllCaps(false);
+                    btnSitHere.setTextSize(10f);
+                    btnSitHere.setOnClickListener(v -> {
+                        opsService.occupyTable(table.getTableNumber(), 2);
+                        updateTableButtonLabel();
+                        Toast.makeText(MainActivity.this, "✅ Đã chọn phục vụ tại " + table.getTableNumber(), Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    });
+
+                    MaterialButton btnReserve = new MaterialButton(MainActivity.this);
+                    btnReserve.setText("📅 Đặt Trước");
+                    btnReserve.setAllCaps(false);
+                    btnReserve.setTextSize(10f);
+                    LinearLayout.LayoutParams resParams = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    resParams.setMargins(12, 0, 0, 0);
+                    btnReserve.setLayoutParams(resParams);
+                    btnReserve.setOnClickListener(v -> {
+                        showReserveTableFormDialog(table, this);
+                    });
+
+                    btnRow.addView(btnSitHere);
+                    btnRow.addView(btnReserve);
+
+                    card.addView(tvTitle);
+                    card.addView(tvStatus);
+                    card.addView(btnRow);
+                    container.addView(card);
+                }
+            }
+        };
+
+        renderTables.run();
+        dialog.show();
+    }
+
+    private void showReserveTableFormDialog(RestaurantTable table, Runnable onReservedCallback) {
+        LinearLayout form = new LinearLayout(this);
+        form.setOrientation(LinearLayout.VERTICAL);
+        form.setPadding(42, 24, 42, 12);
+
+        Customer currentCustomer = authService.getCurrentCustomer();
+
+        EditText etName = new EditText(this);
+        etName.setHint("Họ tên người đặt bàn");
+        if (currentCustomer != null) etName.setText(currentCustomer.getFullName());
+
+        EditText etPhone = new EditText(this);
+        etPhone.setHint("Số điện thoại liên hệ");
+        if (currentCustomer != null) etPhone.setText(currentCustomer.getPhoneNumber());
+
+        EditText etTime = new EditText(this);
+        etTime.setHint("Khung giờ nhận bàn (VD: 19:00 tối nay)");
+        etTime.setText("19:00");
+
+        EditText etGuests = new EditText(this);
+        etGuests.setHint("Số lượng khách (VD: " + table.getCapacity() + ")");
+        etGuests.setText(String.valueOf(table.getCapacity()));
+
+        EditText etNote = new EditText(this);
+        etNote.setHint("Ghi chú (Tiệc sinh nhật, ghế trẻ em, gần cửa sổ...)");
+
+        form.addView(etName);
+        form.addView(etPhone);
+        form.addView(etTime);
+        form.addView(etGuests);
+        form.addView(etNote);
+
+        new AlertDialog.Builder(this)
+                .setTitle("📅 Đặt Trước " + table.getTableNumber() + " (" + table.getZone() + ")")
+                .setView(form)
+                .setPositiveButton("✅ Xác Nhận Đặt Bàn", (d, w) -> {
+                    String name = etName.getText().toString().trim();
+                    String phone = etPhone.getText().toString().trim();
+                    String time = etTime.getText().toString().trim();
+                    int guests = table.getCapacity();
+                    try {
+                        guests = Integer.parseInt(etGuests.getText().toString().trim());
+                    } catch (NumberFormatException ignored) {}
+                    String note = etNote.getText().toString().trim();
+
+                    opsService.reserveTable(
+                            table.getTableNumber(),
+                            name.isEmpty() ? "Khách đặt trước" : name,
+                            phone.isEmpty() ? "0901234567" : phone,
+                            time.isEmpty() ? "19:00" : time,
+                            guests,
+                            note
+                    );
+                    if (onReservedCallback != null) onReservedCallback.run();
+                    Toast.makeText(
+                            MainActivity.this,
+                            "🎉 Đã giữ chỗ " + table.getTableNumber() + " lúc " + time + " thành công!",
+                            Toast.LENGTH_LONG
+                    ).show();
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    /**
+     * Tính năng mới 2: AI Thiết kế Mâm cơm / Combo tự động theo Số người & Ngân sách
+     */
+    private void showAiSmartComboBuilderDialog() {
+        String[] presetConfigs = new String[]{
+                "👫 2 Người • Ngân sách ~200.000 đ • Cân bằng Đủ vị",
+                "👨‍👩‍👧‍👦 4 Người • Ngân sách ~400.000 đ • Đặc sản Bán chạy",
+                "🌶️ 4 Người • Ngân sách ~350.000 đ • Gu Cay nồng Đậm đà",
+                "🍻 6 Người • Ngân sách ~600.000 đ • Gu Chiên giòn & Nướng",
+                "🥗 3 Người • Ngân sách ~250.000 đ • Gu Thanh mát Chống ngấy"
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle("🍱 AI Thiết Kế Mâm Cơm Theo Ngân Sách")
+                .setItems(presetConfigs, (d, which) -> {
+                    int guests = 2;
+                    long budget = 200000L;
+                    String style = "ALL";
+                    if (which == 1) { guests = 4; budget = 400000L; style = "ALL"; }
+                    else if (which == 2) { guests = 4; budget = 350000L; style = "SPICY"; }
+                    else if (which == 3) { guests = 6; budget = 600000L; style = "CRISPY"; }
+                    else if (which == 4) { guests = 3; budget = 250000L; style = "LIGHT"; }
+
+                    showGeneratedComboProposalsDialog(guests, budget, style);
+                })
+                .setNegativeButton("Đóng", null)
+                .show();
+    }
+
+    private void showGeneratedComboProposalsDialog(int guests, long budget, String style) {
+        List<SmartComboProposal> proposals = aiRecService.generateSmartCombos(guests, budget, style);
+        ScrollView scrollView = new ScrollView(this);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(36, 24, 36, 24);
+        scrollView.addView(container);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("✨ AI Đề Xuất Mâm Cơm (" + guests + " người)")
+                .setView(scrollView)
+                .setNegativeButton("Đóng", null)
+                .create();
+
+        for (SmartComboProposal combo : proposals) {
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setPadding(24, 20, 24, 20);
+            card.setBackgroundResource(R.drawable.bg_card_food);
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            lp.setMargins(0, 10, 0, 10);
+            card.setLayoutParams(lp);
+
+            TextView tvTitle = new TextView(this);
+            tvTitle.setText(combo.getComboName());
+            tvTitle.setTextSize(14f);
+            tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+            tvTitle.setTextColor(ContextCompat.getColor(this, R.color.primary_orange));
+
+            TextView tvRationale = new TextView(this);
+            tvRationale.setText(combo.getRationale());
+            tvRationale.setTextSize(11f);
+            tvRationale.setTextColor(ContextCompat.getColor(this, R.color.gray_text));
+            tvRationale.setPadding(0, 4, 0, 8);
+
+            StringBuilder dishesSb = new StringBuilder();
+            for (CartItem ci : combo.getItems()) {
+                dishesSb.append(" • ").append(ci.getMenuItem().getName())
+                        .append(" ×").append(ci.getQuantity())
+                        .append(" (").append(String.format(Locale.getDefault(), "%,d đ", ci.getSubtotal())).append(")\n");
+            }
+            dishesSb.append(String.format(
+                    Locale.getDefault(),
+                    "🥗 Tổng năng lượng: ~%d kcal • 💰 Tổng giá trị: %,d đ\n🎟️ Tặng kèm mã CHIEUTHU3 giảm ngay tới 15%%!",
+                    combo.getTotalCaloriesKcal(),
+                    combo.getOriginalTotal()
+            ));
+
+            TextView tvDishes = new TextView(this);
+            tvDishes.setText(dishesSb.toString().trim());
+            tvDishes.setTextSize(12f);
+            tvDishes.setTextColor(Color.BLACK);
+
+            MaterialButton btnApplyCombo = new MaterialButton(this);
+            btnApplyCombo.setText("🛒 Thêm Trọn Bộ Mâm Cơm Vào Giỏ");
+            btnApplyCombo.setAllCaps(false);
+            btnApplyCombo.setTextSize(12f);
+            btnApplyCombo.setOnClickListener(v -> {
+                for (CartItem ci : combo.getItems()) {
+                    CartItem added = cartService.addItem(ci.getMenuItem(), ci.getQuantity());
+                    if (!ci.getNote().isEmpty()) {
+                        cartService.updateNote(added.getMenuItem().getId(), ci.getNote());
+                    }
+                }
+                if (cartService.getAppliedVoucherCode().isEmpty()) {
+                    cartService.setAppliedVoucherCode("CHIEUTHU3");
+                }
+                updateCartBadge();
+                refreshAiRecommendations();
+                dialog.dismiss();
+                Toast.makeText(
+                        MainActivity.this,
+                        "🎉 Đã thêm '" + combo.getComboName() + "' và kích hoạt mã giảm giá CHIEUTHU3!",
+                        Toast.LENGTH_LONG
+                ).show();
+                showCartBottomSheet();
+            });
+
+            card.addView(tvTitle);
+            card.addView(tvRationale);
+            card.addView(tvDishes);
+            card.addView(btnApplyCombo);
+            container.addView(card);
+        }
+
+        dialog.show();
+    }
+
+    /**
+     * Tính năng mới 3: Kho Mã Giảm Giá / Voucher Khuyến Mãi
+     */
+    private void showVoucherWalletDialog(Runnable onVoucherChanged) {
+        List<PromoVoucher> vouchers = opsService.getActiveVouchers();
+        long subtotal = cartService.getTotalAmount();
+        int itemCount = cartService.getTotalItemCount();
+
+        ScrollView scrollView = new ScrollView(this);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(36, 24, 36, 24);
+        scrollView.addView(container);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("🎟️ Kho Voucher & Ưu Đãi Nhà Hàng")
+                .setView(scrollView)
+                .setNeutralButton("Bỏ dùng mã", (d, w) -> {
+                    cartService.setAppliedVoucherCode("");
+                    if (onVoucherChanged != null) onVoucherChanged.run();
+                    Toast.makeText(MainActivity.this, "Đã gỡ mã giảm giá khỏi giỏ hàng", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Đóng", null)
+                .create();
+
+        for (PromoVoucher v : vouchers) {
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setPadding(24, 18, 24, 18);
+            card.setBackgroundResource(R.drawable.bg_card_food);
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            lp.setMargins(0, 8, 0, 8);
+            card.setLayoutParams(lp);
+
+            boolean eligible = v.isEligible(subtotal, itemCount);
+            long estDiscount = v.calculateDiscount(subtotal, itemCount);
+
+            TextView tvCode = new TextView(this);
+            tvCode.setText("🏷️ [" + v.getCode() + "] " + v.getTitle());
+            tvCode.setTextSize(13f);
+            tvCode.setTypeface(null, android.graphics.Typeface.BOLD);
+            tvCode.setTextColor(Color.parseColor("#DC2626"));
+
+            TextView tvDesc = new TextView(this);
+            String statusLine = eligible
+                    ? String.format(Locale.getDefault(), "✅ Đủ điều kiện • Giảm ngay: -%,d đ", estDiscount)
+                    : String.format(Locale.getDefault(), "ℹ️ Cần đơn tối thiểu %,d đ (%d món)", v.getMinOrderAmount(), v.getMinItemsCount());
+            tvDesc.setText(v.getDescription() + "\n" + statusLine);
+            tvDesc.setTextSize(11f);
+            tvDesc.setTextColor(Color.BLACK);
+            tvDesc.setPadding(0, 4, 0, 8);
+
+            MaterialButton btnUse = new MaterialButton(this);
+            boolean isCurrent = v.getCode().equalsIgnoreCase(cartService.getAppliedVoucherCode());
+            btnUse.setText(isCurrent ? "✔ Đang Áp Dụng Mã Này" : "Áp Dụng Mã " + v.getCode());
+            btnUse.setAllCaps(false);
+            btnUse.setTextSize(11f);
+            btnUse.setOnClickListener(view -> {
+                cartService.setAppliedVoucherCode(v.getCode());
+                if (onVoucherChanged != null) onVoucherChanged.run();
+                dialog.dismiss();
+                Toast.makeText(
+                        MainActivity.this,
+                        "🎟️ Đã chọn mã giảm giá " + v.getCode() + " (" + v.getTitle() + ")!",
+                        Toast.LENGTH_SHORT
+                ).show();
+            });
+
+            card.addView(tvCode);
+            card.addView(tvDesc);
+            card.addView(btnUse);
+            container.addView(card);
+        }
+
+        dialog.show();
+    }
+
+    /**
+     * Tính năng mới 4: Gọi Nhân Viên / Hỗ Trợ Tại Bàn 1 Chạm (Smart Waiter Call)
+     */
+    private void showCallWaiterDialog() {
+        String currentTable = "Bàn " + opsService.getSelectedTableNumber();
+        String[] serviceOptions = new String[]{
+                "🧊 Thêm đá viên / Thêm trà đá miễn phí",
+                "🥣 Thêm chén, đũa, muỗng, khăn giấy ướt",
+                "🌶️ Thêm gia vị (Nước mắm ớt, tương ớt, muối tiêu chanh)",
+                "🧹 Nhờ nhân viên dọn đĩa trống / Lau bàn",
+                "🔥 Kiểm tra món đang chế biến giúp bàn",
+                "💳 Nhờ thu ngân mang máy POS / Hóa đơn ra bàn"
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle("🛎️ Gọi Phục Vụ Tại " + currentTable)
+                .setItems(serviceOptions, (d, which) -> {
+                    TableServiceRequest req = opsService.createServiceRequest(
+                            currentTable,
+                            serviceOptions[which],
+                            "Khách gọi trực tiếp từ ứng dụng tại " + currentTable
+                    );
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("✅ Đã Gửi Yêu Cầu Tới Quầy Phục Vụ!")
+                            .setMessage(
+                                    "• Bàn yêu cầu: " + req.getTableNumber()
+                                            + "\n• Nội dung: " + req.getRequestType()
+                                            + "\n• Trạng thái: Nhân viên phục vụ đã nhận thông báo và sẽ có mặt tại bàn trong ít phút!"
+                            )
+                            .setPositiveButton("Đã Hiểu", null)
+                            .show();
+                })
+                .setNegativeButton("Đóng", null)
+                .show();
+    }
+
     private void handleUserClick() {
         Customer customer = authService.getCurrentCustomer();
         AdminAccount admin = authService.getCurrentAdmin();
@@ -464,10 +948,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Hình 24: Giao diện Hồ Sơ Khách Hàng (Xem & Cập nhật thông tin) + UC-06: Theo dõi & Hủy đơn hàng
+     * Hình 24: Giao diện Hồ Sơ Khách Hàng + Hạng Thành Viên VIP & Điểm Tích Lũy + UC-06: Theo dõi & Đặt lại đơn
      */
     private void showCustomerProfileDialog(Customer initialCustomer) {
         DialogCustomerProfileBinding dialogBinding = DialogCustomerProfileBinding.inflate(LayoutInflater.from(this));
+        VietnameseTelexHelper.attachToEditText(dialogBinding.etProfileFullName, null);
+        VietnameseTelexHelper.attachToEditText(dialogBinding.etProfileAddress, null);
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogBinding.getRoot())
                 .create();
@@ -487,6 +973,39 @@ public class MainActivity extends AppCompatActivity {
             dialogBinding.etProfileEmail.setText(c.getEmail() != null ? c.getEmail() : "");
             dialogBinding.etProfileAddress.setText(c.getAddress() != null ? c.getAddress() : "");
             dialogBinding.etProfileNewPassword.setText("");
+
+            LoyaltyProfile loyalty = opsService.getCustomerLoyaltyProfile(c.getId());
+            dialogBinding.tvProfileLoyaltyTier.setText(loyalty.getTierName());
+            dialogBinding.tvProfileLoyaltyPoints.setText(
+                    String.format(
+                            Locale.getDefault(),
+                            "⭐ %d điểm • Ưu đãi VIP -%d%%",
+                            loyalty.getPoints(),
+                            loyalty.getDiscountPercentBonus()
+                    )
+            );
+            dialogBinding.progressLoyaltyTier.setProgress(loyalty.getProgressPercent());
+            if (loyalty.getAmountToNextTier() > 0L) {
+                dialogBinding.tvProfileLoyaltyNextHint.setText(
+                        String.format(
+                                Locale.getDefault(),
+                                "Đã chi tiêu: %,d đ (%d đơn) • Còn %,d đ để thăng hạng %s",
+                                loyalty.getTotalSpent(),
+                                loyalty.getCompletedOrdersCount(),
+                                loyalty.getAmountToNextTier(),
+                                loyalty.getNextTierName()
+                        )
+                );
+            } else {
+                dialogBinding.tvProfileLoyaltyNextHint.setText(
+                        String.format(
+                                Locale.getDefault(),
+                                "Đã chi tiêu: %,d đ (%d đơn) • Bạn đang ở hạng VIP cao nhất!",
+                                loyalty.getTotalSpent(),
+                                loyalty.getCompletedOrdersCount()
+                        )
+                );
+            }
         };
 
         Runnable bindOrderHistory = new Runnable() {
@@ -608,6 +1127,7 @@ public class MainActivity extends AppCompatActivity {
                             boolean cancelled = orderService.cancelOrder(order.getOrderId());
                             if (cancelled) {
                                 refreshFoodList();
+                                bindProfileHeaderAndForm.run();
                                 Toast.makeText(
                                         MainActivity.this,
                                         "Đã hủy đơn hàng " + order.getOrderId() + " thành công!",
@@ -779,6 +1299,10 @@ public class MainActivity extends AppCompatActivity {
         dialogBinding.rvCartItems.setLayoutManager(new LinearLayoutManager(this));
         dialogBinding.rvCartItems.setAdapter(cartAdapterHolder[0]);
 
+        dialogBinding.btnCartSelectVoucher.setOnClickListener(v -> {
+            showVoucherWalletDialog(refreshCartSheetState);
+        });
+
         refreshCartSheetState.run();
 
         dialogBinding.tvClearCart.setOnClickListener(v -> {
@@ -800,8 +1324,55 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void calculateCartTotal(DialogCartBottomSheetBinding dialogBinding) {
-        long total = cartService.getTotalAmount();
-        dialogBinding.tvCartTotalPrice.setText(String.format(Locale.getDefault(), "%,d đ", total));
+        long subtotal = cartService.getTotalAmount();
+        int itemCount = cartService.getTotalItemCount();
+
+        int totalCalories = 0;
+        for (CartItem ci : cartService.getCartItems()) {
+            totalCalories += aiRecService.estimateDishCalories(ci.getMenuItem()) * ci.getQuantity();
+        }
+        int suggestedPeople = Math.max(1, (totalCalories + 450) / 600);
+        dialogBinding.tvCartNutritionSummary.setText(
+                String.format(
+                        Locale.getDefault(),
+                        "🥗 Tổng năng lượng ước tính: ~%d kcal • Phù hợp ~%d người dùng bữa",
+                        totalCalories,
+                        suggestedPeople
+                )
+        );
+
+        String voucherCode = cartService.getAppliedVoucherCode();
+        long voucherDiscount = opsService.calculateVoucherDiscount(voucherCode, subtotal, itemCount);
+
+        Customer currentCustomer = authService.getCurrentCustomer();
+        int vipBonusPct = currentCustomer != null
+                ? opsService.getCustomerLoyaltyProfile(currentCustomer.getId()).getDiscountPercentBonus()
+                : 0;
+        long vipDiscount = (subtotal * vipBonusPct) / 100L;
+        long totalDiscount = Math.min(subtotal, voucherDiscount + vipDiscount);
+        long payable = Math.max(0L, subtotal - totalDiscount);
+
+        if (!voucherCode.isEmpty()) {
+            PromoVoucher pv = opsService.getVoucherByCode(voucherCode);
+            if (pv != null && voucherDiscount > 0L) {
+                dialogBinding.tvCartVoucherStatus.setText("🎟️ Đang dùng mã " + voucherCode + " (-" + String.format(Locale.getDefault(), "%,d đ", voucherDiscount) + ")");
+            } else {
+                dialogBinding.tvCartVoucherStatus.setText("⚠️ Mã " + voucherCode + " chưa đủ điều kiện đơn tối thiểu");
+            }
+        } else {
+            dialogBinding.tvCartVoucherStatus.setText("🎟️ Chưa chọn mã giảm giá (Chạm 'Chọn Mã' để giảm tới 20%)");
+        }
+
+        if (totalDiscount > 0L) {
+            dialogBinding.tvCartDiscountInfo.setVisibility(View.VISIBLE);
+            dialogBinding.tvCartDiscountInfo.setText(
+                    String.format(Locale.getDefault(), "🎉 Ưu đãi Voucher & VIP: -%,d đ (Tạm tính: %,d đ)", totalDiscount, subtotal)
+            );
+        } else {
+            dialogBinding.tvCartDiscountInfo.setVisibility(View.GONE);
+        }
+
+        dialogBinding.tvCartTotalPrice.setText(String.format(Locale.getDefault(), "%,d đ", payable));
     }
 
     private void showPaymentDialog() {
@@ -811,7 +1382,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         List<CartItem> currentCartItems = cartService.getCartItems();
-        long totalAmount = cartService.getTotalAmount();
+        long subtotalAmount = cartService.getTotalAmount();
         int itemCount = cartService.getTotalItemCount();
         DialogPaymentQrBinding dialogBinding = DialogPaymentQrBinding.inflate(LayoutInflater.from(this));
 
@@ -825,7 +1396,8 @@ public class MainActivity extends AppCompatActivity {
 
             TextView tvLeft = new TextView(this);
             tvLeft.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-            tvLeft.setText((i + 1) + ". " + ci.getMenuItem().getName() + " (x" + ci.getQuantity() + ")");
+            String noteSuffix = !ci.getNote().isEmpty() ? " [" + ci.getNote() + "]" : "";
+            tvLeft.setText((i + 1) + ". " + ci.getMenuItem().getName() + " (x" + ci.getQuantity() + ")" + noteSuffix);
             tvLeft.setTextSize(12f);
             tvLeft.setTextColor(ContextCompat.getColor(this, R.color.black));
 
@@ -839,11 +1411,10 @@ public class MainActivity extends AppCompatActivity {
             row.addView(tvRight);
             dialogBinding.layoutPaymentItemsBreakdown.addView(row);
         }
-        dialogBinding.tvPaymentTotalAmount.setText(String.format(Locale.getDefault(), "%,d đ", totalAmount));
 
-        // 2. Tự động điền số bàn từ hồ sơ khách hàng (nếu có) hoặc mặc định Bàn 12
+        // 2. Tự động điền số bàn từ Sơ đồ bàn hoặc hồ sơ khách hàng
         Customer currentCustomer = authService.getCurrentCustomer();
-        String defaultTable = "12";
+        String defaultTable = opsService.getSelectedTableNumber();
         if (currentCustomer != null && currentCustomer.getAddress() != null) {
             String digits = currentCustomer.getAddress().replaceAll("[^0-9]", "");
             if (!digits.isEmpty() && digits.length() <= 3) {
@@ -851,7 +1422,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         dialogBinding.etTableNumber.setText(defaultTable);
-        dialogBinding.etCashGiven.setText(String.valueOf(totalAmount));
+
+        final int[] splitGuestHolder = new int[]{1};
+        final long[] finalPayableHolder = new long[]{subtotalAmount};
 
         java.util.concurrent.Callable<String> getSelectedPaymentMethod = () -> {
             int checkedId = dialogBinding.chipGroupPaymentMethod.getCheckedChipId();
@@ -863,8 +1436,62 @@ public class MainActivity extends AppCompatActivity {
             return "Chuyển khoản QR";
         };
 
-        // Hàm cập nhật giao diện động theo Số bàn & Phương thức thanh toán
+        // Hàm tính tiền thừa trả khách theo thời gian thực khi chọn Tiền mặt
+        Runnable updateCashChange = () -> {
+            long payable = finalPayableHolder[0];
+            String rawCash = dialogBinding.etCashGiven.getText() != null
+                    ? dialogBinding.etCashGiven.getText().toString().trim()
+                    : "";
+            long cashGiven = 0L;
+            try {
+                cashGiven = Long.parseLong(rawCash);
+            } catch (NumberFormatException ignored) {}
+
+            if (cashGiven >= payable) {
+                long change = cashGiven - payable;
+                dialogBinding.tvCashChangeAmount.setText(
+                        String.format(Locale.getDefault(), "💰 Tiền thừa trả lại khách: %,d đ", change)
+                );
+                dialogBinding.tvCashChangeAmount.setTextColor(Color.parseColor("#15803D"));
+            } else {
+                long missing = payable - cashGiven;
+                dialogBinding.tvCashChangeAmount.setText(
+                        String.format(Locale.getDefault(), "⚠️ Khách đưa còn thiếu: %,d đ", missing)
+                );
+                dialogBinding.tvCashChangeAmount.setTextColor(Color.parseColor("#DC2626"));
+            }
+        };
+
+        // Hàm cập nhật giao diện động theo Số bàn, Mã giảm giá, Chia tiền & Phương thức thanh toán
         Runnable updatePaymentUiState = () -> {
+            String code = cartService.getAppliedVoucherCode();
+            long voucherDisc = opsService.calculateVoucherDiscount(code, subtotalAmount, itemCount);
+            int vipPct = currentCustomer != null
+                    ? opsService.getCustomerLoyaltyProfile(currentCustomer.getId()).getDiscountPercentBonus()
+                    : 0;
+            long vipDisc = (subtotalAmount * vipPct) / 100L;
+            long totalDisc = Math.min(subtotalAmount, voucherDisc + vipDisc);
+            long payable = Math.max(0L, subtotalAmount - totalDisc);
+            finalPayableHolder[0] = payable;
+
+            StringBuilder discLabel = new StringBuilder("🎟️ Ưu đãi: -")
+                    .append(String.format(Locale.getDefault(), "%,d đ", totalDisc));
+            if (!code.isEmpty() && voucherDisc > 0L) {
+                discLabel.append(" [Mã ").append(code).append("]");
+            }
+            if (vipPct > 0) {
+                discLabel.append(" [VIP -").append(vipPct).append("%]");
+            }
+            dialogBinding.tvPaymentDiscountBreakdown.setText(discLabel.toString());
+            dialogBinding.tvPaymentTotalAmount.setText(String.format(Locale.getDefault(), "%,d đ", payable));
+
+            int guests = splitGuestHolder[0];
+            long perPerson = (payable + guests - 1) / guests;
+            dialogBinding.tvSplitGuestCount.setText(String.valueOf(guests));
+            dialogBinding.tvSplitAmountPerPerson.setText(
+                    String.format(Locale.getDefault(), "👥 Chia tiền (%d người): %,d đ/người", guests, perPerson)
+            );
+
             String tableRaw = dialogBinding.etTableNumber.getText() != null
                     ? dialogBinding.etTableNumber.getText().toString().trim()
                     : "";
@@ -877,24 +1504,22 @@ public class MainActivity extends AppCompatActivity {
 
             dialogBinding.tvOrderSummary.setText(String.format(
                     Locale.getDefault(),
-                    "Hóa đơn %s • Tổng: %,d đ (%d món) • %s",
+                    "Hóa đơn %s • Thanh toán: %,d đ (%d món) • %s",
                     tableLabel,
-                    totalAmount,
+                    payable,
                     itemCount,
                     method
             ));
 
-            String transferNote = "TT BAN " + cleanTable + " " + (totalAmount / 1000) + "K";
+            String transferNote = "TT BAN " + cleanTable + " " + (payable / 1000) + "K";
             dialogBinding.tvTransferContent.setText("📝 Nội dung: " + transferNote);
 
             int checkedId = dialogBinding.chipGroupPaymentMethod.getCheckedChipId();
             if (checkedId == R.id.chipPayCash) {
-                // Chế độ Tiền mặt tại bàn: Ẩn mã QR, hiện bảng tính tiền mặt & tiền thừa
                 dialogBinding.layoutQrPaymentSection.setVisibility(View.GONE);
                 dialogBinding.layoutCashPaymentSection.setVisibility(View.VISIBLE);
                 dialogBinding.btnConfirmPayment.setText("✅ Xác Nhận Đặt Hàng (Thu Tiền Mặt Tại Bàn)");
             } else if (checkedId == R.id.chipPayWallet) {
-                // Chế độ Ví điện tử MoMo / ZaloPay
                 dialogBinding.layoutQrPaymentSection.setVisibility(View.VISIBLE);
                 dialogBinding.layoutCashPaymentSection.setVisibility(View.GONE);
                 dialogBinding.tvQrBoxLabel.setText("Mã QR Ví Điện Tử MoMo / ZaloPay (Chuẩn EMVCo)");
@@ -903,10 +1528,9 @@ public class MainActivity extends AppCompatActivity {
                 dialogBinding.tvBankAccountNumber.setText("💳 SĐT Ví: 0901234567");
                 dialogBinding.btnConfirmPayment.setText("✅ Xác Nhận Đã Thanh Toán Ví & Đặt Món");
 
-                String emvPayload = QrBitmapGenerator.buildVietQrEmvPayload("970422", "0901234567", totalAmount, transferNote);
+                String emvPayload = QrBitmapGenerator.buildVietQrEmvPayload("970422", "0901234567", payable, transferNote);
                 dialogBinding.imgQrCode.setImageBitmap(QrBitmapGenerator.generateQrBitmap(emvPayload));
             } else {
-                // Chế độ Chuyển khoản Ngân hàng VietQR Napas247
                 dialogBinding.layoutQrPaymentSection.setVisibility(View.VISIBLE);
                 dialogBinding.layoutCashPaymentSection.setVisibility(View.GONE);
                 dialogBinding.tvQrBoxLabel.setText("Mã VietQR Napas247 (Quét Bằng App Ngân Hàng)");
@@ -915,38 +1539,35 @@ public class MainActivity extends AppCompatActivity {
                 dialogBinding.tvBankAccountNumber.setText("💳 Số TK: 0901234567");
                 dialogBinding.btnConfirmPayment.setText("✅ Xác Nhận Đã Chuyển Khoản & Đặt Món");
 
-                String emvPayload = QrBitmapGenerator.buildVietQrEmvPayload("970422", "0901234567", totalAmount, transferNote);
+                String emvPayload = QrBitmapGenerator.buildVietQrEmvPayload("970422", "0901234567", payable, transferNote);
                 dialogBinding.imgQrCode.setImageBitmap(QrBitmapGenerator.generateQrBitmap(emvPayload));
             }
-        };
-
-        // Hàm tính tiền thừa trả khách theo thời gian thực khi chọn Tiền mặt
-        Runnable updateCashChange = () -> {
-            String rawCash = dialogBinding.etCashGiven.getText() != null
-                    ? dialogBinding.etCashGiven.getText().toString().trim()
-                    : "";
-            long cashGiven = 0L;
-            try {
-                cashGiven = Long.parseLong(rawCash);
-            } catch (NumberFormatException ignored) {}
-
-            if (cashGiven >= totalAmount) {
-                long change = cashGiven - totalAmount;
-                dialogBinding.tvCashChangeAmount.setText(
-                        String.format(Locale.getDefault(), "💰 Tiền thừa trả lại khách: %,d đ", change)
-                );
-                dialogBinding.tvCashChangeAmount.setTextColor(Color.parseColor("#15803D"));
-            } else {
-                long missing = totalAmount - cashGiven;
-                dialogBinding.tvCashChangeAmount.setText(
-                        String.format(Locale.getDefault(), "⚠️ Khách đưa còn thiếu: %,d đ", missing)
-                );
-                dialogBinding.tvCashChangeAmount.setTextColor(Color.parseColor("#DC2626"));
-            }
+            updateCashChange.run();
         };
 
         updatePaymentUiState.run();
-        updateCashChange.run();
+        dialogBinding.etCashGiven.setText(String.valueOf(finalPayableHolder[0]));
+
+        dialogBinding.btnPaymentPickVoucher.setOnClickListener(v -> {
+            showVoucherWalletDialog(() -> {
+                updatePaymentUiState.run();
+                dialogBinding.etCashGiven.setText(String.valueOf(finalPayableHolder[0]));
+            });
+        });
+
+        dialogBinding.btnSplitMinus.setOnClickListener(v -> {
+            if (splitGuestHolder[0] > 1) {
+                splitGuestHolder[0]--;
+                updatePaymentUiState.run();
+            }
+        });
+
+        dialogBinding.btnSplitPlus.setOnClickListener(v -> {
+            if (splitGuestHolder[0] < 20) {
+                splitGuestHolder[0]++;
+                updatePaymentUiState.run();
+            }
+        });
 
         dialogBinding.chipGroupPaymentMethod.setOnCheckedStateChangeListener((group, checkedIds) -> {
             updatePaymentUiState.run();
@@ -980,7 +1601,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Các nút chọn mệnh giá tiền mặt nhanh
-        dialogBinding.btnCashExact.setOnClickListener(v -> dialogBinding.etCashGiven.setText(String.valueOf(totalAmount)));
+        dialogBinding.btnCashExact.setOnClickListener(v -> dialogBinding.etCashGiven.setText(String.valueOf(finalPayableHolder[0])));
         dialogBinding.btnCash200k.setOnClickListener(v -> dialogBinding.etCashGiven.setText("200000"));
         dialogBinding.btnCash500k.setOnClickListener(v -> dialogBinding.etCashGiven.setText("500000"));
         dialogBinding.btnCash1000k.setOnClickListener(v -> dialogBinding.etCashGiven.setText("1000000"));
@@ -994,7 +1615,7 @@ public class MainActivity extends AppCompatActivity {
             String tableRaw = dialogBinding.etTableNumber.getText() != null
                     ? dialogBinding.etTableNumber.getText().toString().trim()
                     : "12";
-            String transferNote = "TT BAN " + (tableRaw.isEmpty() ? "12" : tableRaw) + " " + (totalAmount / 1000) + "K";
+            String transferNote = "TT BAN " + (tableRaw.isEmpty() ? "12" : tableRaw) + " " + (finalPayableHolder[0] / 1000) + "K";
             copyToClipboard("Nội dung chuyển khoản", transferNote);
         });
 
@@ -1006,7 +1627,7 @@ public class MainActivity extends AppCompatActivity {
             String tableRaw = dialogBinding.etTableNumber.getText() != null
                     ? dialogBinding.etTableNumber.getText().toString().trim()
                     : "12";
-            String url = "https://img.vietqr.io/image/MB-0901234567-compact2.png?amount=" + totalAmount
+            String url = "https://img.vietqr.io/image/MB-0901234567-compact2.png?amount=" + finalPayableHolder[0]
                     + "&addInfo=TT%20BAN%20" + (tableRaw.isEmpty() ? "12" : tableRaw)
                     + "&accountName=NHA%20HANG%20CHIEU%20THU%203";
             try {
@@ -1034,7 +1655,14 @@ public class MainActivity extends AppCompatActivity {
                 paymentMethod = getSelectedPaymentMethod.call();
             } catch (Exception ignored) {}
 
-            long cashGiven = totalAmount;
+            long payable = finalPayableHolder[0];
+            long discountSaved = Math.max(0L, subtotalAmount - payable);
+            String usedVoucher = cartService.getAppliedVoucherCode();
+            if (!usedVoucher.isEmpty() && discountSaved > 0L) {
+                paymentMethod = paymentMethod + " (Mã " + usedVoucher + ")";
+            }
+
+            long cashGiven = payable;
             long cashChange = 0L;
             if (dialogBinding.chipGroupPaymentMethod.getCheckedChipId() == R.id.chipPayCash) {
                 String rawCash = dialogBinding.etCashGiven.getText() != null
@@ -1045,18 +1673,21 @@ public class MainActivity extends AppCompatActivity {
                 } catch (NumberFormatException e) {
                     cashGiven = 0L;
                 }
-                if (cashGiven < totalAmount) {
+                if (cashGiven < payable) {
                     Toast.makeText(
                             MainActivity.this,
-                            "Số tiền khách đưa chưa đủ để thanh toán hóa đơn (" + String.format(Locale.getDefault(), "%,d đ", totalAmount) + ")!",
+                            "Số tiền khách đưa chưa đủ để thanh toán hóa đơn (" + String.format(Locale.getDefault(), "%,d đ", payable) + ")!",
                             Toast.LENGTH_LONG
                     ).show();
                     return;
                 }
-                cashChange = cashGiven - totalAmount;
+                cashChange = cashGiven - payable;
             }
 
             String tableLabel = "Bàn " + tableRaw;
+            opsService.occupyTable(tableLabel, splitGuestHolder[0]);
+            updateTableButtonLabel();
+
             Customer customer = authService.getCurrentCustomer();
             Integer customerId = customer != null ? customer.getId() : null;
 
@@ -1068,7 +1699,7 @@ public class MainActivity extends AppCompatActivity {
             refreshAiRecommendations();
             dialog.dismiss();
 
-            showPaymentSuccessReceiptDialog(createdOrder, cashGiven, cashChange);
+            showPaymentSuccessReceiptDialog(createdOrder, payable, discountSaved, cashGiven, cashChange);
         });
 
         dialog.show();
@@ -1086,7 +1717,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Hiển thị Biên Lai Giao Dịch Thanh Toán Điện Tử sau khi khách xác nhận đặt hàng
      */
-    private void showPaymentSuccessReceiptDialog(Order order, long cashGiven, long cashChange) {
+    private void showPaymentSuccessReceiptDialog(Order order, long finalPaid, long discountSaved, long cashGiven, long cashChange) {
         String txPrefix;
         if (order.getPaymentMethod().contains("Tiền mặt")) {
             txPrefix = "CASH-";
@@ -1116,7 +1747,10 @@ public class MainActivity extends AppCompatActivity {
                     .append(" = ").append(String.format(Locale.getDefault(), "%,d đ", item.getSubtotal()))
                     .append("\n");
         }
-        receipt.append("\n💰 TỔNG THANH TOÁN: ").append(order.getFormattedTotal()).append("\n");
+        if (discountSaved > 0L) {
+            receipt.append("\n🎟️ Tiết kiệm Voucher/VIP: -").append(String.format(Locale.getDefault(), "%,d đ", discountSaved));
+        }
+        receipt.append("\n💰 THỰC THU: ").append(String.format(Locale.getDefault(), "%,d đ", finalPaid)).append("\n");
         if (order.getPaymentMethod().contains("Tiền mặt")) {
             receipt.append("💵 Tiền khách đưa: ").append(String.format(Locale.getDefault(), "%,d đ", cashGiven)).append("\n");
             receipt.append("🪙 Tiền thừa trả khách: ").append(String.format(Locale.getDefault(), "%,d đ", cashChange)).append("\n");
@@ -1206,10 +1840,29 @@ public class MainActivity extends AppCompatActivity {
                     .show();
         });
 
+        final boolean[] telexEnabledHolder = new boolean[]{true};
+        VietnameseTelexHelper.attachToEditText(dialogBinding.etChatMessage, telexEnabledHolder);
+
+        dialogBinding.tvToggleTelexMode.setOnClickListener(v -> {
+            telexEnabledHolder[0] = !telexEnabledHolder[0];
+            if (telexEnabledHolder[0]) {
+                dialogBinding.tvToggleTelexMode.setText("🇻🇳 Gõ Telex: BẬT");
+                dialogBinding.tvToggleTelexMode.setTextColor(Color.parseColor("#2E7D32"));
+                Toast.makeText(MainActivity.this, "Đã bật bộ gõ Tiếng Việt có dấu (Telex)!", Toast.LENGTH_SHORT).show();
+            } else {
+                dialogBinding.tvToggleTelexMode.setText("🔤 Gõ Telex: TẮT");
+                dialogBinding.tvToggleTelexMode.setTextColor(Color.parseColor("#757575"));
+                Toast.makeText(MainActivity.this, "Đã tắt bộ gõ Telex!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         Runnable sendCurrentInput = () -> {
             String userText = dialogBinding.etChatMessage.getText() != null
                     ? dialogBinding.etChatMessage.getText().toString().trim()
                     : "";
+            if (telexEnabledHolder[0] && !userText.isEmpty()) {
+                userText = VietnameseTelexHelper.convertTelexSentence(userText);
+            }
             aiChatService.sendMessage(userText);
             if (dialogBinding.etChatMessage.getText() != null) {
                 dialogBinding.etChatMessage.getText().clear();
@@ -1219,11 +1872,20 @@ public class MainActivity extends AppCompatActivity {
 
         dialogBinding.btnSendChat.setOnClickListener(v -> sendCurrentInput.run());
         dialogBinding.etChatMessage.setOnEditorActionListener((v, actionId, event) -> {
-            sendCurrentInput.run();
-            return true;
+            if (actionId == EditorInfo.IME_ACTION_SEND
+                    || actionId == EditorInfo.IME_ACTION_DONE
+                    || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                sendCurrentInput.run();
+                return true;
+            }
+            return false;
         });
 
         dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
     }
 
     private String[] getSampleFoodImages() {
@@ -1254,6 +1916,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showLoginDialog() {
         DialogLoginBinding dialogBinding = DialogLoginBinding.inflate(LayoutInflater.from(this));
+        VietnameseTelexHelper.attachToEditText(dialogBinding.etFullName, null);
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogBinding.getRoot())
                 .create();

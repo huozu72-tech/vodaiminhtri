@@ -56,6 +56,40 @@
                 android:layout_marginTop="6dp"
                 android:orientation="vertical" />
 
+            <!-- Voucher & Loyalty VIP Discount Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvPaymentDiscountBreakdown"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🎟️ Ưu đãi Voucher &amp; VIP: -0 đ"
+                    android:textColor="#15803D"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPaymentPickVoucher"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="28dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="🎟️ Chọn Mã"
+                    android:textAllCaps="false"
+                    android:textColor="#DC2626"
+                    android:textSize="10sp"
+                    app:cornerRadius="6dp"
+                    app:strokeColor="#EF4444" />
+            </LinearLayout>
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -85,6 +119,68 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     tools:text="210.000 đ" />
+            </LinearLayout>
+
+            <!-- Split Bill / Chia Tiền Theo Đầu Người -->
+            <LinearLayout
+                android:id="@+id/layoutSplitBillSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="#EFF6FF"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="8dp">
+
+                <TextView
+                    android:id="@+id/tvSplitAmountPerPerson"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="👥 Chia tiền (1 người): 210.000 đ/người"
+                    android:textColor="#1E40AF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSplitMinus"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetRight="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp"
+                    android:text="−"
+                    android:textColor="#1E40AF"
+                    android:textSize="14sp"
+                    app:cornerRadius="6dp" />
+
+                <TextView
+                    android:id="@+id/tvSplitGuestCount"
+                    android:layout_width="28dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="1"
+                    android:textColor="#1E40AF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSplitPlus"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetRight="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp"
+                    android:text="+"
+                    android:textColor="#1E40AF"
+                    android:textSize="14sp"
+                    app:cornerRadius="6dp" />
             </LinearLayout>
         </LinearLayout>
 

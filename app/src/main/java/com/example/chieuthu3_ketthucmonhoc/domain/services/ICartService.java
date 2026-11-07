@@ -16,4 +16,6 @@ public interface ICartService {
     long getTotalAmount();
     int getTotalItemCount();
     boolean isEmpty();
+    String getAppliedVoucherCode();
+    void setAppliedVoucherCode(String code);
 }

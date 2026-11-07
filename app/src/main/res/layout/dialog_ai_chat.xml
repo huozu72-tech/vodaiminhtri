@@ -154,7 +154,7 @@
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- Image-to-Menu Upload Section -->
+    <!-- Image-to-Menu Upload Section & Telex Mode Toggle -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -166,24 +166,38 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnChatCamera"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="34dp"
             android:backgroundTint="@color/ai_button_orange"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="📷 Chụp / Tải Thực Đơn"
+            android:text="📷 Chụp / Tải Ảnh"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="11sp"
-            app:cornerRadius="18dp" />
+            app:cornerRadius="17dp" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:text="AI nhận diện món qua ảnh"
+            android:text="Nhận diện ảnh"
             android:textColor="@color/gray_text"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/tvToggleTelexMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_header_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:text="🇻🇳 Gõ Telex: BẬT"
+            android:textColor="#2E7D32"
+            android:textSize="10sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Text Input Bar -->
@@ -197,20 +211,23 @@
         <EditText
             android:id="@+id/etChatMessage"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
+            android:minHeight="42dp"
+            android:maxLines="3"
             android:layout_weight="1"
             android:background="@drawable/bg_header_button"
-            android:hint="Hỏi AI (VD: Tìm món cay ngon dưới 100k)..."
-            android:imeOptions="actionSend"
-            android:inputType="text"
+            android:hint="Hỏi AI (gõ Telex: timf mons cay duowis 100k)..."
+            android:imeOptions="actionSend|flagNoExtractUi"
+            android:inputType="text|textCapSentences|textAutoCorrect"
             android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
             android:textColor="@color/black"
             android:textSize="13sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSendChat"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="42dp"
             android:layout_marginStart="6dp"
             android:backgroundTint="@color/banner_red"
             android:text="Gửi"

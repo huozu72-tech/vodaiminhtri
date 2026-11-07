@@ -79,8 +79,27 @@ public class AdminCustomerAdapter extends RecyclerView.Adapter<AdminCustomerAdap
                 totalSpent += o.getTotalAmount();
             }
         }
+        int points = (int) (totalSpent / 10000L);
+        String tierBadge;
+        if (totalSpent >= 1_500_000L) {
+            tierBadge = "💎 VIP Kim Cương";
+        } else if (totalSpent >= 700_000L) {
+            tierBadge = "🥇 VIP Vàng";
+        } else if (totalSpent >= 300_000L) {
+            tierBadge = "🥈 VIP Bạc";
+        } else {
+            tierBadge = "🥉 Hạng Đồng";
+        }
+
         holder.binding.tvAdminCustomerStats.setText(
-                String.format(Locale.getDefault(), "🛒 %d đơn hàng • Tổng chi tiêu: %,d đ", orders.size(), totalSpent)
+                String.format(
+                        Locale.getDefault(),
+                        "%s (⭐ %d điểm) • 🛒 %d đơn • Chi tiêu: %,d đ",
+                        tierBadge,
+                        points,
+                        orders.size(),
+                        totalSpent
+                )
         );
 
         holder.itemView.setOnClickListener(v -> {

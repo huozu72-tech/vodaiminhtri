@@ -44,6 +44,16 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/tvCartNutritionSummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="🥗 Tổng năng lượng ước tính: ~0 kcal"
+        android:textColor="#15803D"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <TextView
         android:id="@+id/tvEmptyCartHint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -57,8 +67,8 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCartItems"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_marginTop="10dp"
+        android:layout_height="185dp"
+        android:layout_marginTop="8dp"
         tools:listitem="@layout/item_cart_entry" />
 
     <!-- AI Cross-Sell / Meal Completion Upsell Box -->
@@ -66,7 +76,7 @@
         android:id="@+id/layoutCartAiUpsellSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
         android:background="#FFFBEB"
         android:orientation="vertical"
         android:padding="10dp">
@@ -87,11 +97,60 @@
             android:orientation="vertical" />
     </LinearLayout>
 
+    <!-- Promo Voucher Selection Bar inside Cart -->
+    <LinearLayout
+        android:id="@+id/layoutCartVoucherBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="#FEF2F2"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/tvCartVoucherStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🎟️ Chưa chọn mã giảm giá (Voucher)"
+            android:textColor="#991B1B"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCartSelectVoucher"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingHorizontal="10dp"
+            android:text="Chọn Mã"
+            android:textAllCaps="false"
+            android:textColor="#DC2626"
+            android:textSize="11sp"
+            app:cornerRadius="6dp"
+            app:strokeColor="#EF4444" />
+    </LinearLayout>
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginVertical="10dp"
+        android:layout_marginVertical="8dp"
         android:background="@color/gray_border" />
+
+    <TextView
+        android:id="@+id/tvCartDiscountInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:gravity="end"
+        android:text="🎉 Đã giảm: -0 đ"
+        android:textColor="#15803D"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -121,7 +180,7 @@
         android:id="@+id/btnCheckout"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="12dp"
         android:backgroundTint="@color/banner_red"
         android:text="Tiến Hành Thanh Toán &amp; Đặt Món"
         android:textAllCaps="false"

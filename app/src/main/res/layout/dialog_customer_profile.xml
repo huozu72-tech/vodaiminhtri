@@ -63,6 +63,62 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Thẻ Hạng Thành Viên VIP & Điểm Thưởng Tích Lũy (Loyalty Program) -->
+        <LinearLayout
+            android:id="@+id/cardVipLoyalty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="#FFFBEB"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvProfileLoyaltyTier"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🥇 VIP Vàng (Gold)"
+                    android:textColor="#92400E"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvProfileLoyaltyPoints"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⭐ 75 điểm • Giảm tự động 5%"
+                    android:textColor="#D97706"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progressLoyaltyTier"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:layout_marginTop="8dp"
+                android:progress="60"
+                app:indicatorColor="#F59E0B"
+                app:trackColor="#FDE68A"
+                app:trackCornerRadius="3dp" />
+
+            <TextView
+                android:id="@+id/tvProfileLoyaltyNextHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Tổng chi tiêu: 750.000 đ • Còn 750.000 đ để lên 💎 VIP Kim Cương"
+                android:textColor="#78350F"
+                android:textSize="11sp" />
+        </LinearLayout>
+
         <!-- Editable Profile Form (Hình 24 - Cập nhật hồ sơ cá nhân) -->
         <TextView
             android:layout_width="match_parent"

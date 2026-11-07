@@ -2,6 +2,7 @@ package com.example.chieuthu3_ketthucmonhoc.domain.services;
 
 import com.example.chieuthu3_ketthucmonhoc.domain.models.AIRecommendation;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.SmartComboProposal;
 
 import java.util.List;
 
@@ -13,4 +14,6 @@ public interface IAIRecommendationService {
     List<AIRecommendation> getTrendingDishes(int limit);
     List<AIRecommendation> getTrendingDishes();
     List<AIRecommendation> getCartComplementaryRecommendations(List<MenuItem> currentCartDishes, int limit);
+    int estimateDishCalories(MenuItem item);
+    List<SmartComboProposal> generateSmartCombos(int guestCount, long budgetVnd, String preferenceStyle);
 }

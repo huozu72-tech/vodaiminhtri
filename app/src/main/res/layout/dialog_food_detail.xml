@@ -39,6 +39,24 @@
                 android:textStyle="bold"
                 tools:text="Món chính" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnToggleFavorite"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="12dp"
+                android:backgroundTint="#CCFFFFFF"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="10dp"
+                android:text="🤍 Yêu thích"
+                android:textAllCaps="false"
+                android:textColor="#DC2626"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:cornerRadius="17dp" />
+
             <TextView
                 android:id="@+id/btnCloseDetail"
                 android:layout_width="34dp"
@@ -87,7 +105,7 @@
                     tools:text="120.000 đ" />
             </LinearLayout>
 
-            <!-- Rating & Order Count + Taste Attributes -->
+            <!-- Rating & Order Count + Taste Attributes + Nutrition Info -->
             <TextView
                 android:id="@+id/tvDetailRatingSold"
                 android:layout_width="wrap_content"
@@ -107,6 +125,16 @@
                 android:textSize="11sp"
                 android:textStyle="bold"
                 tools:text="🏷️ Hương vị: Đậm đà • Giòn rụm" />
+
+            <TextView
+                android:id="@+id/tvDetailNutritionInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#15803D"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                tools:text="🥗 Dinh dưỡng ước tính: ~640 kcal/phần • Khẩu phần 2–3 người" />
 
             <!-- Detailed Description -->
             <TextView

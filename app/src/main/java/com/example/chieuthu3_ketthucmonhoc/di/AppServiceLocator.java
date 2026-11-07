@@ -23,8 +23,10 @@ import com.example.chieuthu3_ketthucmonhoc.domain.services.ICartService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IDashboardService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IMenuService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IOrderService;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.IRestaurantOperationsService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.MenuServiceImpl;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.OrderServiceImpl;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.RestaurantOperationsServiceImpl;
 
 public final class AppServiceLocator {
 
@@ -42,6 +44,7 @@ public final class AppServiceLocator {
     private static volatile IAIRecommendationService sAiRecommendationService;
     private static volatile IAIChatbotService sAiChatbotService;
     private static volatile IDashboardService sDashboardService;
+    private static volatile IRestaurantOperationsService sOperationsService;
 
     private AppServiceLocator() {
         // Utility singleton locator
@@ -183,5 +186,16 @@ public final class AppServiceLocator {
             }
         }
         return sDashboardService;
+    }
+
+    public static IRestaurantOperationsService getOperationsService() {
+        if (sOperationsService == null) {
+            synchronized (AppServiceLocator.class) {
+                if (sOperationsService == null) {
+                    sOperationsService = new RestaurantOperationsServiceImpl(getMenuRepository(), getOrderRepository());
+                }
+            }
+        }
+        return sOperationsService;
     }
 }

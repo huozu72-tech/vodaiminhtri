@@ -157,11 +157,96 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
+                <!-- 2B. Quick Smart Utility Bar (Sơ đồ bàn, AI Combo, Kho Voucher, Gọi phục vụ) -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnQuickTableMap"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="@color/white"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingHorizontal="12dp"
+                            android:text="🪑 Sơ Đồ Bàn (Bàn 12)"
+                            android:textAllCaps="false"
+                            android:textColor="@color/primary_orange"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            app:cornerRadius="10dp"
+                            app:strokeColor="@color/ai_border_orange" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnQuickAiCombo"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="@color/white"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingHorizontal="12dp"
+                            android:text="🍱 AI Thiết Kế Mâm Cơm"
+                            android:textAllCaps="false"
+                            android:textColor="#D97706"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            app:cornerRadius="10dp"
+                            app:strokeColor="#F59E0B" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnQuickVouchers"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="@color/white"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingHorizontal="12dp"
+                            android:text="🎟️ Kho Voucher (-20%)"
+                            android:textAllCaps="false"
+                            android:textColor="#DC2626"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            app:cornerRadius="10dp"
+                            app:strokeColor="#FCA5A5" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnQuickCallWaiter"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="38dp"
+                            android:backgroundTint="@color/white"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingHorizontal="12dp"
+                            android:text="🛎️ Gọi Phục Vụ Tại Bàn"
+                            android:textAllCaps="false"
+                            android:textColor="#15803D"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            app:cornerRadius="10dp"
+                            app:strokeColor="#86EFAC" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+
                 <!-- 3. Smart Search & AI Camera Box -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="10dp"
                     android:background="@drawable/bg_ai_box"
                     android:orientation="vertical"
                     android:padding="12dp">
@@ -277,11 +362,19 @@
                             android:layout_height="wrap_content"
                             android:checked="true"
                             android:text="Tất Cả"
+                            android:textColor="@color/white"
                             app:chipBackgroundColor="@color/primary_orange"
                             app:chipCornerRadius="16dp"
-                            app:chipStrokeWidth="0dp"
                             app:chipIconVisible="false"
-                            android:textColor="@color/white" />
+                            app:chipStrokeWidth="0dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipFavorites"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="❤️ Yêu Thích"
+                            app:chipCornerRadius="16dp" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipMain"

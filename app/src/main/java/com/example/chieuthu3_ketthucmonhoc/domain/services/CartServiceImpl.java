@@ -9,6 +9,7 @@ import java.util.List;
 public class CartServiceImpl implements ICartService {
 
     private final ICartRepository cartRepository;
+    private String appliedVoucherCode = "";
 
     public CartServiceImpl(ICartRepository cartRepository) {
         this.cartRepository = cartRepository;
@@ -48,6 +49,7 @@ public class CartServiceImpl implements ICartService {
     @Override
     public void clearCart() {
         cartRepository.clearCart();
+        appliedVoucherCode = "";
     }
 
     @Override
@@ -68,5 +70,15 @@ public class CartServiceImpl implements ICartService {
     @Override
     public boolean isEmpty() {
         return cartRepository.getCartItems().isEmpty();
+    }
+
+    @Override
+    public String getAppliedVoucherCode() {
+        return appliedVoucherCode;
+    }
+
+    @Override
+    public void setAppliedVoucherCode(String code) {
+        this.appliedVoucherCode = code != null ? code.trim().toUpperCase() : "";
     }
 }

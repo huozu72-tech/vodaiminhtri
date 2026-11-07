@@ -54,7 +54,7 @@
                 app:strokeWidth="1dp" />
         </LinearLayout>
 
-        <!-- 2. Admin Navigation Tabs (4 Use Cases: Thống kê, Món ăn, Đơn hàng, Khách hàng) -->
+        <!-- 2. Admin Navigation Tabs (5 Phân Hệ: Thống kê, Món ăn, Đơn hàng, Khách hàng, Sơ đồ bàn) -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -103,6 +103,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="👥 Quản Lý Khách Hàng"
+                    app:chipCornerRadius="16dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipTabTables"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🪑 Sơ Đồ Bàn &amp; Đặt Chỗ"
                     app:chipCornerRadius="16dp" />
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
@@ -157,6 +165,82 @@
                                 android:textColor="@color/admin_blue_accent"
                                 android:textSize="21sp"
                                 android:textStyle="bold" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:orientation="horizontal">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnAdminManageVouchers"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="36dp"
+                                    android:layout_marginEnd="6dp"
+                                    android:layout_weight="1"
+                                    android:insetTop="0dp"
+                                    android:insetBottom="0dp"
+                                    android:text="🎟️ Quản Lý Voucher"
+                                    android:textAllCaps="false"
+                                    android:textColor="#DC2626"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    app:cornerRadius="8dp"
+                                    app:strokeColor="#FCA5A5" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnAdminExportReport"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="36dp"
+                                    android:layout_weight="1"
+                                    android:insetTop="0dp"
+                                    android:insetBottom="0dp"
+                                    android:text="📤 Xuất Báo Cáo"
+                                    android:textAllCaps="false"
+                                    android:textColor="@color/admin_blue_accent"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    app:cornerRadius="8dp"
+                                    app:strokeColor="@color/admin_blue_accent" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Live Waiter Call / Service Bell Card -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardAdminServiceRequests"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:cardBackgroundColor="#FFFBEB"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="2dp"
+                        app:strokeColor="#F59E0B"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="14dp">
+
+                            <TextView
+                                android:id="@+id/tvPendingRequestsBadge"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="🛎️ Yêu Cầu Phục Vụ Tại Bàn (1 yêu cầu mới)"
+                                android:textColor="#92400E"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <LinearLayout
+                                android:id="@+id/layoutServiceRequestsList"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:orientation="vertical" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
@@ -569,6 +653,46 @@
                     android:layout_marginTop="8dp"
                     tools:listitem="@layout/item_admin_customer" />
             </LinearLayout>
+
+            <!-- TAB 5: TABLES & RESERVATIONS MANAGEMENT (Quản lý Sơ đồ bàn & Đặt chỗ) -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/layoutTabTables"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="12dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="🪑 Sơ Đồ Bàn Trực Quan &amp; Quản Lý Đặt Chỗ"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvTableOccupancySummary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Tổng: 10 bàn • Trống: 5 • Có khách: 3 • Đặt trước: 2"
+                        android:textColor="@color/admin_blue_accent"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutAdminTablesContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
 
         </FrameLayout>
     </LinearLayout>

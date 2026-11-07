@@ -59,3 +59,18 @@ Thư mục này chứa đầy đủ toàn bộ ảnh chụp màn hình (screensh
   - **Mô tả**: Hộp thoại Chi tiết đơn hàng Admin hiển thị hóa đơn thu ngân chi tiết và chức năng in hóa đơn.
 - **File**: `18_admin_quan_ly_khach_hang.png`
   - **Mô tả**: Tab Quản lý khách hàng hiển thị danh sách toàn bộ khách hàng đăng ký, số điện thoại, email và ngày tham gia.
+
+
+---
+
+## 6. Bộ Tính Năng Mở Rộng Chuyên Sâu (Smart Restaurant Operations)
+- **File**: `20_main_quick_smart_utility_bar.png`
+  - **Mô tả**: Thanh tiện ích thông minh nhanh trên màn hình chính (`🪑 Sơ đồ bàn`, `🍱 Combo AI`, `🎟️ Voucher`, `🛎️ Gọi phục vụ`) và Chip lọc `❤️ Yêu Thích`.
+- **File**: `21_dialog_table_map_reservation.png`
+  - **Mô tả**: Hộp thoại Sơ đồ bàn trực quan theo khu vực (Khu A Sân Vườn, Khu B Máy Lạnh, Khu C Phòng VIP) và Đặt bàn trước (Table Reservation).
+- **File**: `22_dialog_ai_smart_combo_builder.png`
+  - **Mô tả**: Trình Thiết Kế Mâm Tiệc / Combo AI Thông Minh theo số người, ngân sách và phong cách ẩm thực, tự động tính tổng kcal và ưu đãi combo.
+- **File**: `23_dialog_voucher_wallet.png`
+  - **Mô tả**: Ví Mã Giảm Giá / Voucher Khuyến Mãi (`CHIEUTHU3`, `TANBINH30`, `COMBOAI20`, `FREEDRINK`) áp dụng trực tiếp vào giỏ hàng và thanh toán.
+- **File**: `24_dialog_smart_waiter_call.png`
+  - **Mô tả**: Chuông Gọi Nhân Viên Phục Vụ Tại Bàn (Smart Waiter Call: Thêm đá/trà đá, thêm bát đũa, khăn giấy, yêu cầu thanh toán tại bàn) đồng bộ trực tiếp lên Dashboard Quản trị viên.

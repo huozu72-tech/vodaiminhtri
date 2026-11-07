@@ -7,6 +7,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.SmartComboProposal;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AIRecommendationServiceImpl;
 
@@ -66,7 +67,6 @@ public class AIRecommendationServiceTest {
 
     @Test
     public void personalizedRecommendationMatchesCustomerTasteHistory() {
-        // Customer 1 previously ordered dishCrispy1
         orderRepository.saveOrder(
                 new Order(
                         "#ORD-001",
@@ -78,7 +78,6 @@ public class AIRecommendationServiceTest {
 
         List<AIRecommendation> recs = aiService.getPersonalizedRecommendations(1, 3);
         assertFalse(recs.isEmpty());
-        // The top recommendation should favor crispy / savory main dishes like dishCrispy2
         MenuItem topItem = recs.get(0).getMenuItem();
         assertNotNull(topItem);
         assertTrue(recs.get(0).getScore() > 0.5);
@@ -138,12 +137,33 @@ public class AIRecommendationServiceTest {
                 2
         );
         assertFalse(crossSell.isEmpty());
-        // Should not recommend dishCrispy1 which is already in the cart
         for (AIRecommendation rec : crossSell) {
             assertTrue(rec.getMenuItem().getId() != dishCrispy1.getId());
         }
-        // Top recommendation should be a beverage or side dish to complete the meal
         FoodCategory topCategory = crossSell.get(0).getMenuItem().getCategory();
         assertTrue(topCategory == FoodCategory.BEVERAGE || topCategory == FoodCategory.SIDE_DISH);
+    }
+
+    @Test
+    public void estimateDishCaloriesReturnsHigherCaloriesForMainCrispyDishThanBeverage() {
+        int mainKcal = aiService.estimateDishCalories(dishCrispy1);
+        int drinkKcal = aiService.estimateDishCalories(dishDrink);
+        assertTrue(mainKcal > drinkKcal);
+        assertTrue(mainKcal >= 450);
+        assertTrue(drinkKcal >= 80);
+    }
+
+    @Test
+    public void generateSmartCombosProducesThreeCompleteComboProposalsWithDiscountAndCalories() {
+        List<SmartComboProposal> combos = aiService.generateSmartCombos(4, 300000L, "BALANCED");
+        assertEquals(3, combos.size());
+        for (SmartComboProposal combo : combos) {
+            assertNotNull(combo.getComboName());
+            assertFalse(combo.getItems().isEmpty());
+            assertTrue(combo.getOriginalTotal() > 0);
+            assertTrue(combo.getComboDiscount() > 0);
+            assertEquals(combo.getOriginalTotal() - combo.getComboDiscount(), combo.getFinalPrice());
+            assertTrue(combo.getTotalCaloriesKcal() > 0);
+        }
     }
 }
