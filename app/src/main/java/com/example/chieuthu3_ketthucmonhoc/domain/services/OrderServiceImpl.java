@@ -78,16 +78,18 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     private String generatePaymentQrUrlInternal(String orderId, long amount) {
-        String bankId = "MBBank";
+        String bankId = "MB";
         String accountNo = "0901234567";
         String template = "compact2";
+        String cleanOrder = orderId != null ? orderId.replace("#", "") : "ORD";
         String description;
         try {
-            description = URLEncoder.encode("Thanh toan " + orderId, "UTF-8");
+            description = URLEncoder.encode("THANH TOAN " + cleanOrder, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            description = "Thanh+toan+" + orderId;
+            description = "THANH+TOAN+" + cleanOrder;
         }
-        return "https://img.vietqr.io/image/" + bankId + "-" + accountNo + "-" + template + ".png?amount=" + amount + "&addInfo=" + description;
+        return "https://img.vietqr.io/image/" + bankId + "-" + accountNo + "-" + template
+                + ".png?amount=" + amount + "&addInfo=" + description + "&accountName=NHA%20HANG%20CHIEU%20THU%203";
     }
 
     private synchronized String generateUniqueOrderCode() {

@@ -8,6 +8,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.OrderServiceImpl;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.QrBitmapGenerator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -162,5 +163,26 @@ public class OrderServiceTest {
 
         assertEquals(1, orderRepository.getAllOrders().size());
         assertEquals(OrderStatus.PREPARING, orderRepository.getOrderById("#ORD-2000").getStatus());
+    }
+
+    @Test
+    public void vietQrEmvPayloadContainsValidNapas247StructureAndCrc16() {
+        String emv = QrBitmapGenerator.buildVietQrEmvPayload("970422", "0901234567", 210000L, "TT BAN 12 210K");
+        assertNotNull(emv);
+        assertTrue(emv.startsWith("00020101021238"));
+        assertTrue(emv.contains("A000000727")); // Napas247 GUID
+        assertTrue(emv.contains("970422"));     // MBBank BIN
+        assertTrue(emv.contains("0901234567")); // Account Number
+        assertTrue(emv.contains("QRIBFTTA"));   // Fast transfer service code
+        assertTrue(emv.contains("5303704"));    // VND Currency code
+        assertTrue(emv.contains("5406210000")); // Exact transaction amount
+        assertTrue(emv.contains("5802VN"));     // Country VN
+        assertTrue(emv.contains("6304"));       // CRC-16 tag
+
+        // Kiểm tra 4 ký tự cuối là mã HEX CRC-16/CCITT-FALSE chuẩn
+        String withoutCrcVal = emv.substring(0, emv.length() - 4);
+        String expectedCrc = QrBitmapGenerator.computeCrc16CcittHex(withoutCrcVal);
+        assertEquals(4, expectedCrc.length());
+        assertTrue(emv.endsWith(expectedCrc));
     }
 }

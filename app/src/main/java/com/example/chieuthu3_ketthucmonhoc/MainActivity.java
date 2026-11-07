@@ -1,6 +1,9 @@
 package com.example.chieuthu3_ketthucmonhoc;
 
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -647,11 +650,48 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        List<CartItem> currentCartItems = cartService.getCartItems();
         long totalAmount = cartService.getTotalAmount();
         int itemCount = cartService.getTotalItemCount();
         DialogPaymentQrBinding dialogBinding = DialogPaymentQrBinding.inflate(LayoutInflater.from(this));
 
-        dialogBinding.etTableNumber.setText("12");
+        // 1. Hiển thị bảng kê chi tiết từng món trong hóa đơn
+        dialogBinding.layoutPaymentItemsBreakdown.removeAllViews();
+        for (int i = 0; i < currentCartItems.size(); i++) {
+            CartItem ci = currentCartItems.get(i);
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setPadding(0, 4, 0, 4);
+
+            TextView tvLeft = new TextView(this);
+            tvLeft.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            tvLeft.setText((i + 1) + ". " + ci.getMenuItem().getName() + " (x" + ci.getQuantity() + ")");
+            tvLeft.setTextSize(12f);
+            tvLeft.setTextColor(ContextCompat.getColor(this, R.color.black));
+
+            TextView tvRight = new TextView(this);
+            tvRight.setText(String.format(Locale.getDefault(), "%,d đ", ci.getSubtotal()));
+            tvRight.setTextSize(12f);
+            tvRight.setTypeface(null, android.graphics.Typeface.BOLD);
+            tvRight.setTextColor(ContextCompat.getColor(this, R.color.black));
+
+            row.addView(tvLeft);
+            row.addView(tvRight);
+            dialogBinding.layoutPaymentItemsBreakdown.addView(row);
+        }
+        dialogBinding.tvPaymentTotalAmount.setText(String.format(Locale.getDefault(), "%,d đ", totalAmount));
+
+        // 2. Tự động điền số bàn từ hồ sơ khách hàng (nếu có) hoặc mặc định Bàn 12
+        Customer currentCustomer = authService.getCurrentCustomer();
+        String defaultTable = "12";
+        if (currentCustomer != null && currentCustomer.getAddress() != null) {
+            String digits = currentCustomer.getAddress().replaceAll("[^0-9]", "");
+            if (!digits.isEmpty() && digits.length() <= 3) {
+                defaultTable = digits;
+            }
+        }
+        dialogBinding.etTableNumber.setText(defaultTable);
+        dialogBinding.etCashGiven.setText(String.valueOf(totalAmount));
 
         java.util.concurrent.Callable<String> getSelectedPaymentMethod = () -> {
             int checkedId = dialogBinding.chipGroupPaymentMethod.getCheckedChipId();
@@ -663,10 +703,12 @@ public class MainActivity extends AppCompatActivity {
             return "Chuyển khoản QR";
         };
 
-        Runnable updateSummary = () -> {
+        // Hàm cập nhật giao diện động theo Số bàn & Phương thức thanh toán
+        Runnable updatePaymentUiState = () -> {
             String tableRaw = dialogBinding.etTableNumber.getText() != null
                     ? dialogBinding.etTableNumber.getText().toString().trim()
                     : "";
+            String cleanTable = !tableRaw.isEmpty() ? tableRaw : "12";
             String tableLabel = !tableRaw.isEmpty() ? "Bàn " + tableRaw : "Bàn ?";
             String method = "Chuyển khoản QR";
             try {
@@ -681,20 +723,73 @@ public class MainActivity extends AppCompatActivity {
                     itemCount,
                     method
             ));
-        };
 
-        updateSummary.run();
+            String transferNote = "TT BAN " + cleanTable + " " + (totalAmount / 1000) + "K";
+            dialogBinding.tvTransferContent.setText("📝 Nội dung: " + transferNote);
 
-        dialogBinding.chipGroupPaymentMethod.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            updateSummary.run();
             int checkedId = dialogBinding.chipGroupPaymentMethod.getCheckedChipId();
             if (checkedId == R.id.chipPayCash) {
-                dialogBinding.tvQrBoxLabel.setText("Thanh Toán Tiền Mặt Tại Bàn");
+                // Chế độ Tiền mặt tại bàn: Ẩn mã QR, hiện bảng tính tiền mặt & tiền thừa
+                dialogBinding.layoutQrPaymentSection.setVisibility(View.GONE);
+                dialogBinding.layoutCashPaymentSection.setVisibility(View.VISIBLE);
+                dialogBinding.btnConfirmPayment.setText("✅ Xác Nhận Đặt Hàng (Thu Tiền Mặt Tại Bàn)");
             } else if (checkedId == R.id.chipPayWallet) {
-                dialogBinding.tvQrBoxLabel.setText("Quét Mã Ví Điện Tử MoMo / ZaloPay");
+                // Chế độ Ví điện tử MoMo / ZaloPay
+                dialogBinding.layoutQrPaymentSection.setVisibility(View.VISIBLE);
+                dialogBinding.layoutCashPaymentSection.setVisibility(View.GONE);
+                dialogBinding.tvQrBoxLabel.setText("Mã QR Ví Điện Tử MoMo / ZaloPay (Chuẩn EMVCo)");
+                dialogBinding.tvBankProviderName.setText("📱 Ví điện tử: MoMo / ZaloPay Business");
+                dialogBinding.tvBankAccountOwner.setText("👤 Chủ ví nhận: NHA HANG CHIEU THU 3");
+                dialogBinding.tvBankAccountNumber.setText("💳 SĐT Ví: 0901234567");
+                dialogBinding.btnConfirmPayment.setText("✅ Xác Nhận Đã Thanh Toán Ví & Đặt Món");
+
+                String emvPayload = QrBitmapGenerator.buildVietQrEmvPayload("970422", "0901234567", totalAmount, transferNote);
+                dialogBinding.imgQrCode.setImageBitmap(QrBitmapGenerator.generateQrBitmap(emvPayload));
             } else {
-                dialogBinding.tvQrBoxLabel.setText("Mã QR VietQR Ngân Hàng");
+                // Chế độ Chuyển khoản Ngân hàng VietQR Napas247
+                dialogBinding.layoutQrPaymentSection.setVisibility(View.VISIBLE);
+                dialogBinding.layoutCashPaymentSection.setVisibility(View.GONE);
+                dialogBinding.tvQrBoxLabel.setText("Mã VietQR Napas247 (Quét Bằng App Ngân Hàng)");
+                dialogBinding.tvBankProviderName.setText("🏦 Ngân hàng: MB Bank (Ngân hàng Quân Đội - BIN 970422)");
+                dialogBinding.tvBankAccountOwner.setText("👤 Chủ tài khoản: NHA HANG CHIEU THU 3");
+                dialogBinding.tvBankAccountNumber.setText("💳 Số TK: 0901234567");
+                dialogBinding.btnConfirmPayment.setText("✅ Xác Nhận Đã Chuyển Khoản & Đặt Món");
+
+                String emvPayload = QrBitmapGenerator.buildVietQrEmvPayload("970422", "0901234567", totalAmount, transferNote);
+                dialogBinding.imgQrCode.setImageBitmap(QrBitmapGenerator.generateQrBitmap(emvPayload));
             }
+        };
+
+        // Hàm tính tiền thừa trả khách theo thời gian thực khi chọn Tiền mặt
+        Runnable updateCashChange = () -> {
+            String rawCash = dialogBinding.etCashGiven.getText() != null
+                    ? dialogBinding.etCashGiven.getText().toString().trim()
+                    : "";
+            long cashGiven = 0L;
+            try {
+                cashGiven = Long.parseLong(rawCash);
+            } catch (NumberFormatException ignored) {}
+
+            if (cashGiven >= totalAmount) {
+                long change = cashGiven - totalAmount;
+                dialogBinding.tvCashChangeAmount.setText(
+                        String.format(Locale.getDefault(), "💰 Tiền thừa trả lại khách: %,d đ", change)
+                );
+                dialogBinding.tvCashChangeAmount.setTextColor(Color.parseColor("#15803D"));
+            } else {
+                long missing = totalAmount - cashGiven;
+                dialogBinding.tvCashChangeAmount.setText(
+                        String.format(Locale.getDefault(), "⚠️ Khách đưa còn thiếu: %,d đ", missing)
+                );
+                dialogBinding.tvCashChangeAmount.setTextColor(Color.parseColor("#DC2626"));
+            }
+        };
+
+        updatePaymentUiState.run();
+        updateCashChange.run();
+
+        dialogBinding.chipGroupPaymentMethod.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            updatePaymentUiState.run();
         });
 
         dialogBinding.etTableNumber.addTextChangedListener(new TextWatcher() {
@@ -704,95 +799,182 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 dialogBinding.tilTableNumber.setError(null);
-                updateSummary.run();
+                updatePaymentUiState.run();
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         });
 
+        dialogBinding.etCashGiven.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updateCashChange.run();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // Các nút chọn mệnh giá tiền mặt nhanh
+        dialogBinding.btnCashExact.setOnClickListener(v -> dialogBinding.etCashGiven.setText(String.valueOf(totalAmount)));
+        dialogBinding.btnCash200k.setOnClickListener(v -> dialogBinding.etCashGiven.setText("200000"));
+        dialogBinding.btnCash500k.setOnClickListener(v -> dialogBinding.etCashGiven.setText("500000"));
+        dialogBinding.btnCash1000k.setOnClickListener(v -> dialogBinding.etCashGiven.setText("1000000"));
+
+        // Các nút sao chép Số tài khoản và Nội dung chuyển khoản vào bộ nhớ tạm (Clipboard)
+        dialogBinding.btnCopyAccountNo.setOnClickListener(v -> {
+            copyToClipboard("Số tài khoản nhà hàng", "0901234567");
+        });
+
+        dialogBinding.btnCopyTransferContent.setOnClickListener(v -> {
+            String tableRaw = dialogBinding.etTableNumber.getText() != null
+                    ? dialogBinding.etTableNumber.getText().toString().trim()
+                    : "12";
+            String transferNote = "TT BAN " + (tableRaw.isEmpty() ? "12" : tableRaw) + " " + (totalAmount / 1000) + "K";
+            copyToClipboard("Nội dung chuyển khoản", transferNote);
+        });
+
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogBinding.getRoot())
                 .create();
 
-        // Đơn được tạo (PENDING) ngay khi khách yêu cầu mã QR
-        final Order[] createdOrderHolder = new Order[1];
-
-        java.util.concurrent.Callable<Order> createPendingOrderAndShowQr = () -> {
-            if (createdOrderHolder[0] != null) {
-                return createdOrderHolder[0];
-            }
+        dialogBinding.btnOpenQrUrl.setOnClickListener(v -> {
             String tableRaw = dialogBinding.etTableNumber.getText() != null
                     ? dialogBinding.etTableNumber.getText().toString().trim()
-                    : "";
-            if (tableRaw.isEmpty()) {
-                dialogBinding.tilTableNumber.setError("Vui lòng nhập số bàn trước khi thanh toán");
-                return null;
-            }
-            String tableLabel = "Bàn " + tableRaw;
-            Customer customer = authService.getCurrentCustomer();
-            Integer customerId = customer != null ? customer.getId() : null;
-            String paymentMethod = getSelectedPaymentMethod.call();
-
-            Order order = orderService.createOrder(tableLabel, customerId, cartService.getCartItems(), paymentMethod);
-            createdOrderHolder[0] = order;
-
-            dialogBinding.tilTableNumber.setEnabled(false);
-            String qrUrl = order.getQrPayloadUrl() != null ? order.getQrPayloadUrl() : "";
-            dialogBinding.imgQrCode.setImageBitmap(QrBitmapGenerator.generateQrBitmap(qrUrl));
-            dialogBinding.tvQrUrl.setText("Link VietQR: " + qrUrl);
-            dialogBinding.tvQrUrl.setVisibility(View.VISIBLE);
-            dialogBinding.btnOpenQrUrl.setVisibility(View.VISIBLE);
-            dialogBinding.btnCreateOrderQr.setText("Đã tạo đơn " + order.getOrderId() + " ✓");
-            dialogBinding.btnCreateOrderQr.setEnabled(false);
-            return order;
-        };
-
-        dialogBinding.btnCreateOrderQr.setOnClickListener(v -> {
-            try {
-                createPendingOrderAndShowQr.call();
-            } catch (Exception ignored) {}
-        });
-
-        dialogBinding.btnOpenQrUrl.setOnClickListener(v -> {
-            Order current = createdOrderHolder[0];
-            String url = current != null ? current.getQrPayloadUrl() : null;
-            if (url == null || url.trim().isEmpty()) return;
+                    : "12";
+            String url = "https://img.vietqr.io/image/MB-0901234567-compact2.png?amount=" + totalAmount
+                    + "&addInfo=TT%20BAN%20" + (tableRaw.isEmpty() ? "12" : tableRaw)
+                    + "&accountName=NHA%20HANG%20CHIEU%20THU%203";
             try {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
             } catch (ActivityNotFoundException e) {
                 Toast.makeText(
                         MainActivity.this,
-                        "Thiết bị không có trình duyệt để mở mã QR. Bạn có thể nhấn giữ link ở trên để sao chép.",
+                        "Thiết bị không có trình duyệt để mở trang VietQR.",
                         Toast.LENGTH_LONG
                 ).show();
             }
         });
 
         dialogBinding.btnConfirmPayment.setOnClickListener(v -> {
-            Order order = createdOrderHolder[0];
-            if (order == null) {
-                try {
-                    order = createPendingOrderAndShowQr.call();
-                } catch (Exception ignored) {}
-            }
-            if (order == null) {
+            String tableRaw = dialogBinding.etTableNumber.getText() != null
+                    ? dialogBinding.etTableNumber.getText().toString().trim()
+                    : "";
+            if (tableRaw.isEmpty()) {
+                dialogBinding.tilTableNumber.setError("Vui lòng nhập số bàn phục vụ trước khi xác nhận!");
                 return;
             }
+
+            String paymentMethod = "Chuyển khoản QR";
+            try {
+                paymentMethod = getSelectedPaymentMethod.call();
+            } catch (Exception ignored) {}
+
+            long cashGiven = totalAmount;
+            long cashChange = 0L;
+            if (dialogBinding.chipGroupPaymentMethod.getCheckedChipId() == R.id.chipPayCash) {
+                String rawCash = dialogBinding.etCashGiven.getText() != null
+                        ? dialogBinding.etCashGiven.getText().toString().trim()
+                        : "";
+                try {
+                    cashGiven = Long.parseLong(rawCash);
+                } catch (NumberFormatException e) {
+                    cashGiven = 0L;
+                }
+                if (cashGiven < totalAmount) {
+                    Toast.makeText(
+                            MainActivity.this,
+                            "Số tiền khách đưa chưa đủ để thanh toán hóa đơn (" + String.format(Locale.getDefault(), "%,d đ", totalAmount) + ")!",
+                            Toast.LENGTH_LONG
+                    ).show();
+                    return;
+                }
+                cashChange = cashGiven - totalAmount;
+            }
+
+            String tableLabel = "Bàn " + tableRaw;
+            Customer customer = authService.getCurrentCustomer();
+            Integer customerId = customer != null ? customer.getId() : null;
+
+            Order createdOrder = orderService.createOrder(tableLabel, customerId, cartService.getCartItems(), paymentMethod);
 
             cartService.clearCart();
             updateCartBadge();
             refreshAiRecommendations();
             dialog.dismiss();
 
-            Toast.makeText(
-                    MainActivity.this,
-                    "Đặt hàng thành công đơn " + order.getOrderId() + " (" + order.getTableNumber() + " - " + order.getPaymentMethod() + ")! Bếp đang chế biến món ăn.",
-                    Toast.LENGTH_LONG
-            ).show();
+            showPaymentSuccessReceiptDialog(createdOrder, cashGiven, cashChange);
         });
 
         dialog.show();
+    }
+
+    private void copyToClipboard(String label, String text) {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            ClipData clip = ClipData.newPlainText(label, text);
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(this, "✅ Đã sao chép " + label + ": " + text, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Hiển thị Biên Lai Giao Dịch Thanh Toán Điện Tử sau khi khách xác nhận đặt hàng
+     */
+    private void showPaymentSuccessReceiptDialog(Order order, long cashGiven, long cashChange) {
+        String txPrefix;
+        if (order.getPaymentMethod().contains("Tiền mặt")) {
+            txPrefix = "CASH-";
+        } else if (order.getPaymentMethod().contains("MoMo") || order.getPaymentMethod().contains("Ví")) {
+            txPrefix = "MOMO-";
+        } else {
+            txPrefix = "FT26";
+        }
+        String transactionCode = txPrefix + (System.currentTimeMillis() % 100000000L);
+
+        StringBuilder receipt = new StringBuilder();
+        receipt.append("━━━━━━━━━━━━━━━━━━━━━━━━\n");
+        receipt.append("🧾 BIÊN LAI XÁC NHẬN THANH TOÁN\n");
+        receipt.append("━━━━━━━━━━━━━━━━━━━━━━━━\n");
+        receipt.append("• Mã giao dịch: ").append(transactionCode).append("\n");
+        receipt.append("• Mã đơn hàng: ").append(order.getOrderId()).append("\n");
+        receipt.append("• Bàn phục vụ: ").append(order.getTableNumber()).append("\n");
+        receipt.append("• Thời gian: ").append(order.getFormattedTime()).append("\n");
+        receipt.append("• Phương thức: ").append(order.getPaymentMethod()).append("\n");
+        receipt.append("• Trạng thái đơn: ").append(order.getStatus().getDisplayName()).append(" (Bếp đã nhận lệnh)\n\n");
+        receipt.append("🍽️ Chi tiết món đã đặt:\n");
+        for (int i = 0; i < order.getItems().size(); i++) {
+            OrderItem item = order.getItems().get(i);
+            receipt.append("  ").append(i + 1).append(". ")
+                    .append(item.getMenuItem().getName())
+                    .append(" x").append(item.getQuantity())
+                    .append(" = ").append(String.format(Locale.getDefault(), "%,d đ", item.getSubtotal()))
+                    .append("\n");
+        }
+        receipt.append("\n💰 TỔNG THANH TOÁN: ").append(order.getFormattedTotal()).append("\n");
+        if (order.getPaymentMethod().contains("Tiền mặt")) {
+            receipt.append("💵 Tiền khách đưa: ").append(String.format(Locale.getDefault(), "%,d đ", cashGiven)).append("\n");
+            receipt.append("🪙 Tiền thừa trả khách: ").append(String.format(Locale.getDefault(), "%,d đ", cashChange)).append("\n");
+        } else {
+            receipt.append("🏦 Tài khoản thụ hưởng: MBBank - 0901234567\n");
+            receipt.append("✔️ Xác thực giao dịch: Đã ghi nhận thành công\n");
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("✅ Thanh Toán & Đặt Món Thành Công!")
+                .setMessage(receipt.toString().trim())
+                .setPositiveButton("📜 Theo Dõi Đơn Hàng", (d, w) -> {
+                    Customer c = authService.getCurrentCustomer();
+                    if (c != null) {
+                        showCustomerProfileDialog(c);
+                    }
+                })
+                .setNegativeButton("Đóng", null)
+                .show();
     }
 
     private void showAiChatDialog() {
