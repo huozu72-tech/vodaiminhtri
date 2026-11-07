@@ -1,11 +1,13 @@
 package com.example.chieuthu3_ketthucmonhoc.services;
 
+import com.example.chieuthu3_ketthucmonhoc.data.datasource.InitialDataFactory;
 import com.example.chieuthu3_ketthucmonhoc.data.repository.MenuRepositoryImpl;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.ChatMessage;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AIChatbotServiceImpl;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.ChatbotMLModel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +18,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class AIChatbotServiceTest {
@@ -123,5 +126,95 @@ public class AIChatbotServiceTest {
             assertTrue(item.getPrice() <= 1000000L);
         }
         assertTrue(containsCrispy);
+    }
+
+    @Test
+    public void mlModelAchievesHighAccuracyAndValidProbabilityDistribution() {
+        ChatbotMLModel model = chatbotService.getMlModel();
+        assertNotNull(model);
+        assertTrue("Vocabulary phải được trích xuất từ tập huấn luyện", model.getVocabularySize() > 50);
+        assertTrue("Độ chính xác tập huấn luyện phải >= 92%", model.evaluateTrainingAccuracy() >= 0.92);
+
+        List<ChatbotMLModel.TrainingSample> validationSamples = Arrays.asList(
+                new ChatbotMLModel.TrainingSample("xin chào trợ lý nhà hàng", ChatbotMLModel.Intent.GREETING_HELP),
+                new ChatbotMLModel.TrainingSample("tìm món giá dưới 90k", ChatbotMLModel.Intent.BUDGET_QUERY),
+                new ChatbotMLModel.TrainingSample("mình thích ăn món chua cay", ChatbotMLModel.Intent.TASTE_QUERY),
+                new ChatbotMLModel.TrainingSample("cho xem thực đơn nước uống giải khát", ChatbotMLModel.Intent.CATEGORY_QUERY),
+                new ChatbotMLModel.TrainingSample("quán có món gà nướng mật ong không", ChatbotMLModel.Intent.DISH_SEARCH),
+                new ChatbotMLModel.TrainingSample("đi 4 người nên gọi combo gì", ChatbotMLModel.Intent.COMBO_CONSULT),
+                new ChatbotMLModel.TrainingSample("món nào đặc sản bán chạy nhất quán", ChatbotMLModel.Intent.BESTSELLER_QUERY),
+                new ChatbotMLModel.TrainingSample("quán có bán pizza hay trà sữa không", ChatbotMLModel.Intent.OUT_OF_SCOPE)
+        );
+        assertTrue("Độ chính xác tập kiểm thử độc lập phải >= 85%", model.evaluateAccuracy(validationSamples) >= 0.85);
+
+        ChatbotMLModel.IntentPrediction pred = model.predictIntent("đi 4 người nên gọi combo gì");
+        double probSum = 0.0;
+        for (double p : pred.getProbabilities().values()) {
+            probSum += p;
+        }
+        assertEquals(1.0, probSum, 0.001);
+        assertEquals(ChatbotMLModel.Intent.COMBO_CONSULT, pred.getIntent());
+    }
+
+    @Test
+    public void combinedBudgetAndTasteQueryFiltersBothPriceAndSpicyTaste() {
+        // Kiểm tra đúng câu gợi ý mẫu trên giao diện: "Tìm món cay ngon dưới 100k"
+        ChatMessage response = chatbotService.sendMessage("Tìm món cay ngon dưới 100k");
+        assertFalse(response.isUser());
+        assertFalse(response.getSuggestedItems().isEmpty());
+        for (MenuItem item : response.getSuggestedItems()) {
+            assertTrue("Món gợi ý phải <= 100k", item.getPrice() <= 100000L);
+            assertTrue("Món gợi ý phải có vị cay (không trả về nước ngọt 7Up)", item.getTasteAttributes().contains(TasteAttribute.SPICY));
+        }
+        assertEquals(dishSpicy.getId(), response.getSuggestedItems().get(0).getId());
+    }
+
+    @Test
+    public void unaccentedVietnameseQueriesWorkForTasteCategoryAndDishSearch() {
+        AIChatbotServiceImpl fullMenuChatbot = new AIChatbotServiceImpl(
+                new MenuRepositoryImpl(InitialDataFactory.createInitialMenuItems())
+        );
+
+        ChatMessage crispyResp = fullMenuChatbot.sendMessage("tim mon chien gion");
+        assertFalse(crispyResp.getSuggestedItems().isEmpty());
+        assertTrue(crispyResp.getSuggestedItems().get(0).getTasteAttributes().contains(TasteAttribute.CRISPY));
+
+        ChatMessage drinkResp = fullMenuChatbot.sendMessage("cho xem do uong giai khat");
+        assertFalse(drinkResp.getSuggestedItems().isEmpty());
+        assertEquals(FoodCategory.BEVERAGE, drinkResp.getSuggestedItems().get(0).getCategory());
+
+        ChatMessage dishResp = fullMenuChatbot.sendMessage("lau ga la giang gia bao nhieu");
+        assertFalse(dishResp.getSuggestedItems().isEmpty());
+        assertTrue(dishResp.getSuggestedItems().get(0).getName().contains("Lẩu Gà Lá Giang"));
+    }
+
+    @Test
+    public void comboGroupConsultationAndOutOfScopeGuardrailWorkCorrectly() {
+        AIChatbotServiceImpl fullMenuChatbot = new AIChatbotServiceImpl(
+                new MenuRepositoryImpl(InitialDataFactory.createInitialMenuItems())
+        );
+
+        ChatMessage comboResp = fullMenuChatbot.sendMessage("Đi 4 người nên gọi combo món gì?");
+        assertFalse(comboResp.isUser());
+        assertTrue(comboResp.getText().contains("4 người"));
+        assertTrue(comboResp.getSuggestedItems().size() >= 3);
+
+        ChatMessage outResp = fullMenuChatbot.sendMessage("Quán có bán pizza hải sản không?");
+        assertFalse(outResp.isUser());
+        assertTrue(outResp.getText().contains("pizza"));
+        assertFalse(outResp.getSuggestedItems().isEmpty());
+    }
+
+    @Test
+    public void imageAnalysisRecognizesCookingStyleAndDishHints() {
+        AIChatbotServiceImpl fullMenuChatbot = new AIChatbotServiceImpl(
+                new MenuRepositoryImpl(InitialDataFactory.createInitialMenuItems())
+        );
+
+        // Kiểm tra nhãn mặc định từ nút Camera trong khung chat
+        ChatMessage cameraResp = fullMenuChatbot.analyzeFoodImage("thực đơn món nướng và món chiên giòn");
+        assertFalse(cameraResp.isUser());
+        assertTrue("Phải nhận diện thành công món nướng & chiên giòn", cameraResp.getText().contains("độ tin cậy"));
+        assertFalse(cameraResp.getSuggestedItems().isEmpty());
     }
 }

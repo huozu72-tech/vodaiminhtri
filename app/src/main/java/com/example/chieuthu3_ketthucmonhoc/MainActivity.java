@@ -544,14 +544,20 @@ public class MainActivity extends AppCompatActivity {
                 item -> {
                     cartService.addItem(item, 1);
                     updateCartBadge();
+                    refreshAiRecommendations();
                     Toast.makeText(MainActivity.this, "Đã thêm '" + item.getName() + "' vào giỏ hàng!", Toast.LENGTH_SHORT).show();
                 }
         );
         dialogBinding.rvChatMessages.setLayoutManager(new LinearLayoutManager(this));
         dialogBinding.rvChatMessages.setAdapter(chatAdapter);
-        if (!aiChatService.getChatHistory().isEmpty()) {
-            dialogBinding.rvChatMessages.scrollToPosition(aiChatService.getChatHistory().size() - 1);
-        }
+
+        Runnable refreshAndScrollChat = () -> {
+            chatAdapter.updateList(aiChatService.getChatHistory());
+            if (!aiChatService.getChatHistory().isEmpty()) {
+                dialogBinding.rvChatMessages.scrollToPosition(aiChatService.getChatHistory().size() - 1);
+            }
+        };
+        refreshAndScrollChat.run();
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogBinding.getRoot())
@@ -559,41 +565,79 @@ public class MainActivity extends AppCompatActivity {
 
         dialogBinding.btnCloseChat.setOnClickListener(v -> dialog.dismiss());
 
-        dialogBinding.btnChatCamera.setOnClickListener(v -> {
-            aiChatService.analyzeFoodImage("thực đơn món nướng và món chiên giòn");
-            chatAdapter.updateList(aiChatService.getChatHistory());
-            if (!aiChatService.getChatHistory().isEmpty()) {
-                dialogBinding.rvChatMessages.scrollToPosition(aiChatService.getChatHistory().size() - 1);
-            }
+        dialogBinding.tvClearChatHistory.setOnClickListener(v -> {
+            aiChatService.clearChat();
+            refreshAndScrollChat.run();
+            Toast.makeText(MainActivity.this, "Đã làm mới cuộc trò chuyện AI!", Toast.LENGTH_SHORT).show();
         });
 
-        dialogBinding.btnSendChat.setOnClickListener(v -> {
+        dialogBinding.chipQuickSpicyBudget.setOnClickListener(v -> {
+            aiChatService.sendMessage("Tìm món cay ngon dưới 100k");
+            refreshAndScrollChat.run();
+        });
+        dialogBinding.chipQuickBestseller.setOnClickListener(v -> {
+            aiChatService.sendMessage("Gợi ý món đặc sản bán chạy nhất của quán");
+            refreshAndScrollChat.run();
+        });
+        dialogBinding.chipQuickCombo.setOnClickListener(v -> {
+            aiChatService.sendMessage("Đi 4 người nên gọi combo món gì");
+            refreshAndScrollChat.run();
+        });
+        dialogBinding.chipQuickCrispy.setOnClickListener(v -> {
+            aiChatService.sendMessage("Mình muốn ăn món nướng và món giòn rụm");
+            refreshAndScrollChat.run();
+        });
+        dialogBinding.chipQuickDrinks.setOnClickListener(v -> {
+            aiChatService.sendMessage("Cho xem danh mục nước uống giải khát");
+            refreshAndScrollChat.run();
+        });
+
+        dialogBinding.btnChatCamera.setOnClickListener(v -> {
+            String[] sampleImages = getSampleFoodImages();
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("📷 Chọn Ảnh Món Ăn Cần AI Nhận Diện")
+                    .setItems(sampleImages, (imgDialog, which) -> {
+                        aiChatService.analyzeFoodImage(sampleImages[which]);
+                        refreshAndScrollChat.run();
+                    })
+                    .setNegativeButton("Đóng", null)
+                    .show();
+        });
+
+        Runnable sendCurrentInput = () -> {
             String userText = dialogBinding.etChatMessage.getText() != null
                     ? dialogBinding.etChatMessage.getText().toString().trim()
                     : "";
-            if (!userText.isEmpty()) {
-                aiChatService.sendMessage(userText);
-                if (dialogBinding.etChatMessage.getText() != null) {
-                    dialogBinding.etChatMessage.getText().clear();
-                }
-                chatAdapter.updateList(aiChatService.getChatHistory());
-                if (!aiChatService.getChatHistory().isEmpty()) {
-                    dialogBinding.rvChatMessages.scrollToPosition(aiChatService.getChatHistory().size() - 1);
-                }
+            aiChatService.sendMessage(userText);
+            if (dialogBinding.etChatMessage.getText() != null) {
+                dialogBinding.etChatMessage.getText().clear();
             }
+            refreshAndScrollChat.run();
+        };
+
+        dialogBinding.btnSendChat.setOnClickListener(v -> sendCurrentInput.run());
+        dialogBinding.etChatMessage.setOnEditorActionListener((v, actionId, event) -> {
+            sendCurrentInput.run();
+            return true;
         });
 
         dialog.show();
     }
 
-    private void showImageRecognitionDialog() {
-        String[] sampleImages = new String[]{
+    private String[] getSampleFoodImages() {
+        return new String[]{
                 "Chân Giò Muối Chiên Giòn (Món chiên đặc sản)",
                 "Ếch Nướng Muối Ớt Lá Chanh & Gà Nướng Mật Ong (Món nướng)",
+                "Tôm Chiên Xù & Tôm Nướng Muối Ớt (Hải sản tươi)",
                 "Chân Gà Sốt Thái & Gỏi Ngó Sen Tôm Thịt (Món phụ chua cay)",
+                "Lẩu Gà Lá Giang (Món lẩu đặc biệt)",
                 "Nước Ngọt Giải Khát (Coca Cola, 7Up, Pepsi, Sting)",
-                "Lẩu Gà Lá Giang (Món lẩu đặc biệt)"
+                "Thực đơn món nướng và món chiên giòn"
         };
+    }
+
+    private void showImageRecognitionDialog() {
+        String[] sampleImages = getSampleFoodImages();
 
         new AlertDialog.Builder(this)
                 .setTitle("📷 Chọn Ảnh Món Ăn Cần Nhận Diện")
