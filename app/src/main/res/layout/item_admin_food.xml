@@ -74,20 +74,45 @@
                 android:textSize="13sp"
                 android:textStyle="bold"
                 tools:text="120.000 đ" />
+
+            <TextView
+                android:id="@+id/tvAdminFoodStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/gray_text"
+                android:textSize="11sp"
+                tools:text="🟢 Còn phục vụ • ⭐ 4.9 • Đã bán 210" />
         </LinearLayout>
 
-        <!-- Edit & Delete Action Buttons -->
+        <!-- Toggle Availability, Edit & Delete Action Buttons -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnToggleFoodAvailability"
+                style="@style/Widget.Material3.Button.Icon"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:backgroundTint="#10B981"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                android:text="🔄"
+                android:textSize="11sp"
+                app:cornerRadius="17dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEditFood"
                 style="@style/Widget.Material3.Button.Icon"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="5dp"
                 android:backgroundTint="@color/admin_blue_accent"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
@@ -95,15 +120,15 @@
                 android:insetBottom="0dp"
                 android:padding="0dp"
                 android:text="✏️"
-                android:textSize="12sp"
-                app:cornerRadius="18dp" />
+                android:textSize="11sp"
+                app:cornerRadius="17dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDeleteFood"
                 style="@style/Widget.Material3.Button.Icon"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginStart="6dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="5dp"
                 android:backgroundTint="@color/banner_red"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
@@ -111,8 +136,8 @@
                 android:insetBottom="0dp"
                 android:padding="0dp"
                 android:text="🗑️"
-                android:textSize="12sp"
-                app:cornerRadius="18dp" />
+                android:textSize="11sp"
+                app:cornerRadius="17dp" />
         </LinearLayout>
     </LinearLayout>
 

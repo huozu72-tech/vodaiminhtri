@@ -20,12 +20,26 @@ public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendati
         void onAddToCart(MenuItem item);
     }
 
+    public interface OnFoodItemClickListener {
+        void onFoodItemClick(MenuItem item);
+    }
+
     private List<AIRecommendation> recommendationList;
     private final OnAddToCartListener onAddToCartListener;
+    private final OnFoodItemClickListener onFoodItemClickListener;
 
     public AIRecommendationAdapter(List<AIRecommendation> recommendationList, OnAddToCartListener onAddToCartListener) {
+        this(recommendationList, onAddToCartListener, null);
+    }
+
+    public AIRecommendationAdapter(
+            List<AIRecommendation> recommendationList,
+            OnAddToCartListener onAddToCartListener,
+            OnFoodItemClickListener onFoodItemClickListener
+    ) {
         this.recommendationList = recommendationList != null ? recommendationList : new ArrayList<>();
         this.onAddToCartListener = onAddToCartListener;
+        this.onFoodItemClickListener = onFoodItemClickListener;
     }
 
     public static class RecViewHolder extends RecyclerView.ViewHolder {
@@ -54,6 +68,12 @@ public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendati
         holder.binding.tvAiReasonBadge.setText(item.getReason());
         holder.binding.tvAiDishName.setText(item.getMenuItem().getName());
         holder.binding.tvAiDishPrice.setText(item.getMenuItem().getFormattedPrice());
+
+        holder.itemView.setOnClickListener(v -> {
+            if (onFoodItemClickListener != null) {
+                onFoodItemClickListener.onFoodItemClick(item.getMenuItem());
+            }
+        });
 
         holder.binding.btnAiAddToCart.setOnClickListener(v -> {
             if (onAddToCartListener != null) {

@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="💳 Thanh Toán Chuyển Khoản QR"
+            android:text="💳 Đặt Hàng &amp; Thanh Toán Hóa Đơn"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -25,20 +25,20 @@
             android:id="@+id/tvOrderSummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:gravity="center"
             android:textColor="@color/gray_text"
             android:textSize="13sp"
             tools:text="Hóa đơn Bàn 12 • Tổng cộng: 210.000 đ (5 món)" />
 
-        <!-- Số bàn: người dùng tự nhập thay vì hard-code "Bàn 12" -->
+        <!-- Số bàn: người dùng tự nhập -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilTableNumber"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="Số bàn của bạn (ví dụ: 12)"
+            android:layout_marginTop="10dp"
+            android:hint="Số bàn phục vụ (ví dụ: 12)"
             app:errorEnabled="true">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -49,12 +49,57 @@
                 android:maxLength="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Phương thức thanh toán (Mục 4.2.5 & Bảng 3.4) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Phương thức thanh toán:"
+            android:textColor="@color/black"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupPaymentMethod"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPayQr"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="🏦 Chuyển khoản QR"
+                android:textSize="11sp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPayCash"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💵 Tiền mặt tại bàn"
+                android:textSize="11sp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPayWallet"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📱 Ví MoMo / ZaloPay"
+                android:textSize="11sp" />
+        </com.google.android.material.chip.ChipGroup>
+
         <!-- QR Code Box -->
         <LinearLayout
-            android:layout_width="220dp"
-            android:layout_height="220dp"
+            android:id="@+id/layoutQrBox"
+            android:layout_width="210dp"
+            android:layout_height="210dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/bg_ai_box"
             android:gravity="center"
             android:orientation="vertical"
@@ -62,14 +107,15 @@
 
             <ImageView
                 android:id="@+id/imgQrCode"
-                android:layout_width="160dp"
-                android:layout_height="160dp"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
                 android:background="@color/white"
+                android:contentDescription="Mã QR Thanh Toán"
                 android:padding="4dp"
-                android:src="@drawable/ic_restaurant"
-                android:contentDescription="Mã QR Thanh Toán" />
+                android:src="@drawable/ic_restaurant" />
 
             <TextView
+                android:id="@+id/tvQrBoxLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
@@ -86,8 +132,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:textIsSelectable="true"
             android:textColor="@color/gray_text"
+            android:textIsSelectable="true"
             android:textSize="11sp"
             android:visibility="gone"
             tools:text="Link VietQR: https://img.vietqr.io/image/..."
@@ -113,37 +159,37 @@
             android:id="@+id/btnCreateOrderQr"
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
+            android:layout_height="46dp"
+            android:layout_marginTop="10dp"
             android:backgroundTint="@color/ai_button_orange"
             android:text="1. Nhận Mã QR &amp; Tạo Đơn Hàng"
             android:textAllCaps="false"
             android:textColor="@color/white"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             app:cornerRadius="10dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:gravity="center"
-            android:text="Sau khi quét mã và chuyển tiền thành công, nhấn nút bên dưới để hoàn tất."
+            android:text="Sau khi kiểm tra thông tin thanh toán, nhấn nút bên dưới để hoàn tất đặt món."
             android:textColor="@color/gray_text"
-            android:textSize="12sp" />
+            android:textSize="11sp" />
 
         <!-- Confirm Payment Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnConfirmPayment"
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="12dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
             android:backgroundTint="@color/banner_red"
-            android:text="2. Tôi Đã Chuyển Tiền Thành Công ✓"
+            android:text="2. Hoàn Tất Đặt Hàng &amp; Thanh Toán ✓"
             android:textAllCaps="false"
             android:textColor="@color/white"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             app:cornerRadius="10dp" />
 

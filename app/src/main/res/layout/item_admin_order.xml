@@ -55,7 +55,7 @@
             android:layout_marginTop="2dp"
             android:textColor="@color/gray_text"
             android:textSize="11sp"
-            tools:text="Thời gian: 17:45 - 29/09/2026" />
+            tools:text="Thời gian: 17:45 • Chuyển khoản QR" />
 
         <TextView
             android:id="@+id/tvOrderItemsSummary"
@@ -66,7 +66,7 @@
             android:textSize="13sp"
             tools:text="Món: Chân Giò Muối Chiên Giòn x1, 7Up x2" />
 
-        <!-- Price & Change Status Button -->
+        <!-- Price, View Detail & Change Status Buttons (Hình 29) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -85,12 +85,29 @@
                 tools:text="150.000 đ" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewOrderDetail"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_marginEnd="6dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="10dp"
+                android:text="📄 Chi Tiết"
+                android:textAllCaps="false"
+                android:textColor="@color/admin_blue_accent"
+                android:textSize="11sp"
+                app:cornerRadius="6dp"
+                app:strokeColor="@color/admin_blue_accent" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnChangeStatus"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="34dp"
                 android:backgroundTint="@color/admin_blue_accent"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
+                android:paddingHorizontal="10dp"
                 android:text="Cập Nhật Trạng Thái"
                 android:textAllCaps="false"
                 android:textColor="@color/white"

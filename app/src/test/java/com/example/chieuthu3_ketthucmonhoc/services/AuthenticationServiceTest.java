@@ -95,4 +95,36 @@ public class AuthenticationServiceTest {
         assertTrue(result.isSuccess());
         assertNotNull(seededAuth.getCurrentAdmin());
     }
+
+    @Test
+    public void updateProfileUpdatesCustomerInfoAndPasswordSuccessfully() {
+        AuthResult<Customer> reg = authService.register("Trần Văn B", "tranb@example.com", "0944556677", "oldPass123");
+        assertTrue(reg.isSuccess());
+        int id = reg.getData().getId();
+
+        AuthResult<Customer> updated = authService.updateProfile(
+                id,
+                "Trần Văn B (VIP)",
+                "tranb.vip@example.com",
+                "Bàn 08 - Tầng 2",
+                "newPass456"
+        );
+        assertTrue(updated.isSuccess());
+        assertEquals("Trần Văn B (VIP)", updated.getData().getFullName());
+        assertEquals("tranb.vip@example.com", updated.getData().getEmail());
+        assertEquals("Bàn 08 - Tầng 2", updated.getData().getAddress());
+        assertTrue(SecurityHelper.verifyPassword("newPass456", updated.getData().getPasswordHash()));
+        assertEquals("Trần Văn B (VIP)", authService.getCurrentCustomer().getFullName());
+    }
+
+    @Test
+    public void searchCustomersFiltersByNamePhoneAndEmail() {
+        authService.register("Lê Thị Hoa", "hoa.le@example.com", "0901112222", "pass123");
+        authService.register("Phạm Minh Tuấn", "tuan.pham@example.com", "0903334444", "pass123");
+
+        assertEquals(2, authService.getAllCustomers().size());
+        assertEquals(1, authService.searchCustomers("Hoa").size());
+        assertEquals(1, authService.searchCustomers("090333").size());
+        assertEquals(1, authService.searchCustomers("tuan.pham").size());
+    }
 }

@@ -27,6 +27,10 @@ public enum TasteAttribute {
         return tag;
     }
 
+    public String getDisplayName() {
+        return tag;
+    }
+
     public List<String> getKeywords() {
         return keywords;
     }

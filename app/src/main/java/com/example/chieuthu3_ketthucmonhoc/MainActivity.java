@@ -2,10 +2,12 @@ package com.example.chieuthu3_ketthucmonhoc;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -15,6 +17,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -29,17 +32,21 @@ import com.example.chieuthu3_ketthucmonhoc.databinding.ActivityMainBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogAiChatBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCartBottomSheetBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCustomerProfileBinding;
+import com.example.chieuthu3_ketthucmonhoc.databinding.DialogFoodDetailBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogLoginBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogPaymentQrBinding;
 import com.example.chieuthu3_ketthucmonhoc.di.AppServiceLocator;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.AIRecommendation;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.AdminAccount;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.CartItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Customer;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AuthResult;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IAIChatbotService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IAIRecommendationService;
@@ -49,6 +56,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.services.IMenuService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IOrderService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.QrBitmapGenerator;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,12 +115,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupFoodGrid() {
-        foodAdapter = new FoodAdapter(menuService.getAvailableMenuItems(), item -> {
-            cartService.addItem(item, 1);
-            updateCartBadge();
-            refreshAiRecommendations();
-            Toast.makeText(MainActivity.this, "Đã thêm '" + item.getName() + "' vào giỏ!", Toast.LENGTH_SHORT).show();
-        });
+        foodAdapter = new FoodAdapter(
+                menuService.getAvailableMenuItems(),
+                item -> {
+                    cartService.addItem(item, 1);
+                    updateCartBadge();
+                    refreshAiRecommendations();
+                    Toast.makeText(MainActivity.this, "Đã thêm '" + item.getName() + "' vào giỏ!", Toast.LENGTH_SHORT).show();
+                },
+                this::showFoodDetailDialog
+        );
         binding.rvFoodGrid.setLayoutManager(new GridLayoutManager(this, 2));
         binding.rvFoodGrid.setAdapter(foodAdapter);
     }
@@ -126,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
                     cartService.addItem(item, 1);
                     updateCartBadge();
                     Toast.makeText(MainActivity.this, "Đã thêm '" + item.getName() + "' vào giỏ!", Toast.LENGTH_SHORT).show();
-                }
+                },
+                this::showFoodDetailDialog
         );
         binding.rvAiRecommendations.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -251,6 +264,156 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Xem chi tiết món ăn (Hình 10 Activity Diagram) + Đánh giá món ăn (UC-07) + Món tương tự AI
+     */
+    private void showFoodDetailDialog(MenuItem initialItem) {
+        MenuItem latest = menuService.getMenuItemById(initialItem.getId());
+        final MenuItem[] dishHolder = new MenuItem[]{latest != null ? latest : initialItem};
+
+        DialogFoodDetailBinding dialogBinding = DialogFoodDetailBinding.inflate(LayoutInflater.from(this));
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogBinding.getRoot())
+                .create();
+
+        final int[] quantityHolder = new int[]{1};
+
+        Runnable bindDishData = () -> {
+            MenuItem dish = dishHolder[0];
+            dialogBinding.imgDetailFood.setImageResource(FoodImageResolver.resolveImage(dish));
+            dialogBinding.tvDetailCategoryBadge.setText(dish.getCategory().getDisplayName());
+            dialogBinding.tvDetailFoodName.setText(dish.getName());
+            dialogBinding.tvDetailFoodPrice.setText(dish.getFormattedPrice());
+            dialogBinding.tvDetailRatingSold.setText(
+                    String.format(Locale.US, "⭐ %.1f / 5.0 • 🔥 Đã phục vụ %d phần", dish.getRating(), dish.getOrderCount())
+            );
+            dialogBinding.tvDetailFoodDesc.setText(dish.getDescription());
+
+            List<TasteAttribute> tastes = dish.getTasteAttributes();
+            if (tastes != null && !tastes.isEmpty()) {
+                StringBuilder sb = new StringBuilder("🏷️ Hương vị đặc trưng: ");
+                for (int i = 0; i < tastes.size(); i++) {
+                    if (i > 0) sb.append(" • ");
+                    sb.append(tastes.get(i).getDisplayName());
+                }
+                dialogBinding.tvDetailTasteTags.setText(sb.toString());
+                dialogBinding.tvDetailTasteTags.setVisibility(View.VISIBLE);
+            } else {
+                dialogBinding.tvDetailTasteTags.setVisibility(View.GONE);
+            }
+
+            long subtotal = dish.getPrice() * quantityHolder[0];
+            dialogBinding.tvDetailQuantity.setText(String.valueOf(quantityHolder[0]));
+            dialogBinding.btnDetailAddToCart.setText(
+                    String.format(Locale.getDefault(), "🛒 Thêm Vào Giỏ • %,d đ", subtotal)
+            );
+        };
+
+        bindDishData.run();
+
+        dialogBinding.btnCloseDetail.setOnClickListener(v -> dialog.dismiss());
+
+        dialogBinding.btnDetailMinus.setOnClickListener(v -> {
+            if (quantityHolder[0] > 1) {
+                quantityHolder[0]--;
+                bindDishData.run();
+            }
+        });
+
+        dialogBinding.btnDetailPlus.setOnClickListener(v -> {
+            if (quantityHolder[0] < 20) {
+                quantityHolder[0]++;
+                bindDishData.run();
+            }
+        });
+
+        dialogBinding.btnDetailAddToCart.setOnClickListener(v -> {
+            MenuItem dish = dishHolder[0];
+            cartService.addItem(dish, quantityHolder[0]);
+            updateCartBadge();
+            refreshAiRecommendations();
+            dialog.dismiss();
+            Toast.makeText(
+                    MainActivity.this,
+                    "Đã thêm " + quantityHolder[0] + "x '" + dish.getName() + "' vào giỏ hàng!",
+                    Toast.LENGTH_SHORT
+            ).show();
+        });
+
+        // UC-07: Đánh giá món ăn (1 - 5 sao)
+        View.OnClickListener rateClickListener = v -> {
+            int stars = 5;
+            int id = v.getId();
+            if (id == R.id.btnRate1) stars = 1;
+            else if (id == R.id.btnRate2) stars = 2;
+            else if (id == R.id.btnRate3) stars = 3;
+            else if (id == R.id.btnRate4) stars = 4;
+
+            MenuItem updated = menuService.rateMenuItem(dishHolder[0].getId(), stars);
+            if (updated != null) {
+                dishHolder[0] = updated;
+                bindDishData.run();
+                refreshFoodList();
+                refreshAiRecommendations();
+                dialogBinding.tvRatingFeedback.setText(
+                        String.format(Locale.US, "✅ Cảm ơn bạn đã chấm %d★! Điểm hiện tại: ⭐ %.1f/5.0", stars, updated.getRating())
+                );
+            }
+        };
+        dialogBinding.btnRate1.setOnClickListener(rateClickListener);
+        dialogBinding.btnRate2.setOnClickListener(rateClickListener);
+        dialogBinding.btnRate3.setOnClickListener(rateClickListener);
+        dialogBinding.btnRate4.setOnClickListener(rateClickListener);
+        dialogBinding.btnRate5.setOnClickListener(rateClickListener);
+
+        // AI Similar Dishes (Hình 10: Món tương tự từ Hệ thống AI)
+        List<AIRecommendation> similarDishes = aiRecService.getSimilarDishes(dishHolder[0].getId(), 3);
+        dialogBinding.layoutSimilarDishesContainer.removeAllViews();
+        for (AIRecommendation rec : similarDishes) {
+            MenuItem simItem = rec.getMenuItem();
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(20, 14, 20, 14);
+            row.setBackgroundResource(R.drawable.bg_card_food);
+
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            rowParams.setMargins(0, 6, 0, 6);
+            row.setLayoutParams(rowParams);
+
+            TextView tvInfo = new TextView(this);
+            tvInfo.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            tvInfo.setText(simItem.getName() + " • " + simItem.getFormattedPrice() + "\n" + rec.getReason());
+            tvInfo.setTextSize(12f);
+            tvInfo.setTextColor(ContextCompat.getColor(this, R.color.black));
+
+            MaterialButton btnQuickAdd = new MaterialButton(this);
+            btnQuickAdd.setText("+ Giỏ");
+            btnQuickAdd.setTextSize(10f);
+            btnQuickAdd.setAllCaps(false);
+            btnQuickAdd.setOnClickListener(v -> {
+                cartService.addItem(simItem, 1);
+                updateCartBadge();
+                refreshAiRecommendations();
+                Toast.makeText(MainActivity.this, "Đã thêm '" + simItem.getName() + "' vào giỏ!", Toast.LENGTH_SHORT).show();
+            });
+
+            row.setOnClickListener(v -> {
+                dialog.dismiss();
+                showFoodDetailDialog(simItem);
+            });
+
+            row.addView(tvInfo);
+            row.addView(btnQuickAdd);
+            dialogBinding.layoutSimilarDishesContainer.addView(row);
+        }
+
+        dialog.show();
+    }
+
     private void handleUserClick() {
         Customer customer = authService.getCurrentCustomer();
         AdminAccount admin = authService.getCurrentAdmin();
@@ -275,70 +438,138 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showCustomerProfileDialog(Customer customer) {
+    /**
+     * Hình 24: Giao diện Hồ Sơ Khách Hàng (Xem & Cập nhật thông tin) + UC-06: Theo dõi & Hủy đơn hàng
+     */
+    private void showCustomerProfileDialog(Customer initialCustomer) {
         DialogCustomerProfileBinding dialogBinding = DialogCustomerProfileBinding.inflate(LayoutInflater.from(this));
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogBinding.getRoot())
                 .create();
 
-        dialogBinding.tvProfileFullName.setText(customer.getFullName());
-        dialogBinding.tvProfilePhone.setText("Số điện thoại: " + customer.getPhoneNumber());
-        dialogBinding.tvProfileEmail.setText(
-                customer.getEmail() != null && !customer.getEmail().trim().isEmpty()
-                        ? "Email: " + customer.getEmail()
-                        : "Email: Chưa cập nhật"
-        );
+        final Customer[] customerHolder = new Customer[]{initialCustomer};
 
-        List<Order> orders = orderService.getCustomerOrders(customer.getId());
-        if (orders.isEmpty()) {
-            dialogBinding.tvNoOrdersHint.setVisibility(View.VISIBLE);
-        } else {
-            dialogBinding.tvNoOrdersHint.setVisibility(View.GONE);
-            int displayCount = Math.min(orders.size(), 5);
-            for (int i = 0; i < displayCount; i++) {
-                Order order = orders.get(i);
-                TextView orderItemView = new TextView(this);
-                String statusText;
-                switch (order.getStatus()) {
-                    case PENDING:
-                        statusText = "Chờ xác nhận";
-                        break;
-                    case PREPARING:
-                        statusText = "Bếp đang nấu";
-                        break;
-                    case COMPLETED:
-                        statusText = "Đã hoàn thành ✓";
-                        break;
-                    case CANCELLED:
-                    default:
-                        statusText = "Đã hủy";
-                        break;
+        Runnable bindProfileHeaderAndForm = () -> {
+            Customer c = customerHolder[0];
+            dialogBinding.tvProfileFullName.setText(c.getFullName());
+            dialogBinding.tvProfilePhone.setText("Số điện thoại: " + c.getPhoneNumber());
+            dialogBinding.tvProfileEmail.setText(
+                    c.getEmail() != null && !c.getEmail().trim().isEmpty()
+                            ? "Email: " + c.getEmail()
+                            : "Email: Chưa cập nhật"
+            );
+            dialogBinding.etProfileFullName.setText(c.getFullName());
+            dialogBinding.etProfileEmail.setText(c.getEmail() != null ? c.getEmail() : "");
+            dialogBinding.etProfileAddress.setText(c.getAddress() != null ? c.getAddress() : "");
+            dialogBinding.etProfileNewPassword.setText("");
+        };
+
+        Runnable bindOrderHistory = new Runnable() {
+            @Override
+            public void run() {
+                dialogBinding.layoutCustomerOrders.removeAllViews();
+                List<Order> orders = orderService.getCustomerOrders(customerHolder[0].getId());
+                if (orders.isEmpty()) {
+                    TextView emptyView = new TextView(MainActivity.this);
+                    emptyView.setText("Bạn chưa có đơn hàng nào.");
+                    emptyView.setGravity(Gravity.CENTER);
+                    emptyView.setPadding(16, 24, 16, 24);
+                    dialogBinding.layoutCustomerOrders.addView(emptyView);
+                    return;
                 }
 
-                StringBuilder itemsSummary = new StringBuilder();
-                for (int j = 0; j < order.getItems().size(); j++) {
-                    OrderItem orderItem = order.getItems().get(j);
-                    if (j > 0) itemsSummary.append(", ");
-                    itemsSummary.append(orderItem.getMenuItem().getName())
-                            .append(" x")
-                            .append(orderItem.getQuantity());
+                int displayCount = Math.min(orders.size(), 8);
+                for (int i = 0; i < displayCount; i++) {
+                    Order order = orders.get(i);
+                    LinearLayout card = new LinearLayout(MainActivity.this);
+                    card.setOrientation(LinearLayout.VERTICAL);
+                    card.setPadding(24, 18, 24, 18);
+                    card.setBackgroundResource(R.drawable.bg_card_food);
+
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    params.setMargins(0, 8, 0, 8);
+                    card.setLayoutParams(params);
+
+                    TextView tvOrderHeader = new TextView(MainActivity.this);
+                    tvOrderHeader.setText(
+                            order.getOrderId() + " • " + order.getTableNumber() + " • " + order.getStatus().getDisplayName()
+                    );
+                    tvOrderHeader.setTextSize(13f);
+                    tvOrderHeader.setTypeface(null, android.graphics.Typeface.BOLD);
+                    try {
+                        tvOrderHeader.setTextColor(Color.parseColor(order.getStatus().getColorHex()));
+                    } catch (Exception e) {
+                        tvOrderHeader.setTextColor(Color.BLACK);
+                    }
+
+                    TextView tvOrderDetails = new TextView(MainActivity.this);
+                    tvOrderDetails.setText(
+                            "Thời gian: " + order.getFormattedTime() + " • " + order.getPaymentMethod()
+                                    + "\nMón: " + order.getItemsSummary()
+                                    + "\nTổng thanh toán: " + order.getFormattedTotal()
+                    );
+                    tvOrderDetails.setTextSize(12f);
+                    tvOrderDetails.setPadding(0, 6, 0, 6);
+                    tvOrderDetails.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.black));
+
+                    card.addView(tvOrderHeader);
+                    card.addView(tvOrderDetails);
+
+                    // Nút hủy đơn nếu đơn đang Chờ xác nhận (PENDING) - UC-06 Theo dõi đơn hàng
+                    if (order.getStatus() == OrderStatus.PENDING) {
+                        MaterialButton btnCancelOrder = new MaterialButton(MainActivity.this);
+                        btnCancelOrder.setText("❌ Hủy Đơn Hàng Này");
+                        btnCancelOrder.setAllCaps(false);
+                        btnCancelOrder.setTextSize(11f);
+                        btnCancelOrder.setBackgroundColor(Color.parseColor("#FEE2E2"));
+                        btnCancelOrder.setTextColor(Color.parseColor("#DC2626"));
+                        btnCancelOrder.setOnClickListener(v -> {
+                            boolean cancelled = orderService.cancelOrder(order.getOrderId());
+                            if (cancelled) {
+                                Toast.makeText(
+                                        MainActivity.this,
+                                        "Đã hủy đơn hàng " + order.getOrderId() + " thành công!",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                                this.run();
+                            }
+                        });
+                        card.addView(btnCancelOrder);
+                    }
+
+                    dialogBinding.layoutCustomerOrders.addView(card);
                 }
-
-                orderItemView.setText(order.getOrderId() + " • " + order.getFormattedTotal() + " • " + statusText + "\n(" + itemsSummary + ")");
-                orderItemView.setTextSize(12f);
-                orderItemView.setPadding(24, 16, 24, 16);
-                orderItemView.setBackgroundResource(R.drawable.bg_card_food);
-
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                params.setMargins(0, 8, 0, 8);
-                orderItemView.setLayoutParams(params);
-
-                dialogBinding.layoutCustomerOrders.addView(orderItemView);
             }
-        }
+        };
+
+        bindProfileHeaderAndForm.run();
+        bindOrderHistory.run();
+
+        dialogBinding.btnSaveProfile.setOnClickListener(v -> {
+            String newName = dialogBinding.etProfileFullName.getText().toString();
+            String newEmail = dialogBinding.etProfileEmail.getText().toString();
+            String newAddress = dialogBinding.etProfileAddress.getText().toString();
+            String newPass = dialogBinding.etProfileNewPassword.getText().toString();
+
+            AuthResult<Customer> res = authService.updateProfile(
+                    customerHolder[0].getId(),
+                    newName,
+                    newEmail,
+                    newAddress,
+                    newPass
+            );
+            if (res.isSuccess()) {
+                customerHolder[0] = res.getData();
+                bindProfileHeaderAndForm.run();
+                updateUserHeader();
+                Toast.makeText(MainActivity.this, "Đã cập nhật hồ sơ cá nhân thành công!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, res.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
         dialogBinding.btnLogoutCustomer.setOnClickListener(v -> {
             authService.logout();
@@ -413,8 +644,7 @@ public class MainActivity extends AppCompatActivity {
     private void showPaymentDialog() {
         if (cartService.isEmpty()) {
             Toast.makeText(this, "Giỏ hàng đang trống! Vui lòng chọn món trước.", Toast.LENGTH_SHORT).show();
-            return
-;
+            return;
         }
 
         long totalAmount = cartService.getTotalAmount();
@@ -423,21 +653,49 @@ public class MainActivity extends AppCompatActivity {
 
         dialogBinding.etTableNumber.setText("12");
 
+        java.util.concurrent.Callable<String> getSelectedPaymentMethod = () -> {
+            int checkedId = dialogBinding.chipGroupPaymentMethod.getCheckedChipId();
+            if (checkedId == R.id.chipPayCash) {
+                return "Tiền mặt tại bàn";
+            } else if (checkedId == R.id.chipPayWallet) {
+                return "Ví MoMo / ZaloPay";
+            }
+            return "Chuyển khoản QR";
+        };
+
         Runnable updateSummary = () -> {
             String tableRaw = dialogBinding.etTableNumber.getText() != null
                     ? dialogBinding.etTableNumber.getText().toString().trim()
                     : "";
             String tableLabel = !tableRaw.isEmpty() ? "Bàn " + tableRaw : "Bàn ?";
+            String method = "Chuyển khoản QR";
+            try {
+                method = getSelectedPaymentMethod.call();
+            } catch (Exception ignored) {}
+
             dialogBinding.tvOrderSummary.setText(String.format(
                     Locale.getDefault(),
-                    "Hóa đơn %s • Tổng cộng: %,d đ (%d món)",
+                    "Hóa đơn %s • Tổng: %,d đ (%d món) • %s",
                     tableLabel,
                     totalAmount,
-                    itemCount
+                    itemCount,
+                    method
             ));
         };
 
         updateSummary.run();
+
+        dialogBinding.chipGroupPaymentMethod.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            updateSummary.run();
+            int checkedId = dialogBinding.chipGroupPaymentMethod.getCheckedChipId();
+            if (checkedId == R.id.chipPayCash) {
+                dialogBinding.tvQrBoxLabel.setText("Thanh Toán Tiền Mặt Tại Bàn");
+            } else if (checkedId == R.id.chipPayWallet) {
+                dialogBinding.tvQrBoxLabel.setText("Quét Mã Ví Điện Tử MoMo / ZaloPay");
+            } else {
+                dialogBinding.tvQrBoxLabel.setText("Mã QR VietQR Ngân Hàng");
+            }
+        });
 
         dialogBinding.etTableNumber.addTextChangedListener(new TextWatcher() {
             @Override
@@ -474,8 +732,9 @@ public class MainActivity extends AppCompatActivity {
             String tableLabel = "Bàn " + tableRaw;
             Customer customer = authService.getCurrentCustomer();
             Integer customerId = customer != null ? customer.getId() : null;
+            String paymentMethod = getSelectedPaymentMethod.call();
 
-            Order order = orderService.createOrder(tableLabel, customerId, cartService.getCartItems());
+            Order order = orderService.createOrder(tableLabel, customerId, cartService.getCartItems(), paymentMethod);
             createdOrderHolder[0] = order;
 
             dialogBinding.tilTableNumber.setEnabled(false);
@@ -528,7 +787,7 @@ public class MainActivity extends AppCompatActivity {
 
             Toast.makeText(
                     MainActivity.this,
-                    "Thanh toán thành công đơn " + order.getOrderId() + " (" + order.getTableNumber() + ")! Bếp đang chế biến món ăn.",
+                    "Đặt hàng thành công đơn " + order.getOrderId() + " (" + order.getTableNumber() + " - " + order.getPaymentMethod() + ")! Bếp đang chế biến món ăn.",
                     Toast.LENGTH_LONG
             ).show();
         });

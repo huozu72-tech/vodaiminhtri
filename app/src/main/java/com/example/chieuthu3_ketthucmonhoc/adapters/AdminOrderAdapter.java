@@ -22,12 +22,26 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Ad
         void onChangeStatusClick(Order order);
     }
 
+    public interface OnOrderDetailClickListener {
+        void onOrderDetailClick(Order order);
+    }
+
     private List<Order> orderList;
     private final OnChangeStatusClickListener onChangeStatusClickListener;
+    private final OnOrderDetailClickListener onOrderDetailClickListener;
 
     public AdminOrderAdapter(List<Order> orderList, OnChangeStatusClickListener onChangeStatusClickListener) {
+        this(orderList, onChangeStatusClickListener, null);
+    }
+
+    public AdminOrderAdapter(
+            List<Order> orderList,
+            OnChangeStatusClickListener onChangeStatusClickListener,
+            OnOrderDetailClickListener onOrderDetailClickListener
+    ) {
         this.orderList = orderList != null ? orderList : new ArrayList<>();
         this.onChangeStatusClickListener = onChangeStatusClickListener;
+        this.onOrderDetailClickListener = onOrderDetailClickListener;
     }
 
     public static class AdminOrderViewHolder extends RecyclerView.ViewHolder {
@@ -54,7 +68,7 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Ad
         Context context = holder.itemView.getContext();
 
         holder.binding.tvOrderId.setText(order.getOrderId() + " • " + order.getTableNumber());
-        holder.binding.tvOrderTime.setText("Thời gian: " + order.getFormattedTime());
+        holder.binding.tvOrderTime.setText("Thời gian: " + order.getFormattedTime() + " • " + order.getPaymentMethod());
         holder.binding.tvOrderItemsSummary.setText("Món: " + order.getItemsSummary());
         holder.binding.tvOrderTotalPrice.setText(order.getFormattedTotal());
         holder.binding.tvOrderStatusBadge.setText(order.getStatus().getDisplayName());
@@ -64,6 +78,18 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Ad
         } catch (Exception e) {
             holder.binding.tvOrderStatusBadge.setTextColor(ContextCompat.getColor(context, R.color.admin_status_pending));
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (onOrderDetailClickListener != null) {
+                onOrderDetailClickListener.onOrderDetailClick(order);
+            }
+        });
+
+        holder.binding.btnViewOrderDetail.setOnClickListener(v -> {
+            if (onOrderDetailClickListener != null) {
+                onOrderDetailClickListener.onOrderDetailClick(order);
+            }
+        });
 
         holder.binding.btnChangeStatus.setOnClickListener(v -> {
             if (onChangeStatusClickListener != null) {

@@ -17,4 +17,5 @@ public interface IMenuService {
     MenuItem updateMenuItem(MenuItem item);
     boolean deleteMenuItem(int id);
     MenuItem toggleAvailability(int id);
+    MenuItem rateMenuItem(int id, int stars);
 }

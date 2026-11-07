@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="18dp">
 
         <!-- User Info Header Card -->
         <LinearLayout
@@ -20,18 +20,18 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="54dp"
-                android:layout_height="54dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
                 android:background="@drawable/bg_header_button"
+                android:contentDescription="Avatar"
                 android:padding="10dp"
                 android:src="@drawable/ic_user"
-                app:tint="@color/primary_orange"
-                android:contentDescription="Avatar" />
+                app:tint="@color/primary_orange" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -42,7 +42,7 @@
                     android:textColor="@color/black"
                     android:textSize="17sp"
                     android:textStyle="bold"
-                    tools:text="Khách Hàng Thân Thiết" />
+                    tools:text="Nguyễn Văn A" />
 
                 <TextView
                     android:id="@+id/tvProfilePhone"
@@ -50,7 +50,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:textColor="@color/gray_text"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     tools:text="SĐT: 0901234567" />
 
                 <TextView
@@ -58,19 +58,93 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/gray_text"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     tools:text="Email: khachhang@restaurant.com" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Orders Section Header -->
+        <!-- Editable Profile Form (Hình 24 - Cập nhật hồ sơ cá nhân) -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="📜 Lịch Sử Đơn Hàng Của Bạn"
+            android:layout_marginTop="14dp"
+            android:text="✏️ Cập Nhật Thông Tin Hồ Sơ Cá Nhân"
             android:textColor="@color/black"
-            android:textSize="15sp"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etProfileFullName"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_search_input"
+            android:hint="Họ và tên khách hàng"
+            android:inputType="textPersonName"
+            android:paddingHorizontal="12dp"
+            android:textColor="@color/black"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/etProfileEmail"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_search_input"
+            android:hint="Email liên hệ"
+            android:inputType="textEmailAddress"
+            android:paddingHorizontal="12dp"
+            android:textColor="@color/black"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/etProfileAddress"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_search_input"
+            android:hint="Bàn ưu tiên / Địa chỉ giao hàng (VD: Bàn 08)"
+            android:inputType="textPostalAddress"
+            android:paddingHorizontal="12dp"
+            android:textColor="@color/black"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/etProfileNewPassword"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_search_input"
+            android:hint="Đổi mật khẩu mới (Để trống nếu giữ nguyên)"
+            android:inputType="textPassword"
+            android:paddingHorizontal="12dp"
+            android:textColor="@color/black"
+            android:textSize="13sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveProfile"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/ai_button_orange"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="💾 Lưu Cập Nhật Hồ Sơ"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:cornerRadius="8dp" />
+
+        <!-- Orders Section Header (UC-06: Theo dõi đơn hàng) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="📜 Theo Dõi &amp; Lịch Sử Đơn Hàng Của Bạn"
+            android:textColor="@color/black"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <!-- Container for order items -->
@@ -96,7 +170,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginVertical="16dp"
+            android:layout_marginVertical="14dp"
             android:background="#E2E8F0" />
 
         <!-- Buttons -->
@@ -109,9 +183,9 @@
                 android:id="@+id/btnLogoutCustomer"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="46dp"
-                android:layout_weight="1"
+                android:layout_height="44dp"
                 android:layout_marginEnd="6dp"
+                android:layout_weight="1"
                 android:text="Đăng Xuất"
                 android:textAllCaps="false"
                 android:textColor="#DC2626"
@@ -124,9 +198,9 @@
                 android:id="@+id/btnCloseProfile"
                 style="@style/Widget.Material3.Button"
                 android:layout_width="0dp"
-                android:layout_height="46dp"
-                android:layout_weight="1"
+                android:layout_height="44dp"
                 android:layout_marginStart="6dp"
+                android:layout_weight="1"
                 android:backgroundTint="@color/primary_orange"
                 android:text="Đóng"
                 android:textAllCaps="false"

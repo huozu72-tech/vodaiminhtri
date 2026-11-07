@@ -13,7 +13,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- 1. Top Admin Bar matching Screenshot Header -->
+        <!-- 1. Top Admin Bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,7 +27,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="田 DeskApp"
+                android:text="田 DeskApp Quản Trị"
                 android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -54,7 +54,7 @@
                 app:strokeWidth="1dp" />
         </LinearLayout>
 
-        <!-- 2. Admin Navigation Tabs (Trang chủ, Sản phẩm, Đơn hàng) -->
+        <!-- 2. Admin Navigation Tabs (4 Use Cases: Thống kê, Món ăn, Đơn hàng, Khách hàng) -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -76,7 +76,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:text="🏠 Trang Chủ Thống Kê"
+                    android:text="🏠 Thống Kê Doanh Thu"
                     android:textColor="@color/white"
                     app:chipBackgroundColor="@color/admin_blue_accent"
                     app:chipCornerRadius="16dp" />
@@ -86,7 +86,7 @@
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📊 Sản Phẩm Món Ăn"
+                    android:text="📊 Quản Lý Món Ăn"
                     app:chipCornerRadius="16dp" />
 
                 <com.google.android.material.chip.Chip
@@ -96,6 +96,14 @@
                     android:layout_height="wrap_content"
                     android:text="🛒 Quản Lý Đơn Hàng"
                     app:chipCornerRadius="16dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipTabCustomers"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👥 Quản Lý Khách Hàng"
+                    app:chipCornerRadius="16dp" />
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
 
@@ -104,7 +112,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- TAB 1: DASHBOARD OVERVIEW MATCHING SCREENSHOT -->
+            <!-- TAB 1: DASHBOARD OVERVIEW & TOP SELLING DISHES (Hình 26) -->
             <androidx.core.widget.NestedScrollView
                 android:id="@+id/layoutTabDashboard"
                 android:layout_width="match_parent"
@@ -135,9 +143,9 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Bảng Điều Khiển Quản Trị"
+                                android:text="Bảng Điều Khiển Quản Trị &amp; Thống Kê"
                                 android:textColor="@color/black"
-                                android:textSize="18sp"
+                                android:textSize="17sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -147,12 +155,12 @@
                                 android:layout_marginTop="2dp"
                                 android:text="Quản Trị Viên"
                                 android:textColor="@color/admin_blue_accent"
-                                android:textSize="22sp"
+                                android:textSize="21sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- 4 Metric Cards matching Screenshot -->
+                    <!-- 4 Metric Cards -->
                     <GridLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -160,7 +168,7 @@
                         android:columnCount="2"
                         android:rowCount="2">
 
-                        <!-- Metric 1: Liên hệ / Đơn -->
+                        <!-- Metric 1: Tổng Đơn Hàng -->
                         <com.google.android.material.card.MaterialCardView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -230,7 +238,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Đơn Đang Chờ"
+                                    android:text="Đơn Đang Xử Lý"
                                     android:textColor="@color/gray_text"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -306,7 +314,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Doanh Thu"
+                                    android:text="Tổng Doanh Thu"
                                     android:textColor="@color/gray_text"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -332,26 +340,59 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Hoạt Động Phân Tích (Hoàn Thành vs Đang Xử Lý)"
+                                android:text="📈 Hiệu Suất Vận Hành Hệ Thống"
                                 android:textColor="@color/black"
-                                android:textSize="13sp"
+                                android:textSize="14sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:id="@+id/tvStatCompletionRate"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="8dp"
                                 android:text="Tỷ Lệ Hoàn Thành Đơn: 100% 🎯"
                                 android:textColor="@color/admin_blue_accent"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Top 5 Best Selling Dishes Card (Hình 26 & IDashboardService) -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:cardBackgroundColor="@color/white"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="2dp"
+                        app:strokeWidth="0dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🏆 Top 5 Món Ăn Bán Chạy Nhất"
+                                android:textColor="@color/black"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <LinearLayout
+                                android:id="@+id/layoutTopSellingDishes"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:orientation="vertical" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
             </androidx.core.widget.NestedScrollView>
 
-            <!-- TAB 2: PRODUCTS MANAGEMENT (THÊM / SỬA / XÓA MÓN) -->
+            <!-- TAB 2: PRODUCTS MANAGEMENT (UC-08: Quản lý món ăn - Hình 27 & 28) -->
             <LinearLayout
                 android:id="@+id/layoutTabProducts"
                 android:layout_width="match_parent"
@@ -389,15 +430,27 @@
                         app:cornerRadius="8dp" />
                 </LinearLayout>
 
+                <EditText
+                    android:id="@+id/etSearchAdminFood"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_search_input"
+                    android:hint="🔍 Tìm món ăn trong thực đơn quản trị..."
+                    android:inputType="text"
+                    android:paddingHorizontal="12dp"
+                    android:textColor="@color/black"
+                    android:textSize="13sp" />
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvAdminProducts"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="8dp"
                     tools:listitem="@layout/item_admin_food" />
             </LinearLayout>
 
-            <!-- TAB 3: ORDERS MANAGEMENT (QUẢN LÝ ĐƠN HÀNG) -->
+            <!-- TAB 3: ORDERS MANAGEMENT (UC-09: Quản lý đơn hàng - Hình 29) -->
             <LinearLayout
                 android:id="@+id/layoutTabOrders"
                 android:layout_width="match_parent"
@@ -409,17 +462,112 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Danh Sách Đơn Hàng Cần Xử Lý"
+                    android:text="Danh Sách Đơn Hàng &amp; Trạng Thái Bếp"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroupOrderStatusFilter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:selectionRequired="true"
+                        app:singleLine="true"
+                        app:singleSelection="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOrderFilterAll"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:text="Tất cả đơn"
+                            android:textSize="11sp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOrderFilterPending"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chờ xác nhận"
+                            android:textSize="11sp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOrderFilterPreparing"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Đang chế biến"
+                            android:textSize="11sp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOrderFilterCompleted"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Đã hoàn thành"
+                            android:textSize="11sp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOrderFilterCancelled"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Đã hủy"
+                            android:textSize="11sp" />
+                    </com.google.android.material.chip.ChipGroup>
+                </HorizontalScrollView>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvAdminOrders"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="6dp"
                     tools:listitem="@layout/item_admin_order" />
+            </LinearLayout>
+
+            <!-- TAB 4: CUSTOMERS MANAGEMENT (UC-10: Quản lý khách hàng) -->
+            <LinearLayout
+                android:id="@+id/layoutTabCustomers"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvAdminCustomerCountHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Danh Sách Khách Hàng Thành Viên"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etSearchAdminCustomer"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_search_input"
+                    android:hint="🔍 Tìm khách hàng theo Họ tên, SĐT, Email..."
+                    android:inputType="text"
+                    android:paddingHorizontal="12dp"
+                    android:textColor="@color/black"
+                    android:textSize="13sp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvAdminCustomers"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="8dp"
+                    tools:listitem="@layout/item_admin_customer" />
             </LinearLayout>
 
         </FrameLayout>

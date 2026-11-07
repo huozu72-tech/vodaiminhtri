@@ -16,6 +16,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder> {
 
@@ -23,12 +24,26 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         void onAddToCart(MenuItem item);
     }
 
+    public interface OnFoodItemClickListener {
+        void onFoodItemClick(MenuItem item);
+    }
+
     private List<MenuItem> foodList;
     private final OnAddToCartListener onAddToCartListener;
+    private final OnFoodItemClickListener onFoodItemClickListener;
 
     public FoodAdapter(List<MenuItem> foodList, OnAddToCartListener onAddToCartListener) {
+        this(foodList, onAddToCartListener, null);
+    }
+
+    public FoodAdapter(
+            List<MenuItem> foodList,
+            OnAddToCartListener onAddToCartListener,
+            OnFoodItemClickListener onFoodItemClickListener
+    ) {
         this.foodList = foodList != null ? foodList : new ArrayList<>();
         this.onAddToCartListener = onAddToCartListener;
+        this.onFoodItemClickListener = onFoodItemClickListener;
     }
 
     public static class FoodViewHolder extends RecyclerView.ViewHolder {
@@ -57,6 +72,9 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         holder.binding.imgFood.setImageResource(FoodImageResolver.resolveImage(item));
         holder.binding.tvFoodName.setText(item.getName());
         holder.binding.tvFoodDesc.setText(item.getDescription());
+        holder.binding.tvFoodRatingSold.setText(
+                String.format(Locale.US, "⭐ %.1f • Đã bán %d", item.getRating(), item.getOrderCount())
+        );
         holder.binding.tvFoodPrice.setText(item.getFormattedPrice());
         holder.binding.tvCategoryBadge.setText(item.getCategory().getDisplayName());
 
@@ -74,6 +92,12 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
                 holder.binding.tvCategoryBadge.setTextColor(ContextCompat.getColor(context, R.color.badge_do_uong_text));
                 break;
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (onFoodItemClickListener != null) {
+                onFoodItemClickListener.onFoodItemClick(item);
+            }
+        });
 
         holder.binding.btnAddToCart.setOnClickListener(v -> {
             if (onAddToCartListener != null) {

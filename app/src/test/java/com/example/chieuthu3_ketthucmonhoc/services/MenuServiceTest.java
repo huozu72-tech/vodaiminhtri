@@ -98,4 +98,20 @@ public class MenuServiceTest {
         }
         assertFalse(containsAvailable);
     }
+
+    @Test
+    public void rateMenuItemUpdatesDishRatingWithinValidRange() {
+        MenuItem rated = menuService.rateMenuItem(1, 5);
+        assertNotNull(rated);
+        assertTrue(rated.getRating() >= 4.8 && rated.getRating() <= 5.0);
+
+        MenuItem lowRated = menuService.rateMenuItem(2, 1);
+        assertNotNull(lowRated);
+        assertTrue(lowRated.getRating() < 4.8 && lowRated.getRating() >= 1.0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void rateMenuItemThrowsOnInvalidStars() {
+        menuService.rateMenuItem(1, 6);
+    }
 }

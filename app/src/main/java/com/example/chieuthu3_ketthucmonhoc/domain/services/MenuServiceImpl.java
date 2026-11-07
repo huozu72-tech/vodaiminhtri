@@ -121,4 +121,33 @@ public class MenuServiceImpl implements IMenuService {
         );
         return menuRepository.saveMenuItem(updated);
     }
+
+    @Override
+    public MenuItem rateMenuItem(int id, int stars) {
+        if (stars < 1 || stars > 5) {
+            throw new IllegalArgumentException("Số sao đánh giá phải từ 1 đến 5");
+        }
+        MenuItem item = menuRepository.getMenuItemById(id);
+        if (item == null) {
+            return null;
+        }
+        int baseWeight = Math.max(5, Math.min(item.getOrderCount() / 10, 20));
+        double blended = ((item.getRating() * baseWeight) + stars) / (double) (baseWeight + 1);
+        double newRating = Math.round(blended * 10.0) / 10.0;
+        newRating = Math.max(1.0, Math.min(5.0, newRating));
+
+        MenuItem updated = new MenuItem(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getPrice(),
+                item.getCategory(),
+                item.getTasteAttributes(),
+                item.isAvailable(),
+                newRating,
+                item.getOrderCount(),
+                item.getImageResId()
+        );
+        return menuRepository.saveMenuItem(updated);
+    }
 }
