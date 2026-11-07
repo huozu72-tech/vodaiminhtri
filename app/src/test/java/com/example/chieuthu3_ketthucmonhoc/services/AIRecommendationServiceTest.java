@@ -130,4 +130,20 @@ public class AIRecommendationServiceTest {
         }
         assertEquals(1.0, maxScore, 0.001);
     }
+
+    @Test
+    public void cartComplementaryRecommendationsSuggestsBeverageOrSideWhenOnlyMainDishInCart() {
+        List<AIRecommendation> crossSell = aiService.getCartComplementaryRecommendations(
+                Collections.singletonList(dishCrispy1),
+                2
+        );
+        assertFalse(crossSell.isEmpty());
+        // Should not recommend dishCrispy1 which is already in the cart
+        for (AIRecommendation rec : crossSell) {
+            assertTrue(rec.getMenuItem().getId() != dishCrispy1.getId());
+        }
+        // Top recommendation should be a beverage or side dish to complete the meal
+        FoodCategory topCategory = crossSell.get(0).getMenuItem().getCategory();
+        assertTrue(topCategory == FoodCategory.BEVERAGE || topCategory == FoodCategory.SIDE_DISH);
+    }
 }

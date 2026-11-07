@@ -36,6 +36,11 @@ public class CartServiceImpl implements ICartService {
     }
 
     @Override
+    public void updateNote(int menuItemId, String note) {
+        cartRepository.updateNote(menuItemId, note);
+    }
+
+    @Override
     public void removeItem(int menuItemId) {
         cartRepository.removeItem(menuItemId);
     }

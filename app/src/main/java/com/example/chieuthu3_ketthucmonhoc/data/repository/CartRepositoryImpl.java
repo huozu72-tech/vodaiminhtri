@@ -49,6 +49,16 @@ public class CartRepositoryImpl implements ICartRepository {
     }
 
     @Override
+    public void updateNote(int menuItemId, String note) {
+        for (CartItem existing : cartItems) {
+            if (existing.getMenuItem().getId() == menuItemId) {
+                existing.setNote(note);
+                break;
+            }
+        }
+    }
+
+    @Override
     public void removeItem(int menuItemId) {
         cartItems.removeIf(item -> item.getMenuItem().getId() == menuItemId);
     }

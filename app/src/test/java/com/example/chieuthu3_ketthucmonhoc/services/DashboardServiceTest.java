@@ -55,14 +55,15 @@ public class DashboardServiceTest {
     }
 
     @Test
-    public void topSellingItemsSortsByTotalQuantityOrdered() {
+    public void topSellingItemsExcludesCancelledOrdersAndTieBreaksByRevenue() {
         List<TopSellingItem> top = dashboardService.getTopSellingMenuItems(2);
         assertEquals(2, top.size());
-        // dish2 was ordered: 2 (in order 1) + 1 (in order 3) = 3
-        // dish1 was ordered: 1 (in order 1) + 1 (in order 2) = 2
-        assertEquals(dish2.getId(), top.get(0).getMenuItem().getId());
-        assertEquals(3, top.get(0).getQuantitySold());
-        assertEquals(dish1.getId(), top.get(1).getMenuItem().getId());
+        // dish1 was ordered: 1 (in order 1 COMPLETED) + 1 (in order 2 PENDING) = 2 (revenue 240,000đ)
+        // dish2 was ordered: 2 (in order 1 COMPLETED); order 3 is CANCELLED and excluded = 2 (revenue 30,000đ)
+        // Tie-breaker by revenue puts dish1 first
+        assertEquals(dish1.getId(), top.get(0).getMenuItem().getId());
+        assertEquals(2, top.get(0).getQuantitySold());
+        assertEquals(dish2.getId(), top.get(1).getMenuItem().getId());
         assertEquals(2, top.get(1).getQuantitySold());
     }
 }

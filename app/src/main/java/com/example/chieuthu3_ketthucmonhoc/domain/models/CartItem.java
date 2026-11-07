@@ -7,10 +7,16 @@ import java.util.Objects;
 public class CartItem {
     private final MenuItem menuItem;
     private int quantity;
+    private String note;
 
     public CartItem(MenuItem menuItem, int quantity) {
+        this(menuItem, quantity, "");
+    }
+
+    public CartItem(MenuItem menuItem, int quantity, String note) {
         this.menuItem = menuItem;
         this.quantity = quantity;
+        this.note = note != null ? note.trim() : "";
     }
 
     public MenuItem getMenuItem() {
@@ -23,6 +29,14 @@ public class CartItem {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note != null ? note.trim() : "";
     }
 
     public long getSubtotal() {

@@ -78,4 +78,16 @@ public class CartServiceTest {
         cartService.clearCart();
         assertTrue(cartService.isEmpty());
     }
+
+    @Test
+    public void updateNoteSavesTrimmedKitchenNotePerCartItem() {
+        cartService.addItem(food1, 2);
+        assertEquals("", cartService.getCartItems().get(0).getNote());
+
+        cartService.updateNote(food1.getId(), "  Ít cay, không hành  ");
+        assertEquals("Ít cay, không hành", cartService.getCartItems().get(0).getNote());
+
+        cartService.updateNote(food1.getId(), null);
+        assertEquals("", cartService.getCartItems().get(0).getNote());
+    }
 }

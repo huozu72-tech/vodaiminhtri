@@ -64,6 +64,9 @@ public class DashboardServiceImpl implements IDashboardService {
         Map<Integer, Integer> itemCounts = new HashMap<>();
 
         for (Order order : allOrders) {
+            if (order.getStatus() == OrderStatus.CANCELLED) {
+                continue;
+            }
             for (OrderItem orderItem : order.getItems()) {
                 if (orderItem.getMenuItem() != null) {
                     int menuItemId = orderItem.getMenuItem().getId();
@@ -80,7 +83,13 @@ public class DashboardServiceImpl implements IDashboardService {
             }
         }
 
-        result.sort(Comparator.comparingInt(TopSellingItem::getQuantitySold).reversed());
+        result.sort((a, b) -> {
+            int cmp = Integer.compare(b.getQuantitySold(), a.getQuantitySold());
+            if (cmp != 0) return cmp;
+            long revA = a.getMenuItem().getPrice() * a.getQuantitySold();
+            long revB = b.getMenuItem().getPrice() * b.getQuantitySold();
+            return Long.compare(revB, revA);
+        });
 
         if (result.size() <= limit) {
             return result;

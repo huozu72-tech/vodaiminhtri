@@ -151,29 +151,68 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshFoodList() {
-        int checkedId = binding.chipGroupCategory.getCheckedChipId();
-        FoodCategory currentCategory = null;
-        if (checkedId == R.id.chipMain) {
-            currentCategory = FoodCategory.MAIN_DISH;
-        } else if (checkedId == R.id.chipSide) {
-            currentCategory = FoodCategory.SIDE_DISH;
-        } else if (checkedId == R.id.chipDrink) {
-            currentCategory = FoodCategory.BEVERAGE;
-        }
+        String query = binding.etSearchFood.getText() != null
+                ? binding.etSearchFood.getText().toString().trim()
+                : "";
 
         List<MenuItem> items;
-        if (currentCategory != null) {
-            items = menuService.getMenuItemsByCategory(currentCategory);
+        if (!query.isEmpty()) {
+            List<MenuItem> searchResults = menuService.searchMenuItems(query);
+            items = new ArrayList<>();
+            for (MenuItem item : searchResults) {
+                if (item.isAvailable()) {
+                    items.add(item);
+                }
+            }
         } else {
-            items = menuService.getAvailableMenuItems();
+            int checkedId = binding.chipGroupCategory.getCheckedChipId();
+            FoodCategory currentCategory = null;
+            if (checkedId == R.id.chipMain) {
+                currentCategory = FoodCategory.MAIN_DISH;
+            } else if (checkedId == R.id.chipSide) {
+                currentCategory = FoodCategory.SIDE_DISH;
+            } else if (checkedId == R.id.chipDrink) {
+                currentCategory = FoodCategory.BEVERAGE;
+            }
+
+            if (currentCategory != null) {
+                items = new ArrayList<>(menuService.getMenuItemsByCategory(currentCategory));
+            } else {
+                items = new ArrayList<>(menuService.getAvailableMenuItems());
+            }
         }
+
+        // Áp dụng tiêu chí sắp xếp (Mặc định, Bán chạy nhất, Đánh giá cao, Giá thấp->cao, Giá cao->thấp)
+        int sortId = binding.chipGroupSort.getCheckedChipId();
+        if (sortId == R.id.chipSortPopular) {
+            items.sort((a, b) -> Integer.compare(b.getOrderCount(), a.getOrderCount()));
+        } else if (sortId == R.id.chipSortRating) {
+            items.sort((a, b) -> {
+                int cmp = Double.compare(b.getRating(), a.getRating());
+                return cmp != 0 ? cmp : Integer.compare(b.getOrderCount(), a.getOrderCount());
+            });
+        } else if (sortId == R.id.chipSortPriceAsc) {
+            items.sort((a, b) -> Long.compare(a.getPrice(), b.getPrice()));
+        } else if (sortId == R.id.chipSortPriceDesc) {
+            items.sort((a, b) -> Long.compare(b.getPrice(), a.getPrice()));
+        }
+
         foodAdapter.updateList(items);
     }
 
     private void refreshAiRecommendations() {
         Customer currentCustomer = authService.getCurrentCustomer();
         Integer customerId = currentCustomer != null ? currentCustomer.getId() : null;
-        aiRecAdapter.updateList(aiRecService.getPersonalizedRecommendations(customerId, 5));
+        List<CartItem> cartItems = cartService.getCartItems();
+        if (!cartItems.isEmpty() && customerId == null) {
+            List<MenuItem> inCartDishes = new ArrayList<>();
+            for (CartItem ci : cartItems) {
+                inCartDishes.add(ci.getMenuItem());
+            }
+            aiRecAdapter.updateList(aiRecService.getCartComplementaryRecommendations(inCartDishes, 5));
+        } else {
+            aiRecAdapter.updateList(aiRecService.getPersonalizedRecommendations(customerId, 5));
+        }
     }
 
     private void setupSearchAndFilters() {
@@ -183,19 +222,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String query = s != null ? s.toString().trim() : "";
-                if (query.isEmpty()) {
-                    refreshFoodList();
-                } else {
-                    List<MenuItem> searchResults = menuService.searchMenuItems(query);
-                    List<MenuItem> availableOnly = new ArrayList<>();
-                    for (MenuItem item : searchResults) {
-                        if (item.isAvailable()) {
-                            availableOnly.add(item);
-                        }
-                    }
-                    foodAdapter.updateList(availableOnly);
-                }
+                refreshFoodList();
             }
 
             @Override
@@ -204,19 +231,14 @@ public class MainActivity extends AppCompatActivity {
 
         binding.chipGroupCategory.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty()) return;
-            if (binding.etSearchFood.getText() != null) {
+            if (binding.etSearchFood.getText() != null && binding.etSearchFood.getText().length() > 0) {
                 binding.etSearchFood.getText().clear();
             }
-            int checkedId = checkedIds.get(0);
-            if (checkedId == R.id.chipMain) {
-                foodAdapter.updateList(menuService.getMenuItemsByCategory(FoodCategory.MAIN_DISH));
-            } else if (checkedId == R.id.chipSide) {
-                foodAdapter.updateList(menuService.getMenuItemsByCategory(FoodCategory.SIDE_DISH));
-            } else if (checkedId == R.id.chipDrink) {
-                foodAdapter.updateList(menuService.getMenuItemsByCategory(FoodCategory.BEVERAGE));
-            } else {
-                foodAdapter.updateList(menuService.getAvailableMenuItems());
-            }
+            refreshFoodList();
+        });
+
+        binding.chipGroupSort.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            refreshFoodList();
         });
     }
 
@@ -509,8 +531,26 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     TextView tvOrderDetails = new TextView(MainActivity.this);
+                    String stepProgress;
+                    switch (order.getStatus()) {
+                        case PENDING:
+                            stepProgress = "⏳ Tiến độ: [● Chờ xác nhận] ──▶ [○ Bếp nấu] ──▶ [○ Hoàn thành]";
+                            break;
+                        case PREPARING:
+                            stepProgress = "🔥 Tiến độ: [✓ Đã nhận] ──▶ [● Bếp đang nấu] ──▶ [○ Hoàn thành]";
+                            break;
+                        case COMPLETED:
+                            stepProgress = "✅ Tiến độ: [✓ Đã nhận] ──▶ [✓ Đã nấu] ──▶ [● Đã phục vụ]";
+                            break;
+                        case CANCELLED:
+                        default:
+                            stepProgress = "❌ Tiến độ: Đơn hàng đã hủy";
+                            break;
+                    }
+
                     tvOrderDetails.setText(
-                            "Thời gian: " + order.getFormattedTime() + " • " + order.getPaymentMethod()
+                            stepProgress
+                                    + "\nThời gian: " + order.getFormattedTime() + " • " + order.getPaymentMethod()
                                     + "\nMón: " + order.getItemsSummary()
                                     + "\nTổng thanh toán: " + order.getFormattedTotal()
                     );
@@ -521,17 +561,53 @@ public class MainActivity extends AppCompatActivity {
                     card.addView(tvOrderHeader);
                     card.addView(tvOrderDetails);
 
+                    LinearLayout actionRow = new LinearLayout(MainActivity.this);
+                    actionRow.setOrientation(LinearLayout.HORIZONTAL);
+
+                    // Nút Đặt Lại Đơn Này (Re-order 1 chạm)
+                    MaterialButton btnReorder = new MaterialButton(MainActivity.this);
+                    btnReorder.setText("🔄 Đặt Lại Đơn Này");
+                    btnReorder.setAllCaps(false);
+                    btnReorder.setTextSize(11f);
+                    btnReorder.setOnClickListener(v -> {
+                        int addedCount = 0;
+                        for (OrderItem oi : order.getItems()) {
+                            MenuItem latestDish = menuService.getMenuItemById(oi.getMenuItem().getId());
+                            if (latestDish != null && latestDish.isAvailable()) {
+                                cartService.addItem(latestDish, oi.getQuantity());
+                                addedCount += oi.getQuantity();
+                            }
+                        }
+                        updateCartBadge();
+                        refreshAiRecommendations();
+                        dialog.dismiss();
+                        Toast.makeText(
+                                MainActivity.this,
+                                "Đã thêm lại " + addedCount + " phần từ đơn " + order.getOrderId() + " vào giỏ hàng!",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                        showCartBottomSheet();
+                    });
+                    actionRow.addView(btnReorder);
+
                     // Nút hủy đơn nếu đơn đang Chờ xác nhận (PENDING) - UC-06 Theo dõi đơn hàng
                     if (order.getStatus() == OrderStatus.PENDING) {
                         MaterialButton btnCancelOrder = new MaterialButton(MainActivity.this);
-                        btnCancelOrder.setText("❌ Hủy Đơn Hàng Này");
+                        btnCancelOrder.setText("❌ Hủy Đơn");
                         btnCancelOrder.setAllCaps(false);
                         btnCancelOrder.setTextSize(11f);
                         btnCancelOrder.setBackgroundColor(Color.parseColor("#FEE2E2"));
                         btnCancelOrder.setTextColor(Color.parseColor("#DC2626"));
+                        LinearLayout.LayoutParams cancelParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        cancelParams.setMargins(12, 0, 0, 0);
+                        btnCancelOrder.setLayoutParams(cancelParams);
                         btnCancelOrder.setOnClickListener(v -> {
                             boolean cancelled = orderService.cancelOrder(order.getOrderId());
                             if (cancelled) {
+                                refreshFoodList();
                                 Toast.makeText(
                                         MainActivity.this,
                                         "Đã hủy đơn hàng " + order.getOrderId() + " thành công!",
@@ -540,9 +616,10 @@ public class MainActivity extends AppCompatActivity {
                                 this.run();
                             }
                         });
-                        card.addView(btnCancelOrder);
+                        actionRow.addView(btnCancelOrder);
                     }
 
+                    card.addView(actionRow);
                     dialogBinding.layoutCustomerOrders.addView(card);
                 }
             }
@@ -593,23 +670,108 @@ public class MainActivity extends AppCompatActivity {
         bottomSheet.setContentView(dialogBinding.getRoot());
 
         final CartAdapter[] cartAdapterHolder = new CartAdapter[1];
+
+        Runnable refreshCartSheetState = new Runnable() {
+            @Override
+            public void run() {
+                List<CartItem> items = cartService.getCartItems();
+                cartAdapterHolder[0].updateList(items);
+                updateCartBadge();
+                refreshAiRecommendations();
+                calculateCartTotal(dialogBinding);
+
+                if (items.isEmpty()) {
+                    dialogBinding.tvEmptyCartHint.setVisibility(View.VISIBLE);
+                    dialogBinding.rvCartItems.setVisibility(View.GONE);
+                    dialogBinding.layoutCartAiUpsellSection.setVisibility(View.GONE);
+                } else {
+                    dialogBinding.tvEmptyCartHint.setVisibility(View.GONE);
+                    dialogBinding.rvCartItems.setVisibility(View.VISIBLE);
+
+                    List<MenuItem> currentDishes = new ArrayList<>();
+                    for (CartItem ci : items) {
+                        currentDishes.add(ci.getMenuItem());
+                    }
+                    List<AIRecommendation> upsells = aiRecService.getCartComplementaryRecommendations(currentDishes, 2);
+                    dialogBinding.layoutCartAiUpsellItems.removeAllViews();
+                    if (upsells.isEmpty()) {
+                        dialogBinding.layoutCartAiUpsellSection.setVisibility(View.GONE);
+                    } else {
+                        dialogBinding.layoutCartAiUpsellSection.setVisibility(View.VISIBLE);
+                        for (AIRecommendation rec : upsells) {
+                            MenuItem upDish = rec.getMenuItem();
+                            LinearLayout row = new LinearLayout(MainActivity.this);
+                            row.setOrientation(LinearLayout.HORIZONTAL);
+                            row.setGravity(Gravity.CENTER_VERTICAL);
+                            row.setPadding(8, 6, 8, 6);
+
+                            TextView tvUp = new TextView(MainActivity.this);
+                            tvUp.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                            tvUp.setText("• " + upDish.getName() + " (" + upDish.getFormattedPrice() + ") — " + rec.getReason());
+                            tvUp.setTextSize(11f);
+                            tvUp.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.black));
+
+                            MaterialButton btnAddUp = new MaterialButton(MainActivity.this);
+                            btnAddUp.setText("+ Thêm");
+                            btnAddUp.setAllCaps(false);
+                            btnAddUp.setTextSize(10f);
+                            btnAddUp.setOnClickListener(v -> {
+                                cartService.addItem(upDish, 1);
+                                this.run();
+                                Toast.makeText(MainActivity.this, "Đã ghép thêm '" + upDish.getName() + "' vào giỏ!", Toast.LENGTH_SHORT).show();
+                            });
+
+                            row.addView(tvUp);
+                            row.addView(btnAddUp);
+                            dialogBinding.layoutCartAiUpsellItems.addView(row);
+                        }
+                    }
+                }
+            }
+        };
+
         cartAdapterHolder[0] = new CartAdapter(
                 cartService.getCartItems(),
                 new CartAdapter.OnCartItemActionListener() {
                     @Override
                     public void onQuantityPlus(CartItem item) {
                         cartService.updateQuantity(item.getMenuItem().getId(), item.getQuantity() + 1);
-                        cartAdapterHolder[0].updateList(cartService.getCartItems());
-                        updateCartBadge();
-                        calculateCartTotal(dialogBinding);
+                        refreshCartSheetState.run();
                     }
 
                     @Override
                     public void onQuantityMinus(CartItem item) {
                         cartService.updateQuantity(item.getMenuItem().getId(), item.getQuantity() - 1);
-                        cartAdapterHolder[0].updateList(cartService.getCartItems());
-                        updateCartBadge();
-                        calculateCartTotal(dialogBinding);
+                        refreshCartSheetState.run();
+                    }
+
+                    @Override
+                    public void onRemoveItem(CartItem item) {
+                        cartService.removeItem(item.getMenuItem().getId());
+                        refreshCartSheetState.run();
+                        Toast.makeText(MainActivity.this, "Đã xóa '" + item.getMenuItem().getName() + "' khỏi giỏ!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onEditNote(CartItem item) {
+                        String[] presetNotes = new String[]{
+                                "Ít cay",
+                                "Không hành / ngò",
+                                "Chiên giòn kỹ",
+                                "Ít đá / Không đá",
+                                "Nêm đậm đà",
+                                "Mang ra trước",
+                                "Xóa ghi chú"
+                        };
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("📝 Ghi Chú Bếp: " + item.getMenuItem().getName())
+                                .setItems(presetNotes, (d, which) -> {
+                                    String chosen = which == 6 ? "" : presetNotes[which];
+                                    cartService.updateNote(item.getMenuItem().getId(), chosen);
+                                    refreshCartSheetState.run();
+                                })
+                                .setNegativeButton("Đóng", null)
+                                .show();
                     }
                 }
         );
@@ -617,13 +779,11 @@ public class MainActivity extends AppCompatActivity {
         dialogBinding.rvCartItems.setLayoutManager(new LinearLayoutManager(this));
         dialogBinding.rvCartItems.setAdapter(cartAdapterHolder[0]);
 
-        calculateCartTotal(dialogBinding);
+        refreshCartSheetState.run();
 
         dialogBinding.tvClearCart.setOnClickListener(v -> {
             cartService.clearCart();
-            cartAdapterHolder[0].updateList(new ArrayList<>());
-            updateCartBadge();
-            calculateCartTotal(dialogBinding);
+            refreshCartSheetState.run();
             Toast.makeText(MainActivity.this, "Đã xóa toàn bộ giỏ hàng!", Toast.LENGTH_SHORT).show();
         });
 
@@ -904,6 +1064,7 @@ public class MainActivity extends AppCompatActivity {
 
             cartService.clearCart();
             updateCartBadge();
+            refreshFoodList();
             refreshAiRecommendations();
             dialog.dismiss();
 

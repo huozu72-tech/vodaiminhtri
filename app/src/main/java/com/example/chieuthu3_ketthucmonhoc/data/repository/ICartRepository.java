@@ -10,6 +10,7 @@ public interface ICartRepository {
     CartItem addItem(MenuItem item, int quantity);
     CartItem addItem(MenuItem item);
     void updateQuantity(int menuItemId, int quantity);
+    void updateNote(int menuItemId, String note);
     void removeItem(int menuItemId);
     void clearCart();
     long getTotalAmount();

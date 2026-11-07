@@ -499,6 +499,16 @@ public class AdminActivity extends AppCompatActivity {
             } else if (food.getCategory() == FoodCategory.BEVERAGE) {
                 dialogBinding.chipAddDrink.setChecked(true);
             }
+
+            List<TasteAttribute> existingTastes = food.getTasteAttributes();
+            dialogBinding.chipTasteSavory.setChecked(existingTastes.contains(TasteAttribute.SAVORY));
+            dialogBinding.chipTasteCrispy.setChecked(existingTastes.contains(TasteAttribute.CRISPY));
+            dialogBinding.chipTasteSpicy.setChecked(existingTastes.contains(TasteAttribute.SPICY));
+            dialogBinding.chipTasteSweet.setChecked(existingTastes.contains(TasteAttribute.SWEET));
+            dialogBinding.chipTasteSour.setChecked(existingTastes.contains(TasteAttribute.SOUR));
+            dialogBinding.chipTasteRefreshing.setChecked(existingTastes.contains(TasteAttribute.REFRESHING));
+            dialogBinding.chipTasteGrilled.setChecked(existingTastes.contains(TasteAttribute.GRILLED));
+            dialogBinding.chipTasteFried.setChecked(existingTastes.contains(TasteAttribute.FRIED));
         } else {
             dialogBinding.tvDialogTitle.setText("➕ Thêm Món Ăn Mới");
         }
@@ -545,6 +555,19 @@ public class AdminActivity extends AppCompatActivity {
                 category = FoodCategory.MAIN_DISH;
             }
 
+            List<TasteAttribute> selectedTastes = new ArrayList<>();
+            if (dialogBinding.chipTasteSavory.isChecked()) selectedTastes.add(TasteAttribute.SAVORY);
+            if (dialogBinding.chipTasteCrispy.isChecked()) selectedTastes.add(TasteAttribute.CRISPY);
+            if (dialogBinding.chipTasteSpicy.isChecked()) selectedTastes.add(TasteAttribute.SPICY);
+            if (dialogBinding.chipTasteSweet.isChecked()) selectedTastes.add(TasteAttribute.SWEET);
+            if (dialogBinding.chipTasteSour.isChecked()) selectedTastes.add(TasteAttribute.SOUR);
+            if (dialogBinding.chipTasteRefreshing.isChecked()) selectedTastes.add(TasteAttribute.REFRESHING);
+            if (dialogBinding.chipTasteGrilled.isChecked()) selectedTastes.add(TasteAttribute.GRILLED);
+            if (dialogBinding.chipTasteFried.isChecked()) selectedTastes.add(TasteAttribute.FRIED);
+            if (selectedTastes.isEmpty()) {
+                selectedTastes.add(TasteAttribute.SAVORY);
+            }
+
             if (isEditing) {
                 MenuItem updated = new MenuItem(
                         food.getId(),
@@ -552,7 +575,7 @@ public class AdminActivity extends AppCompatActivity {
                         desc,
                         price,
                         category,
-                        food.getTasteAttributes(),
+                        selectedTastes,
                         food.isAvailable(),
                         food.getRating(),
                         food.getOrderCount(),
@@ -566,7 +589,7 @@ public class AdminActivity extends AppCompatActivity {
                         desc,
                         price,
                         category,
-                        Collections.singletonList(TasteAttribute.SAVORY)
+                        selectedTastes
                 );
                 Toast.makeText(AdminActivity.this, "Đã thêm món mới thành công!", Toast.LENGTH_SHORT).show();
             }

@@ -1,6 +1,7 @@
 package com.example.chieuthu3_ketthucmonhoc.domain.services;
 
 import com.example.chieuthu3_ketthucmonhoc.domain.models.AIRecommendation;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 
 import java.util.List;
 
@@ -11,4 +12,5 @@ public interface IAIRecommendationService {
     List<AIRecommendation> getSimilarDishes(int menuItemId);
     List<AIRecommendation> getTrendingDishes(int limit);
     List<AIRecommendation> getTrendingDishes();
+    List<AIRecommendation> getCartComplementaryRecommendations(List<MenuItem> currentCartDishes, int limit);
 }

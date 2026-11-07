@@ -38,21 +38,59 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Xóa tất cả"
-            android:textColor="@color/gray_text"
-            android:textSize="12sp" />
+            android:textColor="@color/banner_red"
+            android:textSize="12sp"
+            android:textStyle="bold" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvEmptyCartHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="24dp"
+        android:gravity="center"
+        android:text="🛒 Giỏ hàng đang trống.\nHãy chọn món ngon từ thực đơn hoặc nhờ AI tư vấn nhé!"
+        android:textColor="@color/gray_text"
+        android:textSize="13sp"
+        android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCartItems"
         android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:layout_marginTop="12dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="10dp"
         tools:listitem="@layout/item_cart_entry" />
+
+    <!-- AI Cross-Sell / Meal Completion Upsell Box -->
+    <LinearLayout
+        android:id="@+id/layoutCartAiUpsellSection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="#FFFBEB"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✨ AI Gợi Ý Gọi Kèm Cho Trọn Vị:"
+            android:textColor="#92400E"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/layoutCartAiUpsellItems"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="vertical" />
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginVertical="12dp"
+        android:layout_marginVertical="10dp"
         android:background="@color/gray_border" />
 
     <LinearLayout
@@ -83,9 +121,9 @@
         android:id="@+id/btnCheckout"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="14dp"
         android:backgroundTint="@color/banner_red"
-        android:text="Xác Nhận Đặt Món"
+        android:text="Tiến Hành Thanh Toán &amp; Đặt Món"
         android:textAllCaps="false"
         android:textColor="@color/white"
         android:textSize="15sp"

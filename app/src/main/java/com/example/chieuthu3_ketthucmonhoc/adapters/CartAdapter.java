@@ -18,6 +18,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     public interface OnCartItemActionListener {
         void onQuantityPlus(CartItem item);
         void onQuantityMinus(CartItem item);
+        default void onRemoveItem(CartItem item) {}
+        default void onEditNote(CartItem item) {}
     }
 
     private List<CartItem> cartList;
@@ -52,8 +54,23 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
         holder.binding.imgCartFood.setImageResource(FoodImageResolver.resolveImage(item.getMenuItem()));
         holder.binding.tvCartItemName.setText(item.getMenuItem().getName());
-        holder.binding.tvCartItemPrice.setText(item.getFormattedSubtotal());
+        holder.binding.tvCartItemPrice.setText(
+                item.getMenuItem().getFormattedPrice() + " × " + item.getQuantity() + " = " + item.getFormattedSubtotal()
+        );
         holder.binding.tvQuantity.setText(String.valueOf(item.getQuantity()));
+
+        String note = item.getNote();
+        if (note != null && !note.trim().isEmpty()) {
+            holder.binding.tvCartItemNote.setText("📝 Ghi chú bếp: " + note);
+        } else {
+            holder.binding.tvCartItemNote.setText("📝 + Ghi chú bếp (Ít cay, không hành...)");
+        }
+
+        holder.binding.tvCartItemNote.setOnClickListener(v -> {
+            if (actionListener != null) {
+                actionListener.onEditNote(item);
+            }
+        });
 
         holder.binding.btnPlus.setOnClickListener(v -> {
             if (actionListener != null) {
@@ -64,6 +81,12 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         holder.binding.btnMinus.setOnClickListener(v -> {
             if (actionListener != null) {
                 actionListener.onQuantityMinus(item);
+            }
+        });
+
+        holder.binding.btnRemoveCartItem.setOnClickListener(v -> {
+            if (actionListener != null) {
+                actionListener.onRemoveItem(item);
             }
         });
     }

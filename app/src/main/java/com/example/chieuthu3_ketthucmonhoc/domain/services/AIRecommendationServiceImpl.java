@@ -7,6 +7,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
 
 import java.util.ArrayList;
@@ -57,17 +58,23 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
         Set<Integer> orderedItemIds = new HashSet<>();
 
         for (Order order : pastOrders) {
+            if (order.getStatus() == OrderStatus.CANCELLED) {
+                continue;
+            }
             for (OrderItem oi : order.getItems()) {
                 MenuItem mi = oi.getMenuItem();
                 if (mi != null) {
                     orderedItems.add(mi);
                     orderedItemIds.add(mi.getId());
-                    preferredCategories.put(mi.getCategory(), preferredCategories.getOrDefault(mi.getCategory(), 0) + 1);
+                    preferredCategories.put(mi.getCategory(), preferredCategories.getOrDefault(mi.getCategory(), 0) + oi.getQuantity());
                     for (TasteAttribute ta : mi.getTasteAttributes()) {
-                        preferredTastes.put(ta, preferredTastes.getOrDefault(ta, 0) + 1);
+                        preferredTastes.put(ta, preferredTastes.getOrDefault(ta, 0) + oi.getQuantity());
                     }
                 }
             }
+        }
+        if (orderedItems.isEmpty()) {
+            return getTrendingDishes(limit);
         }
 
         List<AIRecommendation> scored = new ArrayList<>();
@@ -214,6 +221,76 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
     @Override
     public List<AIRecommendation> getTrendingDishes() {
         return getTrendingDishes(4);
+    }
+
+    @Override
+    public List<AIRecommendation> getCartComplementaryRecommendations(List<MenuItem> currentCartDishes, int limit) {
+        if (currentCartDishes == null || currentCartDishes.isEmpty()) {
+            return getTrendingDishes(limit);
+        }
+
+        Set<Integer> inCartIds = new HashSet<>();
+        boolean hasMain = false;
+        boolean hasSide = false;
+        boolean hasDrink = false;
+        boolean hasRichOrSpicy = false;
+
+        for (MenuItem dish : currentCartDishes) {
+            if (dish == null) continue;
+            inCartIds.add(dish.getId());
+            if (dish.getCategory() == FoodCategory.MAIN_DISH) hasMain = true;
+            else if (dish.getCategory() == FoodCategory.SIDE_DISH) hasSide = true;
+            else if (dish.getCategory() == FoodCategory.BEVERAGE) hasDrink = true;
+
+            for (TasteAttribute ta : dish.getTasteAttributes()) {
+                if (ta == TasteAttribute.SPICY || ta == TasteAttribute.FRIED || ta == TasteAttribute.GRILLED || ta == TasteAttribute.CRISPY) {
+                    hasRichOrSpicy = true;
+                }
+            }
+        }
+
+        List<AIRecommendation> scored = new ArrayList<>();
+        for (MenuItem candidate : menuRepository.getAllMenuItems()) {
+            if (!candidate.isAvailable() || inCartIds.contains(candidate.getId())) {
+                continue;
+            }
+
+            double score = 0.2 * (candidate.getRating() / 5.0);
+            List<String> reasons = new ArrayList<>();
+
+            // Cross-sell: Nếu giỏ đã có món chính mà chưa có Nước uống hoặc Món phụ
+            if (hasMain && !hasDrink && candidate.getCategory() == FoodCategory.BEVERAGE) {
+                score += 0.55;
+                reasons.add("Ghép đôi giải khát cho bữa ăn");
+            } else if (hasMain && !hasSide && candidate.getCategory() == FoodCategory.SIDE_DISH) {
+                score += 0.50;
+                reasons.add("Món phụ ăn kèm chống ngấy tuyệt vời");
+            } else if (!hasMain && candidate.getCategory() == FoodCategory.MAIN_DISH) {
+                score += 0.50;
+                reasons.add("Món chính đặc sắc hoàn thiện bàn tiệc");
+            }
+
+            // Cân bằng vị giác: Nếu giỏ có đồ chiên/nướng/cay, ưu tiên vị thanh mát hoặc chua dịu
+            if (hasRichOrSpicy) {
+                for (TasteAttribute ta : candidate.getTasteAttributes()) {
+                    if (ta == TasteAttribute.REFRESHING || ta == TasteAttribute.SOUR) {
+                        score += 0.25;
+                        reasons.add("Cân bằng vị (" + ta.getDisplayName() + ")");
+                        break;
+                    }
+                }
+            }
+
+            if (reasons.isEmpty()) {
+                reasons.add("Gợi ý gọi thêm hợp khẩu vị bàn tiệc");
+            }
+
+            double finalScore = Math.min(MAX_SCORE, Math.round(score * 100.0) / 100.0);
+            scored.add(new AIRecommendation(candidate, finalScore, joinStrings(reasons, " • ")));
+        }
+
+        scored.sort(Comparator.comparingDouble(AIRecommendation::getScore).reversed());
+        return takeLimit(scored, limit);
     }
 
     private static String joinStrings(List<String> list, String delimiter) {

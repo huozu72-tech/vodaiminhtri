@@ -57,7 +57,8 @@ public class RoomOrderRepository implements IOrderRepository {
         OrderEntity entity = OrderEntity.fromDomain(order);
         database.runInTransaction(() -> {
             OrderEntity existing = dao.getById(entity.getOrderId());
-            if (existing == null) {
+            boolean isNewOrder = (existing == null);
+            if (isNewOrder) {
                 dao.insert(entity);
             } else if (existing.getOrderId().equals(entity.getOrderId())) {
                 dao.update(entity);
@@ -70,6 +71,13 @@ public class RoomOrderRepository implements IOrderRepository {
             List<OrderItemEntity> itemEntities = new ArrayList<>();
             for (OrderItem oi : order.getItems()) {
                 itemEntities.add(OrderItemEntity.fromDomain(oi, entity.getOrderId()));
+                if (isNewOrder && oi.getMenuItem() != null && order.getStatus() != OrderStatus.CANCELLED) {
+                    MenuItemEntity me = menuDao.getById(oi.getMenuItem().getId());
+                    if (me != null) {
+                        me.setOrderCount(me.getOrderCount() + oi.getQuantity());
+                        menuDao.update(me);
+                    }
+                }
             }
             dao.insertItems(itemEntities);
         });
@@ -79,7 +87,23 @@ public class RoomOrderRepository implements IOrderRepository {
     @Override
     public boolean updateOrderStatus(String orderId, OrderStatus newStatus) {
         if (orderId == null || newStatus == null) return false;
-        return dao.updateStatus(orderId.trim(), newStatus.name()) > 0;
+        String trimmedId = orderId.trim();
+        OrderEntity existing = dao.getById(trimmedId);
+        if (existing == null) return false;
+
+        boolean wasCancelled = OrderStatus.CANCELLED.name().equals(existing.getStatus());
+        int updatedRows = dao.updateStatus(trimmedId, newStatus.name());
+        if (updatedRows > 0 && !wasCancelled && newStatus == OrderStatus.CANCELLED) {
+            List<OrderItemEntity> itemEntities = dao.getItems(existing.getOrderId());
+            for (OrderItemEntity ie : itemEntities) {
+                MenuItemEntity me = menuDao.getById(ie.getMenuItemId());
+                if (me != null) {
+                    me.setOrderCount(Math.max(0, me.getOrderCount() - ie.getQuantity()));
+                    menuDao.update(me);
+                }
+            }
+        }
+        return updatedRows > 0;
     }
 
     private Order assembleOrder(OrderEntity entity) {
