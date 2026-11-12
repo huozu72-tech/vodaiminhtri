@@ -129,6 +129,35 @@ public class AIChatbotServiceTest {
     }
 
     @Test
+    public void keywordSearchReturnsMatchingItems() {
+        ChatMessage response = chatbotService.sendMessage("Chân");
+        assertFalse(response.isUser());
+        assertFalse(response.getSuggestedItems().isEmpty());
+        for (MenuItem item : response.getSuggestedItems()) {
+            assertTrue(item.getName().toLowerCase().contains("chân"));
+        }
+    }
+
+    @Test
+    public void bestDishQueryReturnsMainDishOnly() {
+        ChatMessage response = chatbotService.sendMessage("tôi muốn ăn món ngon nhất");
+        assertFalse(response.isUser());
+        assertEquals(1, response.getSuggestedItems().size());
+        assertEquals(FoodCategory.MAIN_DISH, response.getSuggestedItems().get(0).getCategory());
+    }
+
+    @Test
+    public void specialtyDishQueryReturnsMainOrSideDishOnly() {
+        ChatMessage response = chatbotService.sendMessage("tôi muốn ăn món đặc sản của nhà hàng");
+        assertFalse(response.isUser());
+        assertEquals(1, response.getSuggestedItems().size());
+        FoodCategory cat = response.getSuggestedItems().get(0).getCategory();
+        assertTrue(cat == FoodCategory.MAIN_DISH || cat == FoodCategory.SIDE_DISH);
+        assertTrue(cat != FoodCategory.BEVERAGE);
+    }
+
+
+    @Test
     public void mlModelAchievesHighAccuracyAndValidProbabilityDistribution() {
         ChatbotMLModel model = chatbotService.getMlModel();
         assertNotNull(model);
