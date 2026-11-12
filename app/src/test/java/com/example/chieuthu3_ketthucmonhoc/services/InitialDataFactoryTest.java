@@ -7,6 +7,9 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.UserRole;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 public class InitialDataFactoryTest {
 
-    private final List<String> knownPlaintextPasswords = Arrays.asList("123456", "admin123", "manager123");
+    private final List<String> knownPlaintextPasswords = Arrays.asList("123456", "admin123", "manager123", "cashier123");
 
     private List<MenuItem> menuItems;
     private List<Order> orders;
@@ -149,5 +152,54 @@ public class InitialDataFactoryTest {
                     order.getTotalAmount()
             );
         }
+    }
+
+    @Test
+    public void adminsCoverDiverseRoles() {
+        List<AdminAccount> admins = InitialDataFactory.createInitialAdmins();
+        Set<UserRole> roles = new HashSet<>();
+        for (AdminAccount admin : admins) {
+            roles.add(admin.getRole());
+        }
+        assertTrue("Hệ thống phải có Super Admin", roles.contains(UserRole.SUPER_ADMIN));
+        assertTrue("Hệ thống phải có Quản lý", roles.contains(UserRole.MANAGER));
+        assertTrue("Hệ thống phải có Nhân viên thu ngân", roles.contains(UserRole.STAFF));
+    }
+
+    @Test
+    public void customersCoverDiverseCommercialProfiles() {
+        List<Customer> customers = InitialDataFactory.createInitialCustomers();
+        assertTrue("Phải có ít nhất 5 khách hàng thực tế", customers.size() >= 5);
+        for (Customer customer : customers) {
+            assertTrue("Tên khách hàng không được để trống", customer.getFullName() != null && !customer.getFullName().trim().isEmpty());
+            assertTrue("Địa chỉ / vị trí bàn không được để trống", customer.getAddress() != null && !customer.getAddress().trim().isEmpty());
+            assertTrue("Số điện thoại hợp lệ", customer.getPhoneNumber() != null && customer.getPhoneNumber().length() >= 10);
+        }
+    }
+
+    @Test
+    public void menuItemsHaveValidRatingsTasteAttributesAndDrawables() {
+        for (MenuItem item : menuItems) {
+            assertTrue("Đánh giá phải từ 4.0 đến 5.0 sao", item.getRating() >= 4.0 && item.getRating() <= 5.0);
+            assertTrue("Số lượt gọi món phải lớn hơn 0", item.getOrderCount() > 0);
+            assertFalse("Thuộc tính hương vị không được rỗng", item.getTasteAttributes().isEmpty());
+            assertTrue("Mã tài nguyên hình ảnh phải hợp lệ", item.getImageResId() > 0);
+        }
+    }
+
+    @Test
+    public void ordersCoverDiverseStatusesAndPaymentMethods() {
+        Set<OrderStatus> statuses = new HashSet<>();
+        for (Order order : orders) {
+            statuses.add(order.getStatus());
+            if (order.getPaymentMethod() != null && order.getPaymentMethod().contains("QR")) {
+                assertTrue("Đơn thanh toán QR phải có đường dẫn VietQR hợp lệ",
+                        order.getQrPayloadUrl() != null && order.getQrPayloadUrl().startsWith("https://img.vietqr.io/image/"));
+            }
+        }
+        assertTrue("Phải có đơn hàng trạng thái COMPLETED", statuses.contains(OrderStatus.COMPLETED));
+        assertTrue("Phải có đơn hàng trạng thái PENDING", statuses.contains(OrderStatus.PENDING));
+        assertTrue("Phải có đơn hàng trạng thái PREPARING", statuses.contains(OrderStatus.PREPARING));
+        assertTrue("Phải có đơn hàng trạng thái CANCELLED", statuses.contains(OrderStatus.CANCELLED));
     }
 }

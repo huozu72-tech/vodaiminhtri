@@ -39,8 +39,9 @@ public abstract class AppDatabase extends RoomDatabase {
         if (sInstance == null) {
             synchronized (AppDatabase.class) {
                 if (sInstance == null) {
+                    Context appContext = context.getApplicationContext();
                     AppDatabase built = Room.databaseBuilder(
-                            context.getApplicationContext(),
+                            appContext,
                             AppDatabase.class,
                             DATABASE_NAME
                     )
@@ -48,7 +49,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             .fallbackToDestructiveMigration(true)
                             .build();
                     sInstance = built;
-                    DatabaseSeeder.seedIfEmpty(built);
+                    DatabaseSeeder.seedIfEmpty(appContext, built);
                 }
             }
         }
