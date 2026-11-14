@@ -58,12 +58,20 @@ public class ChatbotServiceImpl implements IChatbotService {
 
     @Override
     public ChatMessage analyzeFoodImage(String imageNameOrHint) {
+        return analyzeFoodImage(imageNameOrHint, imageNameOrHint, null);
+    }
+
+    @Override
+    public ChatMessage analyzeFoodImage(String displayLabel, String recognitionHint, String imageUri) {
+        String label = (displayLabel != null && !displayLabel.trim().isEmpty())
+                ? displayLabel.trim()
+                : "Ảnh món ăn tải lên";
         ChatMessage userMsg = new ChatMessage(
                 null,
-                "📷 [Đã tải lên hình ảnh món ăn: " + imageNameOrHint + "]",
+                "📷 [Đã tải lên hình ảnh món ăn: " + label + "]",
                 true,
                 Collections.emptyList(),
-                imageNameOrHint,
+                imageUri,
                 System.currentTimeMillis()
         );
         history.add(userMsg);
@@ -76,7 +84,7 @@ public class ChatbotServiceImpl implements IChatbotService {
             suggestedItems = Collections.emptyList();
             responseText = "🤖 Xin lỗi, hiện tại thực đơn nhà hàng chưa có món nào để gợi ý bạn nhé!";
         } else {
-            ChatbotMLModel.ImageRecognitionResult recognition = mlModel.classifyFoodImage(imageNameOrHint, allItems);
+            ChatbotMLModel.ImageRecognitionResult recognition = mlModel.classifyFoodImage(recognitionHint, allItems);
             suggestedItems = recognition.getMatchedItems().size() > 4
                     ? new ArrayList<>(recognition.getMatchedItems().subList(0, 4))
                     : recognition.getMatchedItems();

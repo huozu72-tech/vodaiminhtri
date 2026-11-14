@@ -246,4 +246,28 @@ public class ChatbotServiceTest {
         assertTrue("Phải nhận diện thành công món nướng & chiên giòn", cameraResp.getText().contains("độ tin cậy"));
         assertFalse(cameraResp.getSuggestedItems().isEmpty());
     }
+
+    @Test
+    public void uploadedPhotoOverloadStoresImageUriAndRecognizesVisualCues() {
+        ChatbotServiceImpl fullMenuChatbot = new ChatbotServiceImpl(
+                new MenuRepositoryImpl(InitialDataFactory.createInitialMenuItems())
+        );
+
+        String savedPath = "/data/user/0/com.example.chieuthu3_ketthucmonhoc/files/food_scans/scan_demo.jpg";
+        ChatMessage botResp = fullMenuChatbot.analyzeFoodImage(
+                "IMG_20261114.jpg",
+                "gà nướng mật ong món nướng chiên vàng",
+                savedPath
+        );
+
+        assertFalse(botResp.isUser());
+        assertTrue(botResp.getText().contains("độ tin cậy"));
+        assertFalse(botResp.getSuggestedItems().isEmpty());
+
+        List<ChatMessage> history = fullMenuChatbot.getChatHistory();
+        ChatMessage userPhotoMsg = history.get(history.size() - 2);
+        assertTrue(userPhotoMsg.isUser());
+        assertTrue(userPhotoMsg.getText().contains("IMG_20261114.jpg"));
+        assertEquals(savedPath, userPhotoMsg.getImageUri());
+    }
 }

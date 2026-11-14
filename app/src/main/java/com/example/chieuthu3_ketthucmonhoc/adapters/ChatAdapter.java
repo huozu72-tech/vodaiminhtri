@@ -68,7 +68,21 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             holder.binding.tvChatMessageText.setBackgroundResource(R.drawable.bg_chat_user);
             holder.binding.tvChatMessageText.setTextColor(ContextCompat.getColor(context, R.color.white));
             holder.binding.layoutSuggestedItems.setVisibility(View.GONE);
+            String imgUri = message.getImageUri();
+            boolean hasRenderablePhoto = imgUri != null && !imgUri.trim().isEmpty()
+                    && (imgUri.startsWith("/") || imgUri.startsWith("content://") || imgUri.startsWith("file://"));
+            if (hasRenderablePhoto) {
+                holder.binding.cardChatUploadedPhoto.setVisibility(View.VISIBLE);
+                FoodImageLoader.loadImagePathOrFallback(
+                        holder.binding.imgChatUploadedPhoto,
+                        imgUri,
+                        R.drawable.food_ga_nuong_mat_ong
+                );
+            } else {
+                holder.binding.cardChatUploadedPhoto.setVisibility(View.GONE);
+            }
         } else {
+            holder.binding.cardChatUploadedPhoto.setVisibility(View.GONE);
             holder.binding.chatBubbleContainer.setGravity(Gravity.START);
             params.gravity = Gravity.START;
             holder.binding.tvChatMessageText.setBackgroundResource(R.drawable.bg_chat_bot);

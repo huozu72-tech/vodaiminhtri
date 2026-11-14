@@ -6,6 +6,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.Customer;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AuthResult;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AuthenticationServiceImpl;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.SecurityHelper;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.UnifiedLoginResult;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -126,5 +127,67 @@ public class AuthenticationServiceTest {
         assertEquals(1, authService.searchCustomers("Hoa").size());
         assertEquals(1, authService.searchCustomers("090333").size());
         assertEquals(1, authService.searchCustomers("tuan.pham").size());
+    }
+
+    @Test
+    public void unifiedLoginRoutesCustomerByPhoneOrEmail() {
+        UserRepositoryImpl seededRepo = new UserRepositoryImpl();
+        AuthenticationServiceImpl seededAuth = new AuthenticationServiceImpl(seededRepo);
+
+        AuthResult<UnifiedLoginResult> byPhone = seededAuth.login("0901234567", "123456");
+        assertTrue(byPhone.isSuccess());
+        assertNotNull(byPhone.getData());
+        assertFalse(byPhone.getData().isAdmin());
+        assertNotNull(byPhone.getData().getCustomer());
+        assertNotNull(seededAuth.getCurrentCustomer());
+        assertNull(seededAuth.getCurrentAdmin());
+
+        seededAuth.logout();
+
+        AuthResult<UnifiedLoginResult> byEmail = seededAuth.login("khachhang@restaurant.com", "123456");
+        assertTrue(byEmail.isSuccess());
+        assertFalse(byEmail.getData().isAdmin());
+        assertNotNull(seededAuth.getCurrentCustomer());
+    }
+
+    @Test
+    public void unifiedLoginRoutesAdminByUsernameOrPhoneAndClearsCustomerSession() {
+        UserRepositoryImpl seededRepo = new UserRepositoryImpl();
+        AuthenticationServiceImpl seededAuth = new AuthenticationServiceImpl(seededRepo);
+
+        // Đăng nhập khách trước, sau đó dùng chung form chuyển sang admin
+        AuthResult<UnifiedLoginResult> customerFirst = seededAuth.login("0901234567", "123456");
+        assertTrue(customerFirst.isSuccess());
+        assertNotNull(seededAuth.getCurrentCustomer());
+
+        AuthResult<UnifiedLoginResult> adminByUsername = seededAuth.login("admin", "admin123");
+        assertTrue(adminByUsername.isSuccess());
+        assertTrue(adminByUsername.getData().isAdmin());
+        assertNotNull(adminByUsername.getData().getAdminAccount());
+        assertNotNull(seededAuth.getCurrentAdmin());
+        assertNull(seededAuth.getCurrentCustomer());
+
+        seededAuth.logout();
+
+        AuthResult<UnifiedLoginResult> adminByPhone = seededAuth.login("0900000000", "admin123");
+        assertTrue(adminByPhone.isSuccess());
+        assertTrue(adminByPhone.getData().isAdmin());
+        assertNotNull(seededAuth.getCurrentAdmin());
+    }
+
+    @Test
+    public void unifiedLoginRejectsInvalidCredentialsWithoutStartingSession() {
+        UserRepositoryImpl seededRepo = new UserRepositoryImpl();
+        AuthenticationServiceImpl seededAuth = new AuthenticationServiceImpl(seededRepo);
+
+        AuthResult<UnifiedLoginResult> wrongPass = seededAuth.login("admin", "sai-mat-khau");
+        assertFalse(wrongPass.isSuccess());
+        assertEquals("Mật khẩu không chính xác", wrongPass.getMessage());
+        assertNull(seededAuth.getCurrentAdmin());
+        assertNull(seededAuth.getCurrentCustomer());
+
+        AuthResult<UnifiedLoginResult> unknown = seededAuth.login("khongtontai", "123456");
+        assertFalse(unknown.isSuccess());
+        assertEquals("Tài khoản không tồn tại trên hệ thống", unknown.getMessage());
     }
 }

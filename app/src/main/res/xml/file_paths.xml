@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path
+        name="camera_photos"
+        path="camera_photos/" />
+    <files-path
+        name="food_images"
+        path="food_images/" />
+    <files-path
+        name="food_scans"
+        path="food_scans/" />
+</paths>

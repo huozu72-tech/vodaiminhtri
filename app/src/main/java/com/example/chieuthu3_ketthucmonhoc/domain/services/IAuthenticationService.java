@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface IAuthenticationService {
     AuthResult<Customer> register(String fullName, String email, String phoneNumber, String password);
+    AuthResult<UnifiedLoginResult> login(String identifier, String password);
     AuthResult<Customer> loginCustomer(String phoneOrEmail, String password);
     AuthResult<AdminAccount> loginAdmin(String username, String password);
     AuthResult<Customer> updateProfile(int customerId, String fullName, String email, String address, String newPassword);

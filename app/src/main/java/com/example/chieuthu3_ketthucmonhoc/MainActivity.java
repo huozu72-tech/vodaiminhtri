@@ -23,9 +23,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -41,7 +44,6 @@ import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCartBottomSheetBind
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogChatBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCustomerProfileBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogFoodDetailBinding;
-import com.example.chieuthu3_ketthucmonhoc.databinding.DialogLoginBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogPaymentQrBinding;
 import com.example.chieuthu3_ketthucmonhoc.di.AppServiceLocator;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.AdminAccount;
@@ -74,6 +76,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.services.QrBitmapGenerator;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -92,6 +95,40 @@ public class MainActivity extends AppCompatActivity {
     private IRecommendationService recService;
     private IChatbotService chatService;
     private IRestaurantOperationsService opsService;
+
+    private Runnable activeChatRefreshRunnable;
+    private File pendingCameraPhotoFile;
+
+    private final ActivityResultLauncher<String> pickSearchImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri == null) {
+                    return;
+                }
+                String displayName = FoodImageLoader.getDisplayName(this, uri);
+                String savedPath = FoodImageLoader.saveScanImageToInternalStorage(this, uri);
+                if (savedPath == null || savedPath.isEmpty()) {
+                    Toast.makeText(this, "Không thể đọc ảnh đã chọn. Vui lòng thử ảnh khác!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String visualHint = FoodImageLoader.buildFoodRecognitionHint(this, savedPath, displayName);
+                handleRecognizedFoodPhoto(displayName, visualHint, savedPath);
+            });
+
+    private final ActivityResultLauncher<Uri> takeFoodPhotoLauncher =
+            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+                File capturedFile = pendingCameraPhotoFile;
+                pendingCameraPhotoFile = null;
+                if (!Boolean.TRUE.equals(success) || capturedFile == null || !capturedFile.exists()) {
+                    return;
+                }
+                Uri fileUri = Uri.fromFile(capturedFile);
+                String savedPath = FoodImageLoader.saveScanImageToInternalStorage(this, fileUri);
+                String targetPath = (savedPath != null && !savedPath.isEmpty())
+                        ? savedPath
+                        : capturedFile.getAbsolutePath();
+                String visualHint = FoodImageLoader.buildFoodRecognitionHint(this, targetPath, capturedFile.getName());
+                handleRecognizedFoodPhoto("Ảnh chụp Camera", visualHint, targetPath);
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -942,7 +979,7 @@ public class MainActivity extends AppCompatActivity {
                     .setNeutralButton("Đóng", null)
                     .show();
         } else {
-            showLoginDialog();
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
         }
     }
 
@@ -1798,6 +1835,13 @@ public class MainActivity extends AppCompatActivity {
                 .setView(dialogBinding.getRoot())
                 .create();
 
+        activeChatRefreshRunnable = refreshAndScrollChat;
+        dialog.setOnDismissListener(d -> {
+            if (activeChatRefreshRunnable == refreshAndScrollChat) {
+                activeChatRefreshRunnable = null;
+            }
+        });
+
         dialogBinding.btnCloseChat.setOnClickListener(v -> dialog.dismiss());
 
         dialogBinding.tvClearChatHistory.setOnClickListener(v -> {
@@ -1827,17 +1871,7 @@ public class MainActivity extends AppCompatActivity {
             refreshAndScrollChat.run();
         });
 
-        dialogBinding.btnChatCamera.setOnClickListener(v -> {
-            String[] sampleImages = getSampleFoodImages();
-            new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("📷 Chọn Ảnh Món Ăn Cần Nhận Diện")
-                    .setItems(sampleImages, (imgDialog, which) -> {
-                        chatService.analyzeFoodImage(sampleImages[which]);
-                        refreshAndScrollChat.run();
-                    })
-                    .setNegativeButton("Đóng", null)
-                    .show();
-        });
+        dialogBinding.btnChatCamera.setOnClickListener(v -> showImageRecognitionDialog());
 
         final boolean[] telexEnabledHolder = new boolean[]{true};
         VietnameseTelexHelper.attachToEditText(dialogBinding.etChatMessage, telexEnabledHolder);
@@ -1900,101 +1934,68 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showImageRecognitionDialog() {
-        String[] sampleImages = getSampleFoodImages();
+        String[] options = new String[]{
+                "🖼️ Tải ảnh từ điện thoại (Thư viện / Tệp)",
+                "📷 Chụp ảnh món ăn bằng Camera",
+                "🍽️ Dùng ảnh mẫu thực đơn (Demo nhanh)"
+        };
 
         new AlertDialog.Builder(this)
-                .setTitle("📷 Chọn Ảnh Món Ăn Cần Nhận Diện")
-                .setItems(sampleImages, (dialog, which) -> {
-                    String selectedHint = sampleImages[which];
-                    chatService.analyzeFoodImage(selectedHint);
-                    showChatDialog();
+                .setTitle("📷 Nhận Diện Món Ăn Từ Ảnh")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        pickSearchImageLauncher.launch("image/*");
+                    } else if (which == 1) {
+                        launchCameraForFoodRecognition();
+                    } else {
+                        showSampleFoodImagePickerDialog();
+                    }
                 })
                 .setNegativeButton("Đóng", null)
                 .show();
     }
 
-    private void showLoginDialog() {
-        DialogLoginBinding dialogBinding = DialogLoginBinding.inflate(LayoutInflater.from(this));
-        VietnameseTelexHelper.attachToEditText(dialogBinding.etFullName, null);
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(dialogBinding.getRoot())
-                .create();
+    private void launchCameraForFoodRecognition() {
+        File photoFile = FoodImageLoader.createTempCameraPhotoFile(this);
+        if (photoFile == null) {
+            Toast.makeText(this, "Không thể tạo tệp ảnh tạm cho Camera!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            pendingCameraPhotoFile = photoFile;
+            Uri photoUri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".fileprovider",
+                    photoFile
+            );
+            takeFoodPhotoLauncher.launch(photoUri);
+        } catch (ActivityNotFoundException e) {
+            pendingCameraPhotoFile = null;
+            Toast.makeText(this, "Thiết bị chưa có ứng dụng Camera. Vui lòng chọn ảnh từ điện thoại!", Toast.LENGTH_SHORT).show();
+        } catch (IllegalArgumentException e) {
+            pendingCameraPhotoFile = null;
+            Toast.makeText(this, "Không thể khởi chạy Camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
 
-        dialogBinding.btnLoginSubmit.setOnClickListener(v -> {
-            String phoneOrEmail = dialogBinding.etPhone.getText() != null
-                    ? dialogBinding.etPhone.getText().toString().trim()
-                    : "";
-            String password = dialogBinding.etPassword.getText() != null
-                    ? dialogBinding.etPassword.getText().toString().trim()
-                    : "";
+    private void showSampleFoodImagePickerDialog() {
+        String[] sampleImages = getSampleFoodImages();
+        new AlertDialog.Builder(this)
+                .setTitle("🍽️ Chọn Ảnh Mẫu Thực Đơn")
+                .setItems(sampleImages, (dialog, which) -> {
+                    String selectedHint = sampleImages[which];
+                    handleRecognizedFoodPhoto(selectedHint, selectedHint, null);
+                })
+                .setNegativeButton("Đóng", null)
+                .show();
+    }
 
-            AuthResult<Customer> result = authService.loginCustomer(phoneOrEmail, password);
-            if (result.isSuccess()) {
-                updateUserHeader();
-                refreshRecommendations();
-                dialog.dismiss();
-                Toast.makeText(MainActivity.this, "Đăng nhập thành công! Chào " + result.getData().getFullName(), Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(MainActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        dialogBinding.btnRegisterSubmit.setOnClickListener(v -> {
-            String fullName = dialogBinding.etFullName.getText() != null
-                    ? dialogBinding.etFullName.getText().toString().trim()
-                    : "";
-            String phone = dialogBinding.etPhone.getText() != null
-                    ? dialogBinding.etPhone.getText().toString().trim()
-                    : "";
-            String email = dialogBinding.etEmail.getText() != null
-                    ? dialogBinding.etEmail.getText().toString().trim()
-                    : "";
-            String password = dialogBinding.etPassword.getText() != null
-                    ? dialogBinding.etPassword.getText().toString().trim()
-                    : "";
-
-            if (fullName.isEmpty()) {
-                Toast.makeText(MainActivity.this, "Vui lòng nhập họ và tên khi đăng ký!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (phone.length() < 9) {
-                Toast.makeText(MainActivity.this, "Vui lòng nhập số điện thoại hợp lệ (tối thiểu 9 chữ số)!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            AuthResult<Customer> result = authService.register(fullName, email, phone, password);
-            if (result.isSuccess()) {
-                updateUserHeader();
-                refreshRecommendations();
-                dialog.dismiss();
-                Toast.makeText(MainActivity.this, "Đăng ký thành công! Chào " + result.getData().getFullName(), Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(MainActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        dialogBinding.btnSwitchToAdmin.setOnClickListener(v -> {
-            String username = dialogBinding.etAdminUsername.getText() != null
-                    ? dialogBinding.etAdminUsername.getText().toString().trim()
-                    : "";
-            String password = dialogBinding.etAdminPassword.getText() != null
-                    ? dialogBinding.etAdminPassword.getText().toString()
-                    : "";
-
-            AuthResult<AdminAccount> result = authService.loginAdmin(username, password);
-            if (result.isSuccess()) {
-                dialog.dismiss();
-                Toast.makeText(
-                        MainActivity.this,
-                        "Đăng nhập quản trị thành công! Xin chào " + result.getData().getFullName(),
-                        Toast.LENGTH_SHORT
-                ).show();
-                startActivity(new Intent(MainActivity.this, AdminActivity.class));
-            } else {
-                Toast.makeText(MainActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        dialog.show();
+    private void handleRecognizedFoodPhoto(String displayLabel, String visualHint, String imageUri) {
+        chatService.analyzeFoodImage(displayLabel, visualHint, imageUri);
+        if (activeChatRefreshRunnable != null) {
+            activeChatRefreshRunnable.run();
+        } else {
+            showChatDialog();
+        }
     }
 }

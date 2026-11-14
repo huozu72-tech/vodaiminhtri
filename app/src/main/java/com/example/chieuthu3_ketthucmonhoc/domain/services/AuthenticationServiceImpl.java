@@ -53,7 +53,39 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         );
         Customer saved = userRepository.saveCustomer(newCustomer);
         this.currentCustomer = saved;
+        this.currentAdmin = null;
         return AuthResult.success(saved);
+    }
+
+    @Override
+    public AuthResult<UnifiedLoginResult> login(String identifier, String password) {
+        String trimmedId = identifier != null ? identifier.trim() : "";
+        if (trimmedId.isEmpty() || password == null || password.isEmpty()) {
+            return AuthResult.error("Vui lòng nhập đầy đủ tài khoản và mật khẩu");
+        }
+
+        AdminAccount admin = userRepository.getAdminByUsername(trimmedId);
+        Customer customer = trimmedId.contains("@")
+                ? userRepository.getCustomerByEmail(trimmedId)
+                : userRepository.getCustomerByPhone(trimmedId);
+
+        if (admin != null && SecurityHelper.verifyPassword(password, admin.getPasswordHash())) {
+            this.currentAdmin = admin;
+            this.currentCustomer = null;
+            return AuthResult.success(new UnifiedLoginResult(admin));
+        }
+
+        if (customer != null && SecurityHelper.verifyPassword(password, customer.getPasswordHash())) {
+            this.currentCustomer = customer;
+            this.currentAdmin = null;
+            return AuthResult.success(new UnifiedLoginResult(customer));
+        }
+
+        if (admin != null || customer != null) {
+            return AuthResult.error("Mật khẩu không chính xác");
+        }
+
+        return AuthResult.error("Tài khoản không tồn tại trên hệ thống");
     }
 
     @Override
@@ -76,6 +108,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         }
 
         this.currentCustomer = customer;
+        this.currentAdmin = null;
         return AuthResult.success(customer);
     }
 
@@ -96,6 +129,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         }
 
         this.currentAdmin = admin;
+        this.currentCustomer = null;
         return AuthResult.success(admin);
     }
 

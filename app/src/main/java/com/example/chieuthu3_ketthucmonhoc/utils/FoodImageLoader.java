@@ -2,11 +2,14 @@ package com.example.chieuthu3_ketthucmonhoc.utils;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.provider.OpenableColumns;
 import android.util.LruCache;
 import android.widget.ImageView;
 
@@ -20,15 +23,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
  * Tiện ích lưu trữ và nạp ảnh món ăn từ bộ nhớ thiết bị (chọn từ thư viện/máy ảnh),
- * tự động thu gọn kích thước, chỉnh hướng EXIF và fallback về drawable mặc định của nhà hàng.
+ * tự động thu gọn kích thước, chỉnh hướng EXIF, trích xuất đặc trưng màu sắc món ăn
+ * và fallback về drawable mặc định của nhà hàng.
  */
 public final class FoodImageLoader {
 
     private static final String FOOD_IMAGE_DIR = "food_images";
+    private static final String FOOD_SCAN_DIR = "food_scans";
+    private static final String CAMERA_CACHE_DIR = "camera_photos";
     private static final int MAX_SAVED_DIMENSION_PX = 800;
     private static final int DISPLAY_DECODE_MAX_PX = 600;
     private static final int JPEG_QUALITY = 85;
@@ -101,6 +108,188 @@ public final class FoodImageLoader {
      */
     @Nullable
     public static String savePickedImageToInternalStorage(Context context, @Nullable Uri sourceUri) {
+        return saveImageToSubdir(context, sourceUri, FOOD_IMAGE_DIR, "food_");
+    }
+
+    /**
+     * Lưu ảnh tải lên/chụp để nhận diện món ăn vào {@code filesDir/food_scans} giúp hiển thị ổn định trong khung chat.
+     */
+    @Nullable
+    public static String saveScanImageToInternalStorage(Context context, @Nullable Uri sourceUri) {
+        return saveImageToSubdir(context, sourceUri, FOOD_SCAN_DIR, "scan_");
+    }
+
+    /**
+     * Tạo tệp tạm trong {@code cacheDir/camera_photos} để ứng dụng Camera ghi ảnh chụp thông qua FileProvider.
+     */
+    @Nullable
+    public static File createTempCameraPhotoFile(Context context) {
+        if (context == null) {
+            return null;
+        }
+        File dir = new File(context.getCacheDir(), CAMERA_CACHE_DIR);
+        if (!dir.exists() && !dir.mkdirs()) {
+            return null;
+        }
+        return new File(dir, "capture_" + System.currentTimeMillis() + ".jpg");
+    }
+
+    /**
+     * Lấy tên hiển thị của tệp từ Content URI để gắn nhãn thân thiện và trích xuất từ khóa món ăn nếu có.
+     */
+    public static String getDisplayName(Context context, @Nullable Uri uri) {
+        if (context == null || uri == null) {
+            return "Ảnh món ăn";
+        }
+        if ("content".equalsIgnoreCase(uri.getScheme())) {
+            try (Cursor cursor = context.getContentResolver().query(
+                    uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (idx >= 0) {
+                        String name = cursor.getString(idx);
+                        if (name != null && !name.trim().isEmpty()) {
+                            return name.trim();
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        String last = uri.getLastPathSegment();
+        if (last != null && !last.trim().isEmpty()) {
+            int slash = last.lastIndexOf('/');
+            return slash >= 0 ? last.substring(slash + 1) : last;
+        }
+        return "Ảnh món ăn";
+    }
+
+    /**
+     * Phân tích tên tệp gốc + đặc trưng màu sắc HSV thực tế của ảnh tải lên/chụp để sinh chuỗi đặc trưng
+     * giúp {@code ChatbotMLModel.classifyFoodImage(...)} khớp món phù hợp ngay cả khi tên ảnh là {@code IMG_...jpg}.
+     */
+    public static String buildFoodRecognitionHint(Context context, @Nullable String imagePath, @Nullable String originalName) {
+        StringBuilder hints = new StringBuilder();
+        String normalizedName = (originalName != null ? originalName : "")
+                .toLowerCase(Locale.ROOT)
+                .replace('_', ' ')
+                .replace('-', ' ')
+                .replace('.', ' ');
+
+        if (normalizedName.contains("chan gio") || normalizedName.contains("chân giò") || normalizedName.contains("gio heo")) {
+            hints.append(" chân giò chiên giòn ");
+        }
+        if (normalizedName.contains("ech") || normalizedName.contains("ếch")) {
+            hints.append(" ếch nướng ");
+        }
+        if (normalizedName.contains("ga ") || normalizedName.startsWith("ga") || normalizedName.contains("gà")) {
+            if (normalizedName.contains("chan ga") || normalizedName.contains("chân gà")) {
+                hints.append(" chân gà sả tắc sốt thái chua cay ");
+            } else {
+                hints.append(" gà nướng mật ong ");
+            }
+        }
+        if (normalizedName.contains("banh bao") || normalizedName.contains("bánh bao")) {
+            hints.append(" bánh bao ");
+        }
+        if (normalizedName.contains("tom") || normalizedName.contains("tôm") || normalizedName.contains("hai san")) {
+            hints.append(" tôm chiên nướng ");
+        }
+        if (normalizedName.contains("lau") || normalizedName.contains("lẩu") || normalizedName.contains("la giang")) {
+            hints.append(" lẩu lá giang chua cay ");
+        }
+        if (normalizedName.contains("goi") || normalizedName.contains("gỏi") || normalizedName.contains("salad")) {
+            hints.append(" gỏi ngó sen xoài ");
+        }
+        if (normalizedName.contains("7up") || normalizedName.contains("coca")
+                || normalizedName.contains("pepsi") || normalizedName.contains("sting")
+                || normalizedName.contains("tra") || normalizedName.contains("nuoc")
+                || normalizedName.contains("drink") || normalizedName.contains("soda")) {
+            hints.append(" nước ngọt giải khát coca 7up pepsi sting ");
+        }
+
+        // Phân tích đặc trưng màu sắc thực tế trên điểm ảnh Bitmap (kích thước nhỏ 48x48)
+        if (imagePath != null && !imagePath.trim().isEmpty()) {
+            Bitmap sample = decodeFromPathOrUri(context, imagePath, 48);
+            if (sample != null) {
+                try {
+                    hints.append(' ').append(extractHsvVisualCues(sample));
+                } finally {
+                    sample.recycle();
+                }
+            }
+        }
+
+        String result = hints.toString().trim();
+        return result.isEmpty() ? "món nướng chiên giòn" : result;
+    }
+
+    private static String extractHsvVisualCues(Bitmap bitmap) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        int total = width * height;
+        if (total <= 0) {
+            return "";
+        }
+
+        int goldenCrispyCount = 0;
+        int spicyRedCount = 0;
+        int freshGreenCount = 0;
+        int brightPaleCount = 0;
+        float[] hsv = new float[3];
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color.colorToHSV(bitmap.getPixel(x, y), hsv);
+                float hue = hsv[0];
+                float sat = hsv[1];
+                float val = hsv[2];
+
+                if (sat >= 0.22f && val >= 0.28f && hue >= 16f && hue <= 52f) {
+                    goldenCrispyCount++;
+                } else if (sat >= 0.32f && val >= 0.25f && (hue < 16f || hue > 335f)) {
+                    spicyRedCount++;
+                } else if (sat >= 0.20f && val >= 0.20f && hue >= 65f && hue <= 165f) {
+                    freshGreenCount++;
+                } else if (sat < 0.16f && val >= 0.80f) {
+                    brightPaleCount++;
+                }
+            }
+        }
+
+        StringBuilder cues = new StringBuilder();
+        double goldenRatio = (double) goldenCrispyCount / total;
+        double redRatio = (double) spicyRedCount / total;
+        double greenRatio = (double) freshGreenCount / total;
+        double brightRatio = (double) brightPaleCount / total;
+
+        if (goldenRatio >= 0.18) {
+            cues.append("món chiên giòn nướng vàng ");
+        }
+        if (redRatio >= 0.14) {
+            cues.append("chua cay sốt thái lẩu nướng ");
+        }
+        if (greenRatio >= 0.14) {
+            cues.append("gỏi thanh mát rau ");
+        }
+        if (brightRatio >= 0.45 && goldenRatio < 0.12 && redRatio < 0.12) {
+            cues.append("nước giải khát ");
+        }
+
+        if (cues.length() == 0) {
+            if (goldenRatio >= redRatio && goldenRatio >= greenRatio) {
+                cues.append("món nướng chiên ");
+            } else if (redRatio >= greenRatio) {
+                cues.append("món chua cay lẩu ");
+            } else {
+                cues.append("gỏi sả tắc ");
+            }
+        }
+        return cues.toString().trim();
+    }
+
+    @Nullable
+    private static String saveImageToSubdir(Context context, @Nullable Uri sourceUri, String subDir, String prefix) {
         if (context == null || sourceUri == null) {
             return null;
         }
@@ -113,7 +302,7 @@ public final class FoodImageLoader {
         Bitmap oriented = applyExifRotationIfNeeded(context, sourceUri, decoded);
         Bitmap resized = scaleDownIfNeeded(oriented, MAX_SAVED_DIMENSION_PX);
 
-        File dir = new File(context.getFilesDir(), FOOD_IMAGE_DIR);
+        File dir = new File(context.getFilesDir(), subDir);
         if (!dir.exists() && !dir.mkdirs()) {
             if (resized != oriented) resized.recycle();
             if (oriented != decoded) oriented.recycle();
@@ -121,7 +310,7 @@ public final class FoodImageLoader {
             return null;
         }
 
-        String fileName = "food_" + System.currentTimeMillis() + "_"
+        String fileName = prefix + System.currentTimeMillis() + "_"
                 + UUID.randomUUID().toString().substring(0, 6) + ".jpg";
         File outFile = new File(dir, fileName);
 
