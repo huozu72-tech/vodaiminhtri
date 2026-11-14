@@ -506,7 +506,6 @@ public class MainActivity extends AppCompatActivity {
      * Tính năng mới 1: Sơ đồ bàn trực quan & Đặt bàn trước (Table Floor Map & Reservation)
      */
     private void showTableReservationDialog() {
-        List<RestaurantTable> allTables = opsService.getAllTables();
         ScrollView scrollView = new ScrollView(this);
         LinearLayout container = new LinearLayout(this);
         container.setOrientation(LinearLayout.VERTICAL);

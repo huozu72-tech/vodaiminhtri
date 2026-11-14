@@ -135,6 +135,16 @@ public class ChatbotServiceImpl implements IChatbotService {
             );
         }
 
+        /* ====================================================================================
+         * [HOOK CUSTOM FEATURE] - BỘ LỌC TÌM KIẾM TỪ KHÓA & RANDOM MÓN NGON / ĐẶC SẢN / BEST
+         * (Đoạn mã này dễ nhìn thấy, nếu xóa khối hook này & hàm bên dưới sẽ không ảnh hưởng code chính)
+         * ==================================================================================== */
+        ChatMessage customResponse = handleCustomQueryFeatures(query, allItems);
+        if (customResponse != null) {
+            return customResponse;
+        }
+        /* ==================================================================================== */
+
         ChatbotMLModel.ExtractedSlots slots = mlModel.extractSlots(query);
         ChatbotMLModel.IntentPrediction prediction = mlModel.predictIntent(query);
         ChatbotMLModel.Intent intent = prediction.getIntent();
@@ -421,4 +431,111 @@ public class ChatbotServiceImpl implements IChatbotService {
                 System.currentTimeMillis()
         );
     }
+
+    /* ====================================================================================
+     * [CUSTOM FEATURE BLOCK] - XỬ LÝ TÌM KIẾM TỪ KHÓA & RANDOM MÓN NGON / ĐẶC SẢN / BEST
+     * (Khối mã độc lập - Dễ nhìn thấy - Xóa bỏ sẽ không ảnh hưởng tới toàn bộ hệ thống)
+     * ==================================================================================== */
+    private ChatMessage handleCustomQueryFeatures(String query, List<MenuItem> allItems) {
+        if (query == null || query.trim().isEmpty()) {
+            return null;
+        }
+
+        String lowerQuery = query.toLowerCase(Locale.ROOT).trim();
+
+        // --------------------------------------------------------------------------------
+        // 1. Trường hợp 1: "tôi muốn ăn món ngon nhất" (hoặc chứa cụm từ "món ngon nhất")
+        // -> Random ngẫu nhiên các MÓN CHÍNH (không lấy món phụ, khai vị và nước)
+        // --------------------------------------------------------------------------------
+        if (lowerQuery.contains("tôi muốn ăn món ngon nhất") || lowerQuery.contains("món ngon nhất")) {
+            List<MenuItem> mainDishes = new ArrayList<>();
+            for (MenuItem item : allItems) {
+                if (item.getCategory() == FoodCategory.MAIN_DISH) {
+                    mainDishes.add(item);
+                }
+            }
+            if (!mainDishes.isEmpty()) {
+                List<MenuItem> randomPool = new ArrayList<>(mainDishes);
+                Collections.shuffle(randomPool);
+                MenuItem selectedItem = randomPool.get(0);
+                return buildMessage(
+                        "🤖 [Gợi ý món ngon nhất] Trợ lý thực đơn gợi ý Món Chính ngon nhất cho bạn hôm nay: "
+                                + selectedItem.getName() + " (" + selectedItem.getFormattedPrice() + ")",
+                        Collections.singletonList(selectedItem)
+                );
+            }
+        }
+
+        // --------------------------------------------------------------------------------
+        // 2. Trường hợp 2: "tôi muốn ăn món đặc sản..." hoặc "tôi muốn ăn món best..."
+        // -> Random ngẫu nhiên các MÓN CHÍNH và MÓN PHỤ/KHAI VỊ (không lấy nước/đồ uống)
+        // --------------------------------------------------------------------------------
+        if (lowerQuery.startsWith("tôi muốn ăn món đặc sản") || lowerQuery.contains("tôi muốn ăn món đặc sản")
+                || lowerQuery.startsWith("tôi muốn ăn món best") || lowerQuery.contains("tôi muốn ăn món best")
+                || lowerQuery.contains("món đặc sản") || lowerQuery.contains("món best")) {
+            List<MenuItem> mainAndSideDishes = new ArrayList<>();
+            for (MenuItem item : allItems) {
+                FoodCategory cat = item.getCategory();
+                if (cat == FoodCategory.MAIN_DISH || cat == FoodCategory.SIDE_DISH) {
+                    mainAndSideDishes.add(item);
+                }
+            }
+            if (!mainAndSideDishes.isEmpty()) {
+                List<MenuItem> randomPool = new ArrayList<>(mainAndSideDishes);
+                Collections.shuffle(randomPool);
+                MenuItem selectedItem = randomPool.get(0);
+                return buildMessage(
+                        "🤖 [Gợi ý đặc sản / best] Dựa trên yêu cầu của bạn, hệ thống gợi ý món đặc sản / best hấp dẫn dưới đây: "
+                                + selectedItem.getName() + " (" + selectedItem.getFormattedPrice() + ")",
+                        Collections.singletonList(selectedItem)
+                );
+            }
+        }
+
+        // --------------------------------------------------------------------------------
+        // 3. Trường hợp 3: Tìm kiếm bằng từ khóa (Ví dụ: "Gà", "Tôm", "Ếch", "Lẩu",...)
+        // -> Lọc và hiển thị tất cả các món liên quan tới từ khóa
+        // --------------------------------------------------------------------------------
+        if (isKeywordSearchQuery(lowerQuery)) {
+            String keyword = extractSearchKeyword(lowerQuery);
+            if (!keyword.isEmpty()) {
+                List<MenuItem> matchedItems = new ArrayList<>();
+                for (MenuItem item : allItems) {
+                    String itemName = item.getName().toLowerCase(Locale.ROOT);
+                    String itemDesc = item.getDescription() != null ? item.getDescription().toLowerCase(Locale.ROOT) : "";
+                    String catName = item.getCategory() != null ? item.getCategory().getDisplayName().toLowerCase(Locale.ROOT) : "";
+                    if (itemName.contains(keyword) || itemDesc.contains(keyword) || catName.contains(keyword)) {
+                        matchedItems.add(item);
+                    }
+                }
+                if (!matchedItems.isEmpty()) {
+                    return buildMessage(
+                            "🤖 [Tìm kiếm từ khóa] Kết quả tìm kiếm các món liên quan đến từ khóa \"" + keyword + "\":",
+                            matchedItems
+                    );
+                }
+            }
+        }
+
+        return null; // Trả về null nếu không thuộc các trường hợp trên để chuyển cho bộ gợi ý mặc định xử lý
+    }
+
+    private boolean isKeywordSearchQuery(String query) {
+        if (query.contains("dưới") || query.contains("ngân sách") || query.contains("thích ăn") || query.contains("vị ")) {
+            return false;
+        }
+        String[] words = query.split("\\s+");
+        if (words.length <= 3) {
+            return true;
+        }
+        return query.startsWith("tìm món") || query.startsWith("tìm ") || query.startsWith("món ");
+    }
+
+    private String extractSearchKeyword(String query) {
+        String cleaned = query.replace("tìm món", "").replace("tìm", "").replace("món", "").trim();
+        return cleaned.isEmpty() ? query.trim() : cleaned;
+    }
+    /* ====================================================================================
+     * END OF CUSTOM FEATURE BLOCK
+     * ==================================================================================== */
 }
