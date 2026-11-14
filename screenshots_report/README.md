@@ -1,6 +1,6 @@
 # BỘ ẢNH CHỤP MÀN HÌNH GIAO DIỆN ỨNG DỤNG NHÀ HÀNG (PHỤC VỤ BÁO CÁO TIỂU LUẬN)
 
-Thư mục này chứa đầy đủ toàn bộ ảnh chụp màn hình (screenshots) thực tế từ máy ảo Android (Pixel 8 / độ phân giải 1080x2400) cho từng chức năng, phân hệ và luồng người dùng (Actor: Khách Hàng, Quản Trị Viên, Hệ Thống AI).
+Thư mục này chứa đầy đủ toàn bộ ảnh chụp màn hình (screenshots) thực tế từ máy ảo Android (Pixel 8 / độ phân giải 1080x2400) cho từng chức năng, phân hệ và luồng người dùng (Actor: Khách Hàng, Quản Trị Viên, Hệ Thống Gợi Ý).
 
 ---
 
@@ -12,15 +12,15 @@ Thư mục này chứa đầy đủ toàn bộ ảnh chụp màn hình (screensh
 
 ## 2. Phân Hệ Khách Hàng (Customer Module - `MainActivity`)
 - **File**: `02_main_home.png`
-  - **Mô tả**: Màn hình chính thực đơn gồm Header hiển thị bàn & tài khoản, Banner *"Gợi ý AI Dành Cho Bạn"*, thanh tìm kiếm thông minh và danh mục món ăn dạng lưới (Grid).
+  - **Mô tả**: Màn hình chính thực đơn gồm Header hiển thị bàn & tài khoản, Banner *"Gợi Ý Dành Cho Bạn"*, thanh tìm kiếm thông minh và danh mục món ăn dạng lưới (Grid).
 - **File**: `03_loc_sap_xep_thuc_don.png`
   - **Mô tả**: Bộ lọc danh mục (Món chính, Món phụ, Nước uống) kết hợp thanh Chip sắp xếp đa tiêu chí (*Mặc định, Bán chạy nhất, Đánh giá cao, Giá thấp → cao, Giá cao → thấp*).
 - **File**: `04_chi_tiet_mon_an_danh_gia.png`
-  - **Mô tả**: Hộp thoại Chi tiết món ăn với ảnh chất lượng cao, nhãn hương vị đặc trưng, tính năng **Đánh giá chất lượng món 1–5 sao (⭐)** và danh sách **Món tương đồng do AI gợi ý**.
-- **File**: `05_tro_ly_ai_chatbot.png`
-  - **Mô tả**: Trợ lý ẩm thực AI Chatbot tích hợp Machine Learning (Multinomial Naive Bayes + TF-IDF) hỗ trợ gợi ý món cay dưới 100k, tư vấn khẩu vị và nhận diện ảnh thực đơn.
-- **File**: `06_gio_hang_va_ai_upsell.png`
-  - **Mô tả**: BottomSheet Giỏ hàng với chi tiết đơn giá × số lượng, tính năng **Ghi chú bếp từng món** (Ít cay, không hành...), nút xóa nhanh 1 chạm và **Khu vực AI Gợi Ý Gọi Kèm Cho Trọn Vị (AI Cross-Sell)**.
+  - **Mô tả**: Hộp thoại Chi tiết món ăn với ảnh chất lượng cao, nhãn hương vị đặc trưng, tính năng **Đánh giá chất lượng món 1–5 sao (⭐)** và danh sách **Món tương đồng gợi ý cho bạn**.
+- **File**: `05_tro_ly_chatbot.png`
+  - **Mô tả**: Trợ lý ẩm thực Chatbot tích hợp Machine Learning (Multinomial Naive Bayes + TF-IDF) hỗ trợ gợi ý món cay dưới 100k, tư vấn khẩu vị và nhận diện ảnh thực đơn.
+- **File**: `06_gio_hang_va_upsell.png`
+  - **Mô tả**: BottomSheet Giỏ hàng với chi tiết đơn giá × số lượng, tính năng **Ghi chú bếp từng món** (Ít cay, không hành...), nút xóa nhanh 1 chạm và **Khu vực Gợi Ý Gọi Kèm Cho Trọn Vị (Cross-Sell)**.
 
 ---
 
@@ -52,7 +52,7 @@ Thư mục này chứa đầy đủ toàn bộ ảnh chụp màn hình (screensh
 - **File**: `14_admin_quan_ly_thuc_don.png`
   - **Mô tả**: Tab Quản lý thực đơn món ăn (danh sách món, giá bán, công tắc bật/tắt còn hàng - hết hàng, nút sửa và xóa món).
 - **File**: `15_admin_them_sua_mon_an.png`
-  - **Mô tả**: Hộp thoại Thêm/Sửa món ăn với lựa chọn danh mục và **Bộ Chip chọn thuộc tính hương vị (Taste Attributes: Đậm đà, Giòn, Cay, Ngọt, Chua, Thanh mát, Nướng, Chiên)** phục vụ mô hình máy học AI.
+  - **Mô tả**: Hộp thoại Thêm/Sửa món ăn với lựa chọn danh mục và **Bộ Chip chọn thuộc tính hương vị (Taste Attributes: Đậm đà, Giòn, Cay, Ngọt, Chua, Thanh mát, Nướng, Chiên)** phục vụ mô hình máy học gợi ý món.
 - **File**: `16_admin_quan_ly_don_hang.png`
   - **Mô tả**: Tab Quản lý đơn hàng thời gian thực với bộ lọc trạng thái bếp (Tất cả, Chờ xác nhận, Đang chế biến, Đã hoàn thành) và nút cập nhật trạng thái đơn.
 - **File**: `17_admin_chi_tiet_don_hang.png`
@@ -65,12 +65,12 @@ Thư mục này chứa đầy đủ toàn bộ ảnh chụp màn hình (screensh
 
 ## 6. Bộ Tính Năng Mở Rộng Chuyên Sâu (Smart Restaurant Operations)
 - **File**: `20_main_quick_smart_utility_bar.png`
-  - **Mô tả**: Thanh tiện ích thông minh nhanh trên màn hình chính (`🪑 Sơ đồ bàn`, `🍱 Combo AI`, `🎟️ Voucher`, `🛎️ Gọi phục vụ`) và Chip lọc `❤️ Yêu Thích`.
+  - **Mô tả**: Thanh tiện ích thông minh nhanh trên màn hình chính (`🪑 Sơ đồ bàn`, `🍱 Combo Thông Minh`, `🎟️ Voucher`, `🛎️ Gọi phục vụ`) và Chip lọc `❤️ Yêu Thích`.
 - **File**: `21_dialog_table_map_reservation.png`
   - **Mô tả**: Hộp thoại Sơ đồ bàn trực quan theo khu vực (Khu A Sân Vườn, Khu B Máy Lạnh, Khu C Phòng VIP) và Đặt bàn trước (Table Reservation).
-- **File**: `22_dialog_ai_smart_combo_builder.png`
-  - **Mô tả**: Trình Thiết Kế Mâm Tiệc / Combo AI Thông Minh theo số người, ngân sách và phong cách ẩm thực, tự động tính tổng kcal và ưu đãi combo.
+- **File**: `22_dialog_smart_combo_builder.png`
+  - **Mô tả**: Trình Thiết Kế Mâm Tiệc / Combo Thông Minh theo số người, ngân sách và phong cách ẩm thực, tự động tính tổng kcal và ưu đãi combo.
 - **File**: `23_dialog_voucher_wallet.png`
-  - **Mô tả**: Ví Mã Giảm Giá / Voucher Khuyến Mãi (`CHIEUTHU3`, `TANBINH30`, `COMBOAI20`, `FREEDRINK`) áp dụng trực tiếp vào giỏ hàng và thanh toán.
+  - **Mô tả**: Ví Mã Giảm Giá / Voucher Khuyến Mãi (`CHIEUTHU3`, `TANBINH30`, `COMBO20`, `FREEDRINK`) áp dụng trực tiếp vào giỏ hàng và thanh toán.
 - **File**: `24_dialog_smart_waiter_call.png`
   - **Mô tả**: Chuông Gọi Nhân Viên Phục Vụ Tại Bàn (Smart Waiter Call: Thêm đá/trà đá, thêm bát đũa, khăn giấy, yêu cầu thanh toán tại bàn) đồng bộ trực tiếp lên Dashboard Quản trị viên.

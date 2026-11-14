@@ -63,7 +63,8 @@ public class RoomMenuRepository implements IMenuRepository {
                     item.isAvailable(),
                     item.getRating(),
                     item.getOrderCount(),
-                    item.getImageResId()
+                    item.getImageResId(),
+                    item.getImagePath()
             );
         }
 

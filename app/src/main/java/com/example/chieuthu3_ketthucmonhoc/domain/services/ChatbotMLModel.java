@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Mô hình Học Máy (Machine Learning) nhúng cho Trợ Lý Ẩm Thực AI.
+ * Mô hình Học Máy (Machine Learning) nhúng cho Trợ Lý Ẩm Thực Thông Minh.
  *
  * Kiến trúc kết hợp 3 mô hình con chạy hoàn toàn offline trên thiết bị:
  * 1. Multinomial Naive Bayes (MNB) + Softmax Calibration:
@@ -770,14 +770,14 @@ public class ChatbotMLModel {
 
         // 1. GREETING_HELP
         s.add(new TrainingSample("xin chào shop", Intent.GREETING_HELP));
-        s.add(new TrainingSample("chào bạn trợ lý ai", Intent.GREETING_HELP));
+        s.add(new TrainingSample("chào bạn trợ lý ẩm thực", Intent.GREETING_HELP));
         s.add(new TrainingSample("hello quán ơi", Intent.GREETING_HELP));
         s.add(new TrainingSample("hi bạn có thể giúp gì cho tôi", Intent.GREETING_HELP));
         s.add(new TrainingSample("bạn là ai và làm được gì", Intent.GREETING_HELP));
         s.add(new TrainingSample("hướng dẫn mình cách đặt món với", Intent.GREETING_HELP));
         s.add(new TrainingSample("xin chao quan", Intent.GREETING_HELP));
         s.add(new TrainingSample("alo shop oi tư vấn giúp", Intent.GREETING_HELP));
-        s.add(new TrainingSample("chào nhà hàng ẩm thực ai", Intent.GREETING_HELP));
+        s.add(new TrainingSample("chào nhà hàng ẩm thực việt", Intent.GREETING_HELP));
         s.add(new TrainingSample("tôi cần hỗ trợ thông tin thực đơn", Intent.GREETING_HELP));
 
         // 2. BUDGET_QUERY

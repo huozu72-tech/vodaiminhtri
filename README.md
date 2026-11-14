@@ -1,12 +1,12 @@
 # Hệ Thống Quản Lý Đặt Món Nhà Hàng Ẩm Thực Việt (Vietnamese Restaurant Ordering & Admin System)
 
-> **Dự án ứng dụng Android thương mại chuyên nghiệp** phục vụ quy trình gọi món tại bàn, thanh toán VietQR Napas247, trợ lý AI tư vấn thực đơn và cổng quản trị vận hành nhà hàng toàn diện.
+> **Dự án ứng dụng Android thương mại chuyên nghiệp** phục vụ quy trình gọi món tại bàn, thanh toán VietQR Napas247, trợ lý thông minh tư vấn thực đơn và cổng quản trị vận hành nhà hàng toàn diện.
 
 ---
 
 ## 🌟 Tổng Quan Hệ Thống
 
-Ứng dụng được thiết kế và hiện thực hóa dựa trên bài toán vận hành thực tế tại các nhà hàng ẩm thực Việt Nam quy mô vừa và lớn. Hệ thống cung cấp trải nghiệm số hóa trọn vẹn từ lúc thực khách bước vào bàn, quét thực đơn, nhận tư vấn khẩu vị từ AI, đặt món, thanh toán không tiền mặt qua mã VietQR chuẩn ngân hàng đến quản lý chế biến tại bếp và báo cáo doanh thu quản trị.
+Ứng dụng được thiết kế và hiện thực hóa dựa trên bài toán vận hành thực tế tại các nhà hàng ẩm thực Việt Nam quy mô vừa và lớn. Hệ thống cung cấp trải nghiệm số hóa trọn vẹn từ lúc thực khách bước vào bàn, quét thực đơn, nhận tư vấn khẩu vị thông minh, đặt món, thanh toán không tiền mặt qua mã VietQR chuẩn ngân hàng đến quản lý chế biến tại bếp và báo cáo doanh thu quản trị.
 
 Toàn bộ ứng dụng được xây dựng **100% bằng Java thuần (Pure Java 11)** theo kiến trúc hướng đối tượng chuẩn mực (**Layered Architecture**, **SOLID principles**, **Interface-driven Design**), loại bỏ hoàn toàn các cấu hình phụ thuộc không cần thiết để tối ưu hóa hiệu năng và độ ổn định.
 
@@ -31,8 +31,8 @@ Toàn bộ ứng dụng được xây dựng **100% bằng Java thuần (Pure Ja
   - Tiện ích một chạm sao chép số tài khoản, số tiền và nội dung chuyển khoản (Order ID).
   - Xác nhận thanh toán và tự động đồng bộ trạng thái đơn hàng vào cơ sở dữ liệu Room.
 
-### 3. Trợ Lý AI Chatbot & Tư Vấn Ẩm Thực
-- **AI Recommendation Engine:** Phân tích khẩu vị ưa thích của khách hàng để gợi ý món ăn phù hợp với độ tương đồng khẩu vị cao nhất.
+### 3. Trợ Lý Chatbot & Tư Vấn Ẩm Thực
+- **Smart Recommendation Engine:** Phân tích khẩu vị ưa thích của khách hàng để gợi ý món ăn phù hợp với độ tương đồng khẩu vị cao nhất.
 - **Chatbot Tư vấn 24/7:** Mô hình phân loại ý định (Intent Classifier) xử lý ngôn ngữ tự nhiên tiếng Việt, hỗ trợ giải đáp thực đơn, tư vấn món ăn thanh đạm/cay nồng/đồ uống giải nhiệt, và gửi phản hồi kèm danh thiếp món ăn tương tác trực tiếp.
 
 ### 4. Chương Trình Khách Hàng Thân Thiết (Loyalty & VIP)
@@ -67,7 +67,7 @@ Hệ thống tuân thủ mô hình kiến trúc phân tầng chuẩn mực (**La
 app/src/main/java/com/example/chieuthu3_ketthucmonhoc/
 ├── App.java                              # Điểm khởi chạy: khởi tạo AppServiceLocator
 ├── IntroActivity.java                    # Màn hình Splash / Giới thiệu ứng dụng
-├── MainActivity.java                     # Màn hình chính phục vụ thực khách (Menu, Cart, QR, AI)
+├── MainActivity.java                     # Màn hình chính phục vụ thực khách (Menu, Cart, QR, Tư vấn)
 ├── AdminActivity.java                    # Màn hình Cổng quản trị nhà hàng (Admin Portal)
 │
 ├── domain/                               # Lớp Nghiệp Vụ Cốt Lõi (Domain Layer - Pure Java)
@@ -90,8 +90,8 @@ app/src/main/java/com/example/chieuthu3_ketthucmonhoc/
 │       ├── IOrderService.java            # Xử lý đặt hàng, chuyển trạng thái, tính tiền
 │       ├── IAuthenticationService.java   # Xác thực tài khoản khách hàng và nhân viên
 │       ├── IDashboardService.java        # Thống kê số liệu doanh thu, top món bán chạy
-│       ├── IAIRecommendationService.java # Thuật toán gợi ý món ăn theo khẩu vị
-│       ├── IAIChatbotService.java        # Xử lý ngôn ngữ tự nhiên và tư vấn thực đơn
+│       ├── IRecommendationService.java   # Thuật toán gợi ý món ăn theo khẩu vị
+│       ├── IChatbotService.java          # Xử lý ngôn ngữ tự nhiên và tư vấn thực đơn
 │       ├── IRestaurantOperationsService.java # Quản lý bàn ăn, yêu cầu dịch vụ
 │       ├── SecurityHelper.java           # Mã hóa mật khẩu SHA-256
 │       ├── VietnameseTelexHelper.java    # Chuẩn hóa tiếng Việt Telex & bỏ dấu
@@ -123,8 +123,8 @@ app/src/main/java/com/example/chieuthu3_ketthucmonhoc/
 └── adapters/                             # Bộ điều hợp RecyclerView hiển thị dữ liệu
     ├── FoodAdapter.java                  # Danh sách món ăn trang chủ
     ├── CartAdapter.java                  # Danh sách món trong giỏ hàng
-    ├── AIRecommendationAdapter.java     # Thẻ món ăn gợi ý thông minh
-    ├── ChatAdapter.java                  # Bong bóng hội thoại tin nhắn AI
+    ├── RecommendationAdapter.java        # Thẻ món ăn gợi ý thông minh
+    ├── ChatAdapter.java                  # Bong bóng hội thoại tin nhắn Chatbot
     ├── AdminFoodAdapter.java             # Quản lý danh sách món cho Admin
     ├── AdminOrderAdapter.java            # Danh sách đơn hàng cho Admin
     └── AdminCustomerAdapter.java         # Danh sách khách hàng thân thiết

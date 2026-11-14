@@ -39,7 +39,7 @@
             app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="28dp"
             app:cardElevation="6dp"
-            app:strokeColor="@color/ai_border_orange"
+            app:strokeColor="@color/accent_border_orange"
             app:strokeWidth="1.5dp">
 
             <ImageView
@@ -49,7 +49,7 @@
                 android:padding="16dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/logo_app"
-                android:contentDescription="AI Restaurant Logo" />
+                android:contentDescription="Logo Nhà Hàng" />
         </com.google.android.material.card.MaterialCardView>
 
         <!-- Brand Name -->
@@ -59,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:letterSpacing="0.03"
-            android:text="AI RESTAURANT"
+            android:text="ẨM THỰC VIỆT"
             android:textColor="@color/primary_orange"
             android:textSize="26sp"
             android:textStyle="bold" />
@@ -73,7 +73,7 @@
             android:background="@drawable/bg_badge_mon_chinh"
             android:paddingHorizontal="14dp"
             android:paddingVertical="5dp"
-            android:text="🍽️ ĐẶT MÓN THÔNG MINH • TRỢ LÝ AI"
+            android:text="🍽️ ĐẶT MÓN THÔNG MINH • TRỢ LÝ ẨM THỰC"
             android:textColor="@color/banner_red_dark"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -166,7 +166,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Trợ Lý AI &amp; Nhận Diện Hình Ảnh"
+                            android:text="Trợ Lý Gợi Ý &amp; Nhận Diện Hình Ảnh"
                             android:textColor="@color/black"
                             android:textSize="13sp"
                             android:textStyle="bold" />

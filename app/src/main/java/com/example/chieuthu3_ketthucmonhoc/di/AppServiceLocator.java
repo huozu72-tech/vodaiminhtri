@@ -11,13 +11,13 @@ import com.example.chieuthu3_ketthucmonhoc.data.repository.ICartRepository;
 import com.example.chieuthu3_ketthucmonhoc.data.repository.IMenuRepository;
 import com.example.chieuthu3_ketthucmonhoc.data.repository.IOrderRepository;
 import com.example.chieuthu3_ketthucmonhoc.data.repository.IUserRepository;
-import com.example.chieuthu3_ketthucmonhoc.domain.services.AIChatbotServiceImpl;
-import com.example.chieuthu3_ketthucmonhoc.domain.services.AIRecommendationServiceImpl;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.ChatbotServiceImpl;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.RecommendationServiceImpl;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AuthenticationServiceImpl;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.CartServiceImpl;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.DashboardServiceImpl;
-import com.example.chieuthu3_ketthucmonhoc.domain.services.IAIChatbotService;
-import com.example.chieuthu3_ketthucmonhoc.domain.services.IAIRecommendationService;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.IChatbotService;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.IRecommendationService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IAuthenticationService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.ICartService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IDashboardService;
@@ -41,8 +41,8 @@ public final class AppServiceLocator {
     private static volatile IMenuService sMenuService;
     private static volatile ICartService sCartService;
     private static volatile IOrderService sOrderService;
-    private static volatile IAIRecommendationService sAiRecommendationService;
-    private static volatile IAIChatbotService sAiChatbotService;
+    private static volatile IRecommendationService sRecommendationService;
+    private static volatile IChatbotService sChatbotService;
     private static volatile IDashboardService sDashboardService;
     private static volatile IRestaurantOperationsService sOperationsService;
 
@@ -155,26 +155,26 @@ public final class AppServiceLocator {
         return sOrderService;
     }
 
-    public static IAIRecommendationService getAiRecommendationService() {
-        if (sAiRecommendationService == null) {
+    public static IRecommendationService getRecommendationService() {
+        if (sRecommendationService == null) {
             synchronized (AppServiceLocator.class) {
-                if (sAiRecommendationService == null) {
-                    sAiRecommendationService = new AIRecommendationServiceImpl(getMenuRepository(), getOrderRepository());
+                if (sRecommendationService == null) {
+                    sRecommendationService = new RecommendationServiceImpl(getMenuRepository(), getOrderRepository());
                 }
             }
         }
-        return sAiRecommendationService;
+        return sRecommendationService;
     }
 
-    public static IAIChatbotService getAiChatbotService() {
-        if (sAiChatbotService == null) {
+    public static IChatbotService getChatbotService() {
+        if (sChatbotService == null) {
             synchronized (AppServiceLocator.class) {
-                if (sAiChatbotService == null) {
-                    sAiChatbotService = new AIChatbotServiceImpl(getMenuRepository());
+                if (sChatbotService == null) {
+                    sChatbotService = new ChatbotServiceImpl(getMenuRepository());
                 }
             }
         }
-        return sAiChatbotService;
+        return sChatbotService;
     }
 
     public static IDashboardService getDashboardService() {

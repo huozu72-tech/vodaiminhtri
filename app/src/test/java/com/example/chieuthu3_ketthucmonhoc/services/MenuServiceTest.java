@@ -114,4 +114,79 @@ public class MenuServiceTest {
     public void rateMenuItemThrowsOnInvalidStars() {
         menuService.rateMenuItem(1, 6);
     }
+
+    @Test
+    public void createMenuItemWithCustomImagePathPersistsPath() {
+        MenuItem created = menuService.createMenuItem(
+                "Bún Đậu Mắm Tôm Đặc Biệt",
+                "Mẹt đầy đủ chả cốm, nem rán, thịt luộc",
+                95000L,
+                FoodCategory.MAIN_DISH,
+                Arrays.asList(TasteAttribute.SAVORY, TasteAttribute.CRISPY),
+                "  /data/user/0/app/files/food_images/bun_dau.jpg  "
+        );
+        assertNotNull(created);
+        assertTrue(created.hasCustomImage());
+        assertEquals("/data/user/0/app/files/food_images/bun_dau.jpg", created.getImagePath());
+
+        MenuItem fetched = menuService.getMenuItemById(created.getId());
+        assertNotNull(fetched);
+        assertEquals("/data/user/0/app/files/food_images/bun_dau.jpg", fetched.getImagePath());
+    }
+
+    @Test
+    public void toggleAvailabilityAndRatePreserveCustomImagePath() {
+        MenuItem created = menuService.createMenuItem(
+                "Phở Bò Wagyu",
+                "Nước dùng ninh 12 giờ",
+                185000L,
+                FoodCategory.MAIN_DISH,
+                Collections.singletonList(TasteAttribute.SAVORY),
+                "/data/user/0/app/files/food_images/pho_wagyu.jpg"
+        );
+
+        MenuItem toggled = menuService.toggleAvailability(created.getId());
+        assertNotNull(toggled);
+        assertFalse(toggled.isAvailable());
+        assertTrue(toggled.hasCustomImage());
+        assertEquals("/data/user/0/app/files/food_images/pho_wagyu.jpg", toggled.getImagePath());
+
+        MenuItem rated = menuService.rateMenuItem(created.getId(), 5);
+        assertNotNull(rated);
+        assertTrue(rated.hasCustomImage());
+        assertEquals("/data/user/0/app/files/food_images/pho_wagyu.jpg", rated.getImagePath());
+    }
+
+    @Test
+    public void updateMenuItemCanResetCustomImageToDefault() {
+        MenuItem created = menuService.createMenuItem(
+                "Trà Sữa Ô Long",
+                "Vị trà đậm đà",
+                45000L,
+                FoodCategory.BEVERAGE,
+                Arrays.asList(TasteAttribute.SWEET, TasteAttribute.REFRESHING),
+                "/data/user/0/app/files/food_images/tra_sua.jpg"
+        );
+        assertTrue(created.hasCustomImage());
+
+        MenuItem reset = new MenuItem(
+                created.getId(),
+                created.getName(),
+                created.getDescription(),
+                created.getPrice(),
+                created.getCategory(),
+                created.getTasteAttributes(),
+                created.isAvailable(),
+                created.getRating(),
+                created.getOrderCount(),
+                created.getImageResId(),
+                ""
+        );
+        menuService.updateMenuItem(reset);
+
+        MenuItem fetched = menuService.getMenuItemById(created.getId());
+        assertNotNull(fetched);
+        assertFalse(fetched.hasCustomImage());
+        assertEquals("", fetched.getImagePath());
+    }
 }

@@ -18,13 +18,20 @@ public class MenuItem {
     private final double rating;
     private final int orderCount;
     private final int imageResId;
+    private final String imagePath;
 
     public MenuItem(int id, String name, String description, long price, FoodCategory category) {
-        this(id, name, description, price, category, Collections.emptyList(), true, 4.8, 0, 0);
+        this(id, name, description, price, category, Collections.emptyList(), true, 4.8, 0, 0, "");
     }
 
     public MenuItem(int id, String name, String description, long price, FoodCategory category,
                     List<TasteAttribute> tasteAttributes, boolean isAvailable, double rating, int orderCount, int imageResId) {
+        this(id, name, description, price, category, tasteAttributes, isAvailable, rating, orderCount, imageResId, "");
+    }
+
+    public MenuItem(int id, String name, String description, long price, FoodCategory category,
+                    List<TasteAttribute> tasteAttributes, boolean isAvailable, double rating, int orderCount,
+                    int imageResId, String imagePath) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -35,6 +42,7 @@ public class MenuItem {
         this.rating = rating;
         this.orderCount = orderCount;
         this.imageResId = imageResId;
+        this.imagePath = imagePath != null ? imagePath.trim() : "";
     }
 
     public int getId() {
@@ -75,6 +83,14 @@ public class MenuItem {
 
     public int getImageResId() {
         return imageResId;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public boolean hasCustomImage() {
+        return imagePath != null && !imagePath.isEmpty();
     }
 
     public String getFormattedPrice() {

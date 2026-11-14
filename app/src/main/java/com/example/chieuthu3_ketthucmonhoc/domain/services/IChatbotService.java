@@ -4,7 +4,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.ChatMessage;
 
 import java.util.List;
 
-public interface IAIChatbotService {
+public interface IChatbotService {
     ChatMessage sendMessage(String userText);
     ChatMessage analyzeFoodImage(String imageNameOrHint);
     List<ChatMessage> getChatHistory();

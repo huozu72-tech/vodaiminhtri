@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:singleLine="true"
-                android:text="AI Restaurant"
+                android:text="Ẩm Thực Việt"
                 android:textColor="@color/primary_orange"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -142,7 +142,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="Nhà Hàng Ẩm Thực AI"
+                            android:text="Nhà Hàng Ẩm Thực Việt"
                             android:textColor="@color/white"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -152,12 +152,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="Trải nghiệm gọi món thông minh với AI hỗ trợ cá nhân hóa khẩu vị"
+                        android:text="Trải nghiệm gọi món thông minh với hệ thống cá nhân hóa khẩu vị"
                         android:textColor="#FEE2E2"
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <!-- 2B. Quick Smart Utility Bar (Sơ đồ bàn, AI Combo, Kho Voucher, Gọi phục vụ) -->
+                <!-- 2B. Quick Smart Utility Bar (Sơ đồ bàn, Combo thông minh, Kho Voucher, Gọi phục vụ) -->
                 <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -185,10 +185,10 @@
                             android:textSize="11sp"
                             android:textStyle="bold"
                             app:cornerRadius="10dp"
-                            app:strokeColor="@color/ai_border_orange" />
+                            app:strokeColor="@color/accent_border_orange" />
 
                         <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnQuickAiCombo"
+                            android:id="@+id/btnQuickSmartCombo"
                             style="@style/Widget.Material3.Button.OutlinedButton"
                             android:layout_width="wrap_content"
                             android:layout_height="38dp"
@@ -197,7 +197,7 @@
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
                             android:paddingHorizontal="12dp"
-                            android:text="🍱 AI Thiết Kế Mâm Cơm"
+                            android:text="🍱 Thiết Kế Mâm Cơm"
                             android:textAllCaps="false"
                             android:textColor="#D97706"
                             android:textSize="11sp"
@@ -242,12 +242,12 @@
                     </LinearLayout>
                 </HorizontalScrollView>
 
-                <!-- 3. Smart Search & AI Camera Box -->
+                <!-- 3. Smart Search & Camera Box -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_ai_box"
+                    android:background="@drawable/bg_highlight_box"
                     android:orientation="vertical"
                     android:padding="12dp">
 
@@ -266,7 +266,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
-                            android:text="Tìm Kiếm &amp; Nhận Diện AI"
+                            android:text="Tìm Kiếm &amp; Nhận Diện Hình Ảnh"
                             android:textColor="@color/primary_orange"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -280,7 +280,7 @@
                         app:cardBackgroundColor="@color/white"
                         app:cardCornerRadius="10dp"
                         app:cardElevation="1dp"
-                        app:strokeColor="@color/ai_border_orange"
+                        app:strokeColor="@color/accent_border_orange"
                         app:strokeWidth="1dp">
 
                         <EditText
@@ -299,7 +299,7 @@
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnAiUploadPhoto"
+                        android:id="@+id/btnUploadFoodPhoto"
                         android:layout_width="wrap_content"
                         android:layout_height="40dp"
                         android:layout_gravity="center_horizontal"
@@ -315,9 +315,9 @@
                         app:cornerRadius="20dp" />
                 </LinearLayout>
 
-                <!-- 4. AI Recommendation Carousel Section -->
+                <!-- 4. Recommendation Carousel Section -->
                 <LinearLayout
-                    android:id="@+id/layoutAiRecSection"
+                    android:id="@+id/layoutRecSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
@@ -326,19 +326,19 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="✨ Gợi Ý AI Dành Cho Bạn"
+                        android:text="✨ Gợi Ý Dành Cho Bạn"
                         android:textColor="@color/primary_orange"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvAiRecommendations"
+                        android:id="@+id/rvRecommendations"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:orientation="horizontal"
                         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                        tools:listitem="@layout/item_ai_recommendation_card" />
+                        tools:listitem="@layout/item_recommendation_card" />
                 </LinearLayout>
 
                 <!-- 5. Category Filter Tabs -->
@@ -482,15 +482,15 @@
             app:menu="@menu/bottom_nav_menu" />
     </LinearLayout>
 
-    <!-- Floating Action Button for AI Chatbot -->
+    <!-- Floating Action Button for Food Assistant Chatbot -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAiChatbot"
+        android:id="@+id/fabChatbot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="96dp"
-        android:contentDescription="AI Assistant"
+        android:contentDescription="Trợ Lý Ẩm Thực"
         android:src="@drawable/ic_robot"
         app:backgroundTint="@color/primary_orange"
         app:tint="@color/white" />

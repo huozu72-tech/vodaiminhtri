@@ -15,7 +15,7 @@ import com.example.chieuthu3_ketthucmonhoc.R;
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemChatMessageBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemChatSuggestionBinding;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.ChatMessage;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
+import com.example.chieuthu3_ketthucmonhoc.utils.FoodImageLoader;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         } else {
             holder.binding.chatBubbleContainer.setGravity(Gravity.START);
             params.gravity = Gravity.START;
-            holder.binding.tvChatMessageText.setBackgroundResource(R.drawable.bg_chat_ai);
+            holder.binding.tvChatMessageText.setBackgroundResource(R.drawable.bg_chat_bot);
             holder.binding.tvChatMessageText.setTextColor(ContextCompat.getColor(context, R.color.black));
 
             // Render suggested items if any
@@ -83,7 +83,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
                     ItemChatSuggestionBinding itemBinding = ItemChatSuggestionBinding.inflate(
                             inflater, holder.binding.layoutSuggestedItems, false
                     );
-                    itemBinding.imgSuggestFood.setImageResource(FoodImageResolver.resolveImage(item));
+                    FoodImageLoader.loadFoodImage(itemBinding.imgSuggestFood, item);
                     itemBinding.tvSuggestName.setText(item.getName());
                     itemBinding.tvSuggestPrice.setText(item.getFormattedPrice());
                     itemBinding.btnSuggestAdd.setOnClickListener(v -> {

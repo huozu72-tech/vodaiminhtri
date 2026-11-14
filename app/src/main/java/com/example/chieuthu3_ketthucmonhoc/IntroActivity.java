@@ -21,7 +21,7 @@ import com.example.chieuthu3_ketthucmonhoc.databinding.ActivityIntroBinding;
 /**
  * Màn hình giới thiệu (Intro / Splash Screen) khi khởi động ứng dụng.
  * - Hiển thị logo nhận diện thương hiệu nhà hàng (logo_app.png)
- * - Giới thiệu các tính năng chủ đạo: Thực đơn 16+ món, Trợ lý AI hình ảnh & gợi ý, Thanh toán VietQR
+ * - Giới thiệu các tính năng chủ đạo: Thực đơn 16+ món, Trợ lý gợi ý & nhận diện hình ảnh, Thanh toán VietQR
  * - Tự động chuyển tiếp vào MainActivity sau 2.5 giây hoặc khi người dùng nhấn "Bắt Đầu Trải Nghiệm"
  */
 public class IntroActivity extends AppCompatActivity {

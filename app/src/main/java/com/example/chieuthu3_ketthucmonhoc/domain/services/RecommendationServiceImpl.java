@@ -2,13 +2,13 @@ package com.example.chieuthu3_ketthucmonhoc.domain.services;
 
 import com.example.chieuthu3_ketthucmonhoc.data.repository.IMenuRepository;
 import com.example.chieuthu3_ketthucmonhoc.data.repository.IOrderRepository;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.AIRecommendation;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.CartItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.Recommendation;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.SmartComboProposal;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
 
@@ -21,20 +21,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class AIRecommendationServiceImpl implements IAIRecommendationService {
+public class RecommendationServiceImpl implements IRecommendationService {
 
     private static final double MAX_SCORE = 1.0;
 
     private final IMenuRepository menuRepository;
     private final IOrderRepository orderRepository;
 
-    public AIRecommendationServiceImpl(IMenuRepository menuRepository, IOrderRepository orderRepository) {
+    public RecommendationServiceImpl(IMenuRepository menuRepository, IOrderRepository orderRepository) {
         this.menuRepository = menuRepository;
         this.orderRepository = orderRepository;
     }
 
     @Override
-    public List<AIRecommendation> getPersonalizedRecommendations(Integer customerId, int limit) {
+    public List<Recommendation> getPersonalizedRecommendations(Integer customerId, int limit) {
         List<MenuItem> allAvailable = new ArrayList<>();
         for (MenuItem item : menuRepository.getAllMenuItems()) {
             if (item.isAvailable()) {
@@ -79,7 +79,7 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
             return getTrendingDishes(limit);
         }
 
-        List<AIRecommendation> scored = new ArrayList<>();
+        List<Recommendation> scored = new ArrayList<>();
         int totalOrderedSize = Math.max(orderedItems.size(), 1);
 
         for (MenuItem item : allAvailable) {
@@ -124,26 +124,26 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
             double finalScore = Math.min(score, MAX_SCORE);
             finalScore = Math.round(finalScore * 100.0) / 100.0;
 
-            scored.add(new AIRecommendation(item, finalScore, finalReason));
+            scored.add(new Recommendation(item, finalScore, finalReason));
         }
 
-        scored.sort(Comparator.comparingDouble(AIRecommendation::getScore).reversed());
+        scored.sort(Comparator.comparingDouble(Recommendation::getScore).reversed());
         return takeLimit(scored, limit);
     }
 
     @Override
-    public List<AIRecommendation> getPersonalizedRecommendations(Integer customerId) {
+    public List<Recommendation> getPersonalizedRecommendations(Integer customerId) {
         return getPersonalizedRecommendations(customerId, 4);
     }
 
     @Override
-    public List<AIRecommendation> getSimilarDishes(int menuItemId, int limit) {
+    public List<Recommendation> getSimilarDishes(int menuItemId, int limit) {
         MenuItem target = menuRepository.getMenuItemById(menuItemId);
         if (target == null) {
             return Collections.emptyList();
         }
 
-        List<AIRecommendation> scored = new ArrayList<>();
+        List<Recommendation> scored = new ArrayList<>();
         Set<TasteAttribute> targetTastes = new HashSet<>(target.getTasteAttributes());
 
         for (MenuItem item : menuRepository.getAllMenuItems()) {
@@ -181,20 +181,20 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
             double finalScore = Math.min(score, MAX_SCORE);
             finalScore = Math.round(finalScore * 100.0) / 100.0;
 
-            scored.add(new AIRecommendation(item, finalScore, finalReason));
+            scored.add(new Recommendation(item, finalScore, finalReason));
         }
 
-        scored.sort(Comparator.comparingDouble(AIRecommendation::getScore).reversed());
+        scored.sort(Comparator.comparingDouble(Recommendation::getScore).reversed());
         return takeLimit(scored, limit);
     }
 
     @Override
-    public List<AIRecommendation> getSimilarDishes(int menuItemId) {
+    public List<Recommendation> getSimilarDishes(int menuItemId) {
         return getSimilarDishes(menuItemId, 3);
     }
 
     @Override
-    public List<AIRecommendation> getTrendingDishes(int limit) {
+    public List<Recommendation> getTrendingDishes(int limit) {
         List<MenuItem> allAvailable = new ArrayList<>();
         for (MenuItem item : menuRepository.getAllMenuItems()) {
             if (item.isAvailable()) {
@@ -208,10 +208,10 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
             return Double.compare(b.getRating(), a.getRating());
         });
 
-        List<AIRecommendation> result = new ArrayList<>();
+        List<Recommendation> result = new ArrayList<>();
         for (MenuItem it : takeLimit(allAvailable, limit)) {
             double score = Math.round((it.getRating() / 5.0) * 100.0) / 100.0;
-            result.add(new AIRecommendation(
+            result.add(new Recommendation(
                     it,
                     score,
                     "Món ăn bán chạy & được yêu thích nhất (⭐ " + it.getRating() + ")"
@@ -221,12 +221,12 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
     }
 
     @Override
-    public List<AIRecommendation> getTrendingDishes() {
+    public List<Recommendation> getTrendingDishes() {
         return getTrendingDishes(4);
     }
 
     @Override
-    public List<AIRecommendation> getCartComplementaryRecommendations(List<MenuItem> currentCartDishes, int limit) {
+    public List<Recommendation> getCartComplementaryRecommendations(List<MenuItem> currentCartDishes, int limit) {
         if (currentCartDishes == null || currentCartDishes.isEmpty()) {
             return getTrendingDishes(limit);
         }
@@ -251,7 +251,7 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
             }
         }
 
-        List<AIRecommendation> scored = new ArrayList<>();
+        List<Recommendation> scored = new ArrayList<>();
         for (MenuItem candidate : menuRepository.getAllMenuItems()) {
             if (!candidate.isAvailable() || inCartIds.contains(candidate.getId())) {
                 continue;
@@ -288,10 +288,10 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
             }
 
             double finalScore = Math.min(MAX_SCORE, Math.round(score * 100.0) / 100.0);
-            scored.add(new AIRecommendation(candidate, finalScore, joinStrings(reasons, " • ")));
+            scored.add(new Recommendation(candidate, finalScore, joinStrings(reasons, " • ")));
         }
 
-        scored.sort(Comparator.comparingDouble(AIRecommendation::getScore).reversed());
+        scored.sort(Comparator.comparingDouble(Recommendation::getScore).reversed());
         return takeLimit(scored, limit);
     }
 
@@ -415,7 +415,7 @@ public class AIRecommendationServiceImpl implements IAIRecommendationService {
         }
         proposals.add(buildProposal(
                 "✨ Combo Gu " + describeStyle(style) + " (" + guests + " người)",
-                "Được AI cá nhân hóa riêng theo sở thích hương vị " + describeStyle(style).toLowerCase() + " của bàn bạn",
+                "Được cá nhân hóa riêng theo sở thích hương vị " + describeStyle(style).toLowerCase() + " của bàn bạn",
                 combo3Items,
                 15
         ));

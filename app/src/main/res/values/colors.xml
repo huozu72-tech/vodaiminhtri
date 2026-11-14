@@ -13,12 +13,12 @@
     <color name="banner_red">#EA580C</color>
     <color name="banner_red_dark">#C2410C</color>
 
-    <!-- AI Box Colors -->
-    <color name="ai_box_bg">#FFF7ED</color>
-    <color name="ai_border_orange">#FB923C</color>
-    <color name="ai_button_orange">#EA580C</color>
-    <color name="ai_badge_bg">#FEF3C7</color>
-    <color name="ai_badge_text">#B45309</color>
+    <!-- Highlight Box Colors -->
+    <color name="highlight_box_bg">#FFF7ED</color>
+    <color name="accent_border_orange">#FB923C</color>
+    <color name="accent_button_orange">#EA580C</color>
+    <color name="highlight_badge_bg">#FEF3C7</color>
+    <color name="highlight_badge_text">#B45309</color>
 
     <!-- Tab & Button Colors -->
     <color name="tab_active_red">#EA580C</color>

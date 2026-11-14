@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Đề xuất Mâm cơm / Combo thông minh do AI tự động thiết kế theo số người và ngân sách.
+ * Đề xuất Mâm cơm / Combo thông minh tự động thiết kế theo số người và ngân sách.
  */
 public final class SmartComboProposal {
     private final String comboName;

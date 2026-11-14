@@ -183,7 +183,7 @@
             android:layout_width="match_parent"
             android:layout_height="42dp"
             android:layout_marginTop="8dp"
-            android:backgroundTint="@color/ai_button_orange"
+            android:backgroundTint="@color/accent_button_orange"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="💾 Lưu Cập Nhật Hồ Sơ"

@@ -67,8 +67,8 @@ public class RestaurantOperationsServiceImpl implements IRestaurantOperationsSer
                 true
         ));
         addVoucherInternal(new PromoVoucher(
-                "COMBOAI20",
-                "Đại Tiệc Gia Đình AI (-20%)",
+                "COMBO20",
+                "Đại Tiệc Gia Đình (-20%)",
                 "Giảm 20% tối đa 80.000đ khi đặt từ 3 phần ăn trở lên (đơn từ 200.000đ)",
                 20,
                 80000L,

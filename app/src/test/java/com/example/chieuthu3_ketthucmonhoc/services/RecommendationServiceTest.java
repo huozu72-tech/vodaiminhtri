@@ -2,14 +2,14 @@ package com.example.chieuthu3_ketthucmonhoc.services;
 
 import com.example.chieuthu3_ketthucmonhoc.data.repository.MenuRepositoryImpl;
 import com.example.chieuthu3_ketthucmonhoc.data.repository.OrderRepositoryImpl;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.AIRecommendation;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.Recommendation;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.SmartComboProposal;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
-import com.example.chieuthu3_ketthucmonhoc.domain.services.AIRecommendationServiceImpl;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.RecommendationServiceImpl;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -23,9 +23,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class AIRecommendationServiceTest {
+public class RecommendationServiceTest {
 
-    private AIRecommendationServiceImpl aiService;
+    private RecommendationServiceImpl recService;
     private MenuRepositoryImpl menuRepository;
     private OrderRepositoryImpl orderRepository;
 
@@ -51,16 +51,16 @@ public class AIRecommendationServiceTest {
         List<MenuItem> menuList = Arrays.asList(dishCrispy1, dishCrispy2, dishSpicy, dishDrink);
         menuRepository = new MenuRepositoryImpl(menuList);
         orderRepository = new OrderRepositoryImpl(menuList, Collections.emptyList());
-        aiService = new AIRecommendationServiceImpl(menuRepository, orderRepository);
+        recService = new RecommendationServiceImpl(menuRepository, orderRepository);
     }
 
     @Test
     public void coldStartRecommendationsReturnsTrendingDishesWhenNoCustomerOrNoOrders() {
-        List<AIRecommendation> recsNoUser = aiService.getPersonalizedRecommendations(null, 2);
+        List<Recommendation> recsNoUser = recService.getPersonalizedRecommendations(null, 2);
         assertEquals(2, recsNoUser.size());
         assertEquals("Chân Giò Muối Chiên Giòn", recsNoUser.get(0).getMenuItem().getName());
 
-        List<AIRecommendation> recsNewUser = aiService.getPersonalizedRecommendations(999, 2);
+        List<Recommendation> recsNewUser = recService.getPersonalizedRecommendations(999, 2);
         assertEquals(2, recsNewUser.size());
         assertTrue(recsNewUser.get(0).getReason().contains("bán chạy"));
     }
@@ -76,7 +76,7 @@ public class AIRecommendationServiceTest {
                 )
         );
 
-        List<AIRecommendation> recs = aiService.getPersonalizedRecommendations(1, 3);
+        List<Recommendation> recs = recService.getPersonalizedRecommendations(1, 3);
         assertFalse(recs.isEmpty());
         MenuItem topItem = recs.get(0).getMenuItem();
         assertNotNull(topItem);
@@ -86,7 +86,7 @@ public class AIRecommendationServiceTest {
 
     @Test
     public void similarDishesMatchesSameCategoryAndTaste() {
-        List<AIRecommendation> similar = aiService.getSimilarDishes(dishCrispy1.getId(), 2);
+        List<Recommendation> similar = recService.getSimilarDishes(dishCrispy1.getId(), 2);
         assertEquals(2, similar.size());
         assertEquals(dishCrispy2.getId(), similar.get(0).getMenuItem().getId());
         assertTrue(similar.get(0).getReason().contains("Vị tương đồng"));
@@ -94,11 +94,11 @@ public class AIRecommendationServiceTest {
 
     @Test
     public void similarDishesAlwaysHaveNonBlankReasonForUnrelatedItems() {
-        List<AIRecommendation> similar = aiService.getSimilarDishes(dishDrink.getId(), 3);
+        List<Recommendation> similar = recService.getSimilarDishes(dishDrink.getId(), 3);
 
         assertEquals(3, similar.size());
         boolean hasFavorite = false;
-        for (AIRecommendation rec : similar) {
+        for (Recommendation rec : similar) {
             assertTrue(rec.getReason() != null && !rec.getReason().trim().isEmpty());
             if (rec.getReason().contains("yêu thích")) {
                 hasFavorite = true;
@@ -118,10 +118,10 @@ public class AIRecommendationServiceTest {
                 )
         );
 
-        List<AIRecommendation> recs = aiService.getPersonalizedRecommendations(7, 4);
+        List<Recommendation> recs = recService.getPersonalizedRecommendations(7, 4);
         assertFalse(recs.isEmpty());
         double maxScore = 0.0;
-        for (AIRecommendation rec : recs) {
+        for (Recommendation rec : recs) {
             assertTrue(rec.getScore() <= 1.0);
             if (rec.getScore() > maxScore) {
                 maxScore = rec.getScore();
@@ -132,12 +132,12 @@ public class AIRecommendationServiceTest {
 
     @Test
     public void cartComplementaryRecommendationsSuggestsBeverageOrSideWhenOnlyMainDishInCart() {
-        List<AIRecommendation> crossSell = aiService.getCartComplementaryRecommendations(
+        List<Recommendation> crossSell = recService.getCartComplementaryRecommendations(
                 Collections.singletonList(dishCrispy1),
                 2
         );
         assertFalse(crossSell.isEmpty());
-        for (AIRecommendation rec : crossSell) {
+        for (Recommendation rec : crossSell) {
             assertTrue(rec.getMenuItem().getId() != dishCrispy1.getId());
         }
         FoodCategory topCategory = crossSell.get(0).getMenuItem().getCategory();
@@ -146,8 +146,8 @@ public class AIRecommendationServiceTest {
 
     @Test
     public void estimateDishCaloriesReturnsHigherCaloriesForMainCrispyDishThanBeverage() {
-        int mainKcal = aiService.estimateDishCalories(dishCrispy1);
-        int drinkKcal = aiService.estimateDishCalories(dishDrink);
+        int mainKcal = recService.estimateDishCalories(dishCrispy1);
+        int drinkKcal = recService.estimateDishCalories(dishDrink);
         assertTrue(mainKcal > drinkKcal);
         assertTrue(mainKcal >= 450);
         assertTrue(drinkKcal >= 80);
@@ -155,7 +155,7 @@ public class AIRecommendationServiceTest {
 
     @Test
     public void generateSmartCombosProducesThreeCompleteComboProposalsWithDiscountAndCalories() {
-        List<SmartComboProposal> combos = aiService.generateSmartCombos(4, 300000L, "BALANCED");
+        List<SmartComboProposal> combos = recService.generateSmartCombos(4, 300000L, "BALANCED");
         assertEquals(3, combos.size());
         for (SmartComboProposal combo : combos) {
             assertNotNull(combo.getComboName());

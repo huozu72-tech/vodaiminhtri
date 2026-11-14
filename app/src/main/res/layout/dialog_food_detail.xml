@@ -121,7 +121,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/ai_button_orange"
+                android:textColor="@color/accent_button_orange"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 tools:text="🏷️ Hương vị: Đậm đà • Giòn rụm" />
@@ -253,12 +253,12 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- AI Similar Dishes Section (Hình 10 Activity Diagram) -->
+            <!-- Similar Dishes Section (Hình 10 Activity Diagram) -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:text="✨ Món Tương Tự Gợi Ý Bởi Hệ Thống AI"
+                android:text="✨ Món Tương Tự Gợi Ý Cho Bạn"
                 android:textColor="@color/black"
                 android:textSize="13sp"
                 android:textStyle="bold" />

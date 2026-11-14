@@ -5,9 +5,9 @@
         android:icon="@drawable/ic_restaurant"
         android:title="Trang Chủ" />
     <item
-        android:id="@+id/nav_ai"
+        android:id="@+id/nav_chatbot"
         android:icon="@drawable/ic_robot"
-        android:title="AI Đề Món" />
+        android:title="Trợ Lý Món" />
     <item
         android:id="@+id/nav_cart"
         android:icon="@drawable/ic_cart"

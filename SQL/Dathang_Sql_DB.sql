@@ -1,5 +1,5 @@
 -- ============================================================
---  DatHangAI - Restaurant Ordering System
+--  DatHang - Restaurant Ordering System
 --  File     : database_setup.sql
 --  Mô tả    : Script tạo và seed dữ liệu cho toàn bộ database
 --  Cập nhật : 2026-04-12
@@ -242,6 +242,6 @@ GO
 -- DELETE FROM MenuItems WHERE Id = 99;
 
 PRINT '============================================================';
-PRINT 'Hoàn tất! Database DatHangAI đã sẵn sàng sử dụng.';
+PRINT 'Hoàn tất! Database DatHang đã sẵn sàng sử dụng.';
 PRINT '============================================================';
 GO

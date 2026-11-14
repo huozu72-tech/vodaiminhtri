@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemCartEntryBinding;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.CartItem;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
+import com.example.chieuthu3_ketthucmonhoc.utils.FoodImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     public void onBindViewHolder(@NonNull CartViewHolder holder, int position) {
         CartItem item = cartList.get(position);
 
-        holder.binding.imgCartFood.setImageResource(FoodImageResolver.resolveImage(item.getMenuItem()));
+        FoodImageLoader.loadFoodImage(holder.binding.imgCartFood, item.getMenuItem());
         holder.binding.tvCartItemName.setText(item.getMenuItem().getName());
         holder.binding.tvCartItemPrice.setText(
                 item.getMenuItem().getFormattedPrice() + " × " + item.getQuantity() + " = " + item.getFormattedSubtotal()

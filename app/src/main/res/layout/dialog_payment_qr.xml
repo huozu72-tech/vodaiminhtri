@@ -259,7 +259,7 @@
                 android:layout_width="220dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:background="@drawable/bg_ai_box"
+                android:background="@drawable/bg_highlight_box"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:padding="12dp">
@@ -280,7 +280,7 @@
                     android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:text="Mã VietQR Napas247 (Quét Bằng App Ngân Hàng)"
-                    android:textColor="@color/ai_button_orange"
+                    android:textColor="@color/accent_button_orange"
                     android:textSize="11sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -389,10 +389,10 @@
                 android:insetBottom="0dp"
                 android:text="🌐 Mở Trang VietQR Chính Thức Trên Trình Duyệt"
                 android:textAllCaps="false"
-                android:textColor="@color/ai_button_orange"
+                android:textColor="@color/accent_button_orange"
                 android:textSize="11sp"
                 app:cornerRadius="8dp"
-                app:strokeColor="@color/ai_border_orange" />
+                app:strokeColor="@color/accent_border_orange" />
         </LinearLayout>
 
         <!-- 4B. KHU VỰC THANH TOÁN TIỀN MẶT TẠI BÀN (Tính tiền khách đưa & tiền thừa thực tế) -->

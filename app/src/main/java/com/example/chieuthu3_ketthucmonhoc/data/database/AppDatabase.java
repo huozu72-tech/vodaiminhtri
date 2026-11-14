@@ -23,7 +23,7 @@ import com.example.chieuthu3_ketthucmonhoc.data.database.entity.OrderItemEntity;
         OrderEntity.class,
         OrderItemEntity.class
     },
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

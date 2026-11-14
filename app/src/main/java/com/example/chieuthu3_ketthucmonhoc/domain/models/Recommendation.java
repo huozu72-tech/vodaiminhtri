@@ -1,11 +1,11 @@
 package com.example.chieuthu3_ketthucmonhoc.domain.models;
 
-public class AIRecommendation {
+public class Recommendation {
     private final MenuItem menuItem;
     private final double score;
     private final String reason;
 
-    public AIRecommendation(MenuItem menuItem, double score, String reason) {
+    public Recommendation(MenuItem menuItem, double score, String reason) {
         this.menuItem = menuItem;
         this.score = score;
         this.reason = reason;

@@ -21,6 +21,85 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
+        <!-- Khối chọn & xem trước ảnh món ăn từ điện thoại -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@color/admin_bg_gray"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="1dp"
+                app:strokeColor="@color/accent_border_orange"
+                app:strokeWidth="1dp">
+
+                <ImageView
+                    android:id="@+id/imgFoodPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Xem trước ảnh món ăn"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/food_ga_nuong_mat_ong" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvSelectedImageStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🖼️ Đang dùng ảnh mặc định theo tên món"
+                    android:textColor="@color/gray_text"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPickFoodImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="6dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="📷 Chọn Ảnh Từ Điện Thoại"
+                    android:textAllCaps="false"
+                    android:textColor="@color/primary_orange"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/primary_orange_light"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="@color/accent_border_orange"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnResetFoodImage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginTop="4dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="↩️ Dùng Ảnh Mặc Định"
+                    android:textAllCaps="false"
+                    android:textColor="@color/gray_text"
+                    android:textSize="11sp"
+                    android:visibility="gone"
+                    app:backgroundTint="@android:color/transparent"
+                    app:elevation="0dp" />
+            </LinearLayout>
+        </LinearLayout>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilFoodName"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -80,7 +159,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Nhãn hương vị đặc trưng (Hỗ trợ AI gợi ý &amp; Chatbot):"
+            android:text="Nhãn hương vị đặc trưng (Hỗ trợ gợi ý &amp; Chatbot):"
             android:textColor="@color/black"
             android:textSize="12sp"
             android:textStyle="bold" />

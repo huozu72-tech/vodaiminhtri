@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:gravity="center"
-            android:text="Đăng nhập để nhận gợi ý món ăn AI theo khẩu vị riêng của bạn"
+            android:text="Đăng nhập để nhận gợi ý món ăn theo khẩu vị riêng của bạn"
             android:textColor="@color/gray_text"
             android:textSize="12sp" />
 

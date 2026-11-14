@@ -13,21 +13,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class AIChatbotServiceImpl implements IAIChatbotService {
+public class ChatbotServiceImpl implements IChatbotService {
 
     private final IMenuRepository menuRepository;
     private final ChatbotMLModel mlModel;
     private final CopyOnWriteArrayList<ChatMessage> history = new CopyOnWriteArrayList<>();
 
-    public AIChatbotServiceImpl(IMenuRepository menuRepository) {
+    public ChatbotServiceImpl(IMenuRepository menuRepository) {
         this(menuRepository, new ChatbotMLModel());
     }
 
-    public AIChatbotServiceImpl(IMenuRepository menuRepository, ChatbotMLModel mlModel) {
+    public ChatbotServiceImpl(IMenuRepository menuRepository, ChatbotMLModel mlModel) {
         this.menuRepository = menuRepository;
         this.mlModel = mlModel != null ? mlModel : new ChatbotMLModel();
         history.add(new ChatMessage(
-                "Xin chào! Tôi là Trợ Lý Ẩm Thực AI (tích hợp mô hình Học Máy NLP & Thị Giác). Tôi có thể tư vấn món ăn theo khẩu vị (cay, giòn, chua ngọt...), ngân sách, gợi ý combo nhóm hoặc nhận diện món từ hình ảnh giúp bạn!",
+                "Xin chào! Tôi là Trợ Lý Ẩm Thực (tích hợp mô hình Học Máy NLP & Thị Giác). Tôi có thể tư vấn món ăn theo khẩu vị (cay, giòn, chua ngọt...), ngân sách, gợi ý combo nhóm hoặc nhận diện món từ hình ảnh giúp bạn!",
                 false
         ));
     }
@@ -41,7 +41,7 @@ public class AIChatbotServiceImpl implements IAIChatbotService {
         String trimmed = userText != null ? userText.trim() : "";
         if (trimmed.isEmpty()) {
             ChatMessage reminder = new ChatMessage(
-                    "Bạn chưa nhập nội dung rồi! Hãy cho Trợ Lý AI biết bạn muốn ăn món gì (khẩu vị, ngân sách, combo nhóm, hình ảnh...) nhé!",
+                    "Bạn chưa nhập nội dung rồi! Hãy cho Trợ Lý biết bạn muốn ăn món gì (khẩu vị, ngân sách, combo nhóm, hình ảnh...) nhé!",
                     false
             );
             history.add(reminder);
@@ -51,9 +51,9 @@ public class AIChatbotServiceImpl implements IAIChatbotService {
         ChatMessage userMsg = new ChatMessage(trimmed, true);
         history.add(userMsg);
 
-        ChatMessage aiResponse = generateAiResponse(trimmed);
-        history.add(aiResponse);
-        return aiResponse;
+        ChatMessage botResponse = generateBotResponse(trimmed);
+        history.add(botResponse);
+        return botResponse;
     }
 
     @Override
@@ -83,14 +83,14 @@ public class AIChatbotServiceImpl implements IAIChatbotService {
 
             if (recognition.isRecognized()) {
                 long confidencePct = Math.round(recognition.getConfidence() * 100);
-                responseText = "🤖 Mô hình AI đã phân tích ảnh (độ tin cậy " + confidencePct
-                        + "%)! Dựa trên đặc trưng món ăn trong ảnh, hệ thống nhận diện các món khớp với thực đơn nhà hàng dưới đây:";
+                responseText = "🤖 Hệ thống đã phân tích ảnh (độ tin cậy " + confidencePct
+                        + "%)! Dựa trên đặc trưng món ăn trong ảnh, quán gợi ý các món khớp với thực đơn nhà hàng dưới đây:";
             } else {
-                responseText = "🤖 AI chưa nhận diện được món cụ thể trong ảnh. Mình gửi bạn 2 món được yêu thích nhiều nhất của nhà hàng thay nhé:";
+                responseText = "🤖 Hệ thống chưa nhận diện được món cụ thể trong ảnh. Mình gửi bạn 2 món được yêu thích nhiều nhất của nhà hàng thay nhé:";
             }
         }
 
-        ChatMessage aiMsg = new ChatMessage(
+        ChatMessage botMsg = new ChatMessage(
                 null,
                 responseText,
                 false,
@@ -98,8 +98,8 @@ public class AIChatbotServiceImpl implements IAIChatbotService {
                 null,
                 System.currentTimeMillis()
         );
-        history.add(aiMsg);
-        return aiMsg;
+        history.add(botMsg);
+        return botMsg;
     }
 
     @Override
@@ -126,7 +126,7 @@ public class AIChatbotServiceImpl implements IAIChatbotService {
         return allItems;
     }
 
-    private ChatMessage generateAiResponse(String query) {
+    private ChatMessage generateBotResponse(String query) {
         List<MenuItem> allItems = getAvailableItems();
         if (allItems.isEmpty()) {
             return new ChatMessage(
@@ -239,7 +239,7 @@ public class AIChatbotServiceImpl implements IAIChatbotService {
         if (intent == ChatbotMLModel.Intent.GREETING_HELP) {
             List<MenuItem> topPicks = getTopSellingItems(allItems, 3);
             return buildMessage(
-                    "Dạ AI Restaurant xin chào quý khách! 👋 Mình có thể tư vấn món theo khẩu vị (cay, chua ngọt, giòn...), theo ngân sách (VD: dưới 100k), gợi ý combo nhóm hoặc nhận diện ảnh món ăn. Dưới đây là 3 món đặc sản nổi bật nhất của quán:",
+                    "Dạ Nhà Hàng Ẩm Thực Việt xin chào quý khách! 👋 Mình có thể tư vấn món theo khẩu vị (cay, chua ngọt, giòn...), theo ngân sách (VD: dưới 100k), gợi ý combo nhóm hoặc nhận diện ảnh món ăn. Dưới đây là 3 món đặc sản nổi bật nhất của quán:",
                     topPicks
             );
         }
@@ -290,7 +290,7 @@ public class AIChatbotServiceImpl implements IAIChatbotService {
                         : (slots.getCategory() != null ? "thuộc nhóm " + slots.getCategory().getDisplayName() + " " : "");
                 return buildMessage(
                         "Dạ với yêu cầu món " + extraDesc + "dưới " + budgetK
-                                + "k, Trợ Lý AI gợi ý các món chuẩn vị và hợp túi tiền nhất cho bạn:",
+                                + "k, Trợ Lý gợi ý các món chuẩn vị và hợp túi tiền nhất cho bạn:",
                         topChoices
                 );
             }
@@ -340,7 +340,7 @@ public class AIChatbotServiceImpl implements IAIChatbotService {
         String formattedTotal = String.format(new Locale("vi", "VN"), "%,d đ", comboTotal);
 
         return buildMessage(
-                "Dạ với bàn " + peopleCount + " người, Trợ Lý AI đề xuất combo cân bằng gồm Món chính + Khai vị + Nước uống (tổng khoảng "
+                "Dạ với bàn " + peopleCount + " người, Trợ Lý đề xuất combo cân bằng gồm Món chính + Khai vị + Nước uống (tổng khoảng "
                         + formattedTotal + ") rất hợp lý dưới đây:",
                 combo
         );

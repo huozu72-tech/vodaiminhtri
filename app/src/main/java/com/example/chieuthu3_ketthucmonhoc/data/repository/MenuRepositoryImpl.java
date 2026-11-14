@@ -70,7 +70,8 @@ public class MenuRepositoryImpl implements IMenuRepository {
                     item.isAvailable(),
                     item.getRating(),
                     item.getOrderCount(),
-                    item.getImageResId()
+                    item.getImageResId(),
+                    item.getImagePath()
             );
         } else {
             target = item;

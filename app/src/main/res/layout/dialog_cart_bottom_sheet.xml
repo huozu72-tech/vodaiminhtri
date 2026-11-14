@@ -59,11 +59,12 @@
         android:layout_height="wrap_content"
         android:layout_marginVertical="24dp"
         android:gravity="center"
-        android:text="🛒 Giỏ hàng đang trống.\nHãy chọn món ngon từ thực đơn hoặc nhờ AI tư vấn nhé!"
+        android:text="🛒 Giỏ hàng đang trống.\nHãy chọn món ngon từ thực đơn hoặc nhờ trợ lý tư vấn nhé!"
         android:textColor="@color/gray_text"
         android:textSize="13sp"
         android:visibility="gone" />
 
+    <!-- Smart Cross-Sell / Meal Completion Upsell Box -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCartItems"
         android:layout_width="match_parent"
@@ -71,9 +72,8 @@
         android:layout_marginTop="8dp"
         tools:listitem="@layout/item_cart_entry" />
 
-    <!-- AI Cross-Sell / Meal Completion Upsell Box -->
     <LinearLayout
-        android:id="@+id/layoutCartAiUpsellSection"
+        android:id="@+id/layoutCartUpsellSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -84,13 +84,13 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="✨ AI Gợi Ý Gọi Kèm Cho Trọn Vị:"
+            android:text="✨ Gợi Ý Gọi Kèm Cho Trọn Vị:"
             android:textColor="#92400E"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <LinearLayout
-            android:id="@+id/layoutCartAiUpsellItems"
+            android:id="@+id/layoutCartUpsellItems"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"

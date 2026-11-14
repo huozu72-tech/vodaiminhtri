@@ -50,7 +50,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="📝 + Ghi chú bếp (Ít cay, không hành...)"
-            android:textColor="@color/ai_button_orange"
+            android:textColor="@color/accent_button_orange"
             android:textSize="11sp" />
     </LinearLayout>
 

@@ -4,7 +4,7 @@
 |---|---|
 | **Ngày lập** | 25/10/2026 |
 | **Phạm vi** | Toàn bộ mã nguồn module `:app` — package `com.example.chieuthu3_ketthucmonhoc` (UI View-based + ViewBinding, dữ liệu in-memory, không mạng/DB) |
-| **Vùng rà soát** | ① Bảo mật & xác thực · ② Đặt hàng & thanh toán · ③ Trợ lý AI · ④ Kiến trúc & kiểm thử |
+| **Vùng rà soát** | ① Bảo mật & xác thực · ② Đặt hàng & thanh toán · ③ Trợ lý gợi ý · ④ Kiến trúc & kiểm thử |
 | **Trạng thái mã nguồn** | Nhánh `phong`, nền commit `a2cb0db`; 12 nhóm nâng cấp nằm trong working tree — 11 file sửa + 4 lớp test mới, **chưa commit** |
 | **Kết quả kiểm thử** | ✅ **67/67 unit test ĐẠT (0 lỗi, 0 bỏ qua) và build APK debug ĐẠT** — tôi đã chạy lại trực tiếp ngày 25/10/2026 để xác minh (chi tiết Mục 5) |
 
@@ -27,7 +27,7 @@ Các vấn đề trọng yếu nhất đã được xử lý:
 - **Mã đơn hàng duy nhất, tăng dần** — hết nguy cơ trùng mã đơn seed và ghi đè im lặng làm mất dữ liệu đơn;
 - **Kiểm soát chuyển trạng thái đơn hợp lệ** theo luồng PENDING → PREPARING → COMPLETED / CANCELLED;
 - **Hiển thị URL QR VietQR thật** (trước đây dialog thanh toán chỉ có ảnh placeholder) và **bỏ hard-code "Bàn 12"**;
-- **4 sửa biên cho Trợ lý AI**: ngân sách không món hợp, số VND 7 chữ số, chuỗi rỗng, ảnh không khớp từ khóa.
+- **4 sửa biên cho Trợ lý gợi ý**: ngân sách không món hợp, số VND 7 chữ số, chuỗi rỗng, ảnh không khớp từ khóa.
 
 Kết quả kiểm thử sau nâng cấp: **67/67 test ĐẠT, build APK debug ĐẠT** (chạy xác minh lại lần cuối lúc 10:01–10:04 ngày 25/10/2026, xem Mục 5). Cổng kiểm thử độc lập của quy trình cũng xác nhận xanh (`gateGreen=true`, `baselineGreen=true` theo dữ liệu đầu vào).
 
@@ -68,14 +68,14 @@ Chú thích trạng thái: ✅ đã sửa hoàn toàn · 🔶 sửa một phần
 | ĐH-5 | Đặt hàng | Thấp | Khách không xem lại được đơn đã đặt, không hủy được đơn | ❌ Chưa sửa |
 | ĐH-6 | Đặt hàng | Thấp | Dialog trạng thái map index→enum thủ công | ❌ Chưa sửa |
 | ĐH-7 | Đặt hàng | — | 💪 Phân lớp sạch, guard nghiệp vụ đúng chỗ | Giữ nguyên |
-| AI-1 | Trợ lý AI | Trung bình | Nhánh ngân sách không có else → gợi ý món đắt hơn ngân sách | ✅ Đã sửa (U7) |
-| AI-2 | Trợ lý AI | Thấp | Regex parse sai VND từ 7 chữ số ("1000000" → 1.000đ) | ✅ Đã sửa (U7) |
-| AI-3 | Trợ lý AI | Trung bình | Chatbot không khớp từ khóa tiếng Việt không dấu | ❌ Chưa sửa |
-| AI-4 | Trợ lý AI | Trung bình | Test AI chỉ phủ happy path | 🔶 Bổ sung một phần (U7, U8) |
-| AI-5 | Trợ lý AI | Thấp | sendMessage nhận chuỗi rỗng ở tầng service | ✅ Đã sửa (U7) |
-| AI-6 | Trợ lý AI | Thấp | Ảnh không khớp vẫn khẳng định "nhận diện thành công" | ✅ Đã sửa (U7) |
-| AI-7 | Trợ lý AI | Thấp | clearChat() là API chết, lịch sử chat tăng vô hạn | ❌ Chưa sửa |
-| AI-8 | Trợ lý AI | Thấp | getSimilarDishes chưa wiring UI; score có thể vượt 1.0 | 🔶 Sửa score + reason (U8) |
+| TL-1 | Trợ lý gợi ý | Trung bình | Nhánh ngân sách không có else → gợi ý món đắt hơn ngân sách | ✅ Đã sửa (U7) |
+| TL-2 | Trợ lý gợi ý | Thấp | Regex parse sai VND từ 7 chữ số ("1000000" → 1.000đ) | ✅ Đã sửa (U7) |
+| TL-3 | Trợ lý gợi ý | Trung bình | Chatbot không khớp từ khóa tiếng Việt không dấu | ❌ Chưa sửa |
+| TL-4 | Trợ lý gợi ý | Trung bình | Test Trợ lý chỉ phủ happy path | 🔶 Bổ sung một phần (U7, U8) |
+| TL-5 | Trợ lý gợi ý | Thấp | sendMessage nhận chuỗi rỗng ở tầng service | ✅ Đã sửa (U7) |
+| TL-6 | Trợ lý gợi ý | Thấp | Ảnh không khớp vẫn khẳng định "nhận diện thành công" | ✅ Đã sửa (U7) |
+| TL-7 | Trợ lý gợi ý | Thấp | clearChat() là API chết, lịch sử chat tăng vô hạn | ❌ Chưa sửa |
+| TL-8 | Trợ lý gợi ý | Thấp | getSimilarDishes chưa wiring UI; score có thể vượt 1.0 | 🔶 Sửa score + reason (U8) |
 | KT-1 | Kiến trúc & kiểm thử | Trung bình | Nhiều nhánh nghiệp vụ trọng yếu chưa có test | 🔶 Bổ sung một phần (U5–U12) |
 | KT-2 | Kiến trúc & kiểm thử | Trung bình | Mã đơn trùng/ghi đè (cùng gốc với ĐH-4) | ✅ Đã sửa (U6) |
 | KT-3 | Kiến trúc & kiểm thử | Thấp | Guard addItem/updateQuantity bất đối xứng | ❌ Chưa sửa (giữ hành vi chủ ý) |
@@ -102,7 +102,7 @@ Chú thích trạng thái: ✅ đã sửa hoàn toàn · 🔶 sửa một phần
 - **Vấn đề:** `logout()` đã có ở service nhưng không screen nào gọi; phiên khách hàng gắn vĩnh viễn tới khi tắt app — đơn tiếp theo vẫn được gán cho khách trước đó trên thiết bị dùng chung.
 - **Vị trí:** `AuthenticationServiceImpl.kt:97-100`; `MainActivity.kt:350-400` (khi rà soát).
 - **Bằng chứng:** grep `logout` toàn `app/src/main`: chỉ có định nghĩa `IAuthenticationService.kt:15` và triển khai `AuthenticationServiceImpl.kt:97`, không call site; `MainActivity.kt:187-194` hiển thị tên khách đã đăng nhập, `MainActivity.kt:149/173-175` mở lại dialog đăng nhập, `MainActivity.kt:269-273` gắn `customerId` hiện tại vào mọi đơn mới tạo.
-- **Đề xuất:** Trong `showLoginDialog()`, nếu `authService.getCurrentCustomer() != null` thì đổi nội dung dialog thành trạng thái tài khoản + nút "Đăng xuất" gọi `authService.logout()`, `updateUserHeader()`, `refreshAiRecommendations()`.
+- **Đề xuất:** Trong `showLoginDialog()`, nếu `authService.getCurrentCustomer() != null` thì đổi nội dung dialog thành trạng thái tài khoản + nút "Đăng xuất" gọi `authService.logout()`, `updateUserHeader()`, `refreshRecommendations()`.
 
 **BC-4 · Thấp · ❌ CHƯA SỬA (U9 đã làm nền) — Băm mật khẩu bằng SHA-256 không salt**
 - **Vấn đề:** Hash nhanh, dò trực tiếp/bảng cầu vồng được; hai người cùng mật khẩu có hash giống hệt nhau (dễ thấy ở seed "123456").
@@ -166,51 +166,51 @@ Chú thích trạng thái: ✅ đã sửa hoàn toàn · 🔶 sửa một phần
 **ĐH-7 · 💪 ĐIỂM MẠNH GIỮ NGUYÊN — Phân lớp sạch và guard nghiệp vụ đúng chỗ**
 - **Nội dung:** Mọi finding của vùng đều sửa được mà không phá kiến trúc: validation nằm ở service layer, Activity chỉ gọi qua `I*Service`.
 - **Vị trí:** `OrderServiceImpl.kt:23-32` (khi rà soát).
-- **Bằng chứng:** `MainActivity.kt:39-44` chỉ giữ `I*Service` từ `AppServiceLocator`; `require(tableNumber.isNotBlank())` và `require(cartItems.isNotEmpty())` ở dòng 23-24; snapshot `unitPrice` tại thời điểm đặt (dòng 32); URL VietQR đúng tham số (dòng 55-61, có test `OrderServiceTest.kt:46-48`); chặn giỏ rỗng ở UI (`MainActivity.kt:231-236, 248-251`); `clearCart + updateCartBadge + refreshAiRecommendations` sau đặt hàng (dòng 276-278); `OrderRepositoryImpl.kt:14`, `CartRepositoryImpl.kt:9` dùng `CopyOnWriteArrayList`.
+- **Bằng chứng:** `MainActivity.kt:39-44` chỉ giữ `I*Service` từ `AppServiceLocator`; `require(tableNumber.isNotBlank())` và `require(cartItems.isNotEmpty())` ở dòng 23-24; snapshot `unitPrice` tại thời điểm đặt (dòng 32); URL VietQR đúng tham số (dòng 55-61, có test `OrderServiceTest.kt:46-48`); chặn giỏ rỗng ở UI (`MainActivity.kt:231-236, 248-251`); `clearCart + updateCartBadge + refreshRecommendations` sau đặt hàng (dòng 276-278); `OrderRepositoryImpl.kt:14`, `CartRepositoryImpl.kt:9` dùng `CopyOnWriteArrayList`.
 
-### 3.3 Vùng Trợ lý AI (8 phát hiện)
+### 3.3 Vùng Trợ lý gợi ý (8 phát hiện)
 
-**AI-1 · Trung bình · ✅ ĐÃ SỬA (U7) — Nhánh ngân sách không có nhánh else**
+**TL-1 · Trung bình · ✅ ĐÃ SỬA (U7) — Nhánh ngân sách không có nhánh else**
 - **Vấn đề:** Khi không món nào ≤ ngân sách, bot bỏ qua ràng buộc giá và rơi về gợi ý mặc định (đều đắt hơn ngân sách), không có câu trả lời kiểu "không có món phù hợp".
-- **Vị trí:** `AIChatbotServiceImpl.kt:85-97` (khi rà soát).
+- **Vị trí:** `ChatbotServiceImpl.kt:85-97` (khi rà soát).
 - **Bằng chứng:** `val affordable = allItems.filter { it.price <= budget }…` rồi `if (affordable.isNotEmpty()) { … return }` — không có nhánh else; dòng 135-140 là default `allItems.sortedByDescending { it.orderCount }.take(3)`. Kiểm chứng bằng Node với logic tương đương: "dưới 1k" → budget = 1.000đ, trong khi món rẻ nhất seed là 15.000đ (`InitialDataFactory.kt:164` và 3 món nước kế tiếp đều 15.000) → affordable rỗng → bot trả về các món 60.000–160.000đ.
 
-**AI-2 · Thấp · ✅ ĐÃ SỬA (U7) — Regex ngân sách parse sai số VND từ 7 chữ số trở lên**
+**TL-2 · Thấp · ✅ ĐÃ SỬA (U7) — Regex ngân sách parse sai số VND từ 7 chữ số trở lên**
 - **Vấn đề:** "1000000" bị hiểu là 1.000đ thay vì 1.000.000đ.
-- **Vị trí:** `AIChatbotServiceImpl.kt:84-87` (khi rà soát).
+- **Vị trí:** `ChatbotServiceImpl.kt:84-87` (khi rà soát).
 - **Bằng chứng:** Regex cũ `(\d+)\s*(k|nghìn|nghin|000)`: backtracking khiến group số khớp "1000" và để "000" làm hậu tố. Đã chạy Node kiểm chứng: "1000000" → num=1000, budget=1.000đ; đối chiếu "100000" → 100.000đ (đúng), "dưới 100k" → 100.000đ (đúng).
 
-**AI-3 · Trung bình · ❌ CHƯA SỬA — Chatbot khớp từ khóa tiếng Việt có dấu nguyên văn**
+**TL-3 · Trung bình · ❌ CHƯA SỬA — Chatbot khớp từ khóa tiếng Việt có dấu nguyên văn**
 - **Vấn đề:** Input không dấu ("nuoc", "ga nuong", "dem da") không khớp taste lẫn category nên luôn rơi vào default, trong khi tìm kiếm thực đơn chính lại đã normalize dấu.
 - **Vị trí:** `TasteAttribute.kt:14-17`.
-- **Bằng chứng:** `entries.filter { lower.contains(it.tag) }` — 6/8 tag có dấu ("ngọt", "giòn", "đậm đà", "thanh mát", "nướng", "chiên"); `AIChatbotServiceImpl.kt:117` `lower.contains("nước")`. Đối chiếu `MenuRepositoryImpl.kt:47, 58-62` đã dùng `removeDiacritics` + đ→d cho `searchMenuItems`. Chính regex budget (dòng 84) có sẵn lựa chọn "nghin" không dấu, chứng tỏ input không dấu là kịch bản được kỳ vọng nhưng chỉ budget xử lý.
+- **Bằng chứng:** `entries.filter { lower.contains(it.tag) }` — 6/8 tag có dấu ("ngọt", "giòn", "đậm đà", "thanh mát", "nướng", "chiên"); `ChatbotServiceImpl.kt:117` `lower.contains("nước")`. Đối chiếu `MenuRepositoryImpl.kt:47, 58-62` đã dùng `removeDiacritics` + đ→d cho `searchMenuItems`. Chính regex budget (dòng 84) có sẵn lựa chọn "nghin" không dấu, chứng tỏ input không dấu là kịch bản được kỳ vọng nhưng chỉ budget xử lý.
 - **Đề xuất:** Nâng `removeDiacritics` thành util dùng chung; normalize query + tag + keyword trước khi `contains`, đồng bộ với `searchMenuItems`. (U11 đã khóa hành vi chuẩn của tìm kiếm ở repository; chatbot vẫn chưa đổi.)
 
-**AI-4 · Trung bình · 🔶 BỔ SUNG MỘT PHẦN (U7, U8) — Lớp test AI chỉ phủ happy path**
+**TL-4 · Trung bình · 🔶 BỔ SUNG MỘT PHẦN (U7, U8) — Lớp test Trợ lý chỉ phủ happy path**
 - **Vấn đề:** Thiếu đúng các biên: ngân sách không món nào hợp, chuỗi rỗng, từ khóa không khớp, clearChat, fallback ảnh.
-- **Vị trí:** `AIChatbotServiceTest.kt:29-59` (khi rà soát).
-- **Bằng chứng:** Đọc toàn bộ 4 test của `AIChatbotServiceTest.kt:14-60` và 3 test của `AIRecommendationServiceTest.kt:37-76`; không test nào cho các biên trên. Phân tích đã chạy `./gradlew testDebugUnitTest --tests "...AIChatbotServiceTest" --tests "...AIRecommendationServiceTest"` → BUILD SUCCESSFUL (baseline xanh).
-- **Phần đã bổ sung:** U7 thêm 4 test (ngân sách không món hợp, VND 7 chữ số, chuỗi rỗng, ảnh không khớp), U8 thêm 2 test (chặn điểm 1.0, lý do fallback). **Còn thiếu:** test hint ảnh khớp từ khóa có dấu ("tôm", "gà"… — nhánh `AIChatbotServiceImpl.kt:46-56` khi rà soát), test nhánh query không khớp → default, test `clearChat()`.
+- **Vị trí:** `ChatbotServiceTest.kt:29-59` (khi rà soát).
+- **Bằng chứng:** Đọc toàn bộ 4 test của `ChatbotServiceTest.kt:14-60` và 3 test của `RecommendationServiceTest.kt:37-76`; không test nào cho các biên trên. Phân tích đã chạy `./gradlew testDebugUnitTest --tests "...ChatbotServiceTest" --tests "...RecommendationServiceTest"` → BUILD SUCCESSFUL (baseline xanh).
+- **Phần đã bổ sung:** U7 thêm 4 test (ngân sách không món hợp, VND 7 chữ số, chuỗi rỗng, ảnh không khớp), U8 thêm 2 test (chặn điểm 1.0, lý do fallback). **Còn thiếu:** test hint ảnh khớp từ khóa có dấu ("tôm", "gà"… — nhánh `ChatbotServiceImpl.kt:46-56` khi rà soát), test nhánh query không khớp → default, test `clearChat()`.
 
-**AI-5 · Thấp · ✅ ĐÃ SỬA (U7) — sendMessage không chặn chuỗi rỗng ở tầng service**
+**TL-5 · Thấp · ✅ ĐÃ SỬA (U7) — sendMessage không chặn chuỗi rỗng ở tầng service**
 - **Vấn đề:** Vẫn thêm bubble user rỗng vào history rồi trả lời default; UI đã chặn (điểm mạnh, `MainActivity.kt:319-320` khi rà soát) nhưng service pure-Kotlin được test độc lập nên contract chưa tự bảo vệ.
-- **Vị trí:** `AIChatbotServiceImpl.kt:26-34` (khi rà soát).
+- **Vị trí:** `ChatbotServiceImpl.kt:26-34` (khi rà soát).
 
-**AI-6 · Thấp · ✅ ĐÃ SỬA (U7) — analyzeFoodImage fallback "nói dối"**
+**TL-6 · Thấp · ✅ ĐÃ SỬA (U7) — analyzeFoodImage fallback "nói dối"**
 - **Vấn đề:** Khi không khớp từ khóa nào: fallback lặng lẽ lấy 2 món đầu tiên và message vẫn khẳng định "hệ thống nhận diện thấy các món rất khớp"; nếu thực đơn trống/toàn unavailable thì `suggestedItems` rỗng nhưng văn bản vẫn báo nhận diện thành công.
-- **Vị trí:** `AIChatbotServiceImpl.kt:53-62` (khi rà soát).
+- **Vị trí:** `ChatbotServiceImpl.kt:53-62` (khi rà soát).
 - **Bằng chứng:** Dòng 53-56 `.ifEmpty { allItems.take(2) }` lấy 2 món đầu theo thứ tự menu (không phải món liên quan); dòng 59 text cố định; `allItems` (dòng 45, filter `isAvailable`) có thể rỗng.
 
-**AI-7 · Thấp · ❌ CHƯA SỬA — clearChat() là API chết, lịch sử chat tăng vô hạn**
+**TL-7 · Thấp · ❌ CHƯA SỬA — clearChat() là API chết, lịch sử chat tăng vô hạn**
 - **Vấn đề:** Không UI nào gọi; history là singleton tăng vô hạn trong phiên ứng dụng.
-- **Vị trí:** `AIChatbotServiceImpl.kt:69-77` (khi rà soát).
-- **Bằng chứng:** Grep toàn `app/src/main/java`: `clearChat` chỉ xuất hiện tại `IAIChatbotService.kt:9` (khai báo) và `AIChatbotServiceImpl.kt:69` (override); `showAiChatDialog` (`MainActivity.kt:291-329` khi rà soát) không có control làm mới; history là `CopyOnWriteArrayList` singleton lazy qua `AppServiceLocator.kt:73-75`.
+- **Vị trí:** `ChatbotServiceImpl.kt:69-77` (khi rà soát).
+- **Bằng chứng:** Grep toàn `app/src/main/java`: `clearChat` chỉ xuất hiện tại `IChatbotService.kt:9` (khai báo) và `ChatbotServiceImpl.kt:69` (override); `showChatDialog` (`MainActivity.kt:291-329` khi rà soát) không có control làm mới; history là `CopyOnWriteArrayList` singleton lazy qua `AppServiceLocator.kt:73-75`.
 - **Đề xuất:** Thêm nút "Làm mới" trong dialog chat gọi `clearChat()` rồi `chatAdapter.updateList`; hoặc giới hạn history ~50 tin cuối trong `sendMessage`.
 
-**AI-8 · Thấp · 🔶 SỬA SCORE + REASON (U8) — getSimilarDishes chưa wiring, lý do rỗng, điểm vượt thang**
+**TL-8 · Thấp · 🔶 SỬA SCORE + REASON (U8) — getSimilarDishes chưa wiring, lý do rỗng, điểm vượt thang**
 - **Vấn đề:** `getSimilarDishes` chưa được wiring vào UI nào (chỉ test gọi); `reason` của nó có thể là chuỗi rỗng; score cá nhân hóa có thể vượt 1.0 (tối đa 1.10) — hiện chưa lộ vì adapter không hiển thị score.
-- **Vị trí:** `AIRecommendationServiceImpl.kt:69-93` (khi rà soát).
-- **Bằng chứng:** Grep `getSimilarDishes` trong main: chỉ thấy trong test (`AIRecommendationServiceTest.kt:71`) và định nghĩa impl; dòng 77-89: nếu khác category và không taste chung thì reasons rỗng → `joinToString(" • ")` trả ""; dòng 37-60: tổng trọng số tối đa 0.35+0.45+0.20+0.10 = 1.10; `AIRecommendationAdapter.kt:28-30` chỉ bind reason/tên/giá.
+- **Vị trí:** `RecommendationServiceImpl.kt:69-93` (khi rà soát).
+- **Bằng chứng:** Grep `getSimilarDishes` trong main: chỉ thấy trong test (`RecommendationServiceTest.kt:71`) và định nghĩa impl; dòng 77-89: nếu khác category và không taste chung thì reasons rỗng → `joinToString(" • ")` trả ""; dòng 37-60: tổng trọng số tối đa 0.35+0.45+0.20+0.10 = 1.10; `RecommendationAdapter.kt:28-30` chỉ bind reason/tên/giá.
 - **Phần còn lại:** wiring UI (dialog "Món tương tự" khi click món) chưa làm.
 
 ### 3.4 Vùng Kiến trúc & kiểm thử (8 phát hiện)
@@ -218,7 +218,7 @@ Chú thích trạng thái: ✅ đã sửa hoàn toàn · 🔶 sửa một phần
 **KT-1 · Trung bình · 🔶 BỔ SUNG MỘT PHẦN (U5–U12) — Nhiều nhánh nghiệp vụ trọng yếu chưa được test**
 - **Vấn đề:** Mọi service đều có lớp test và 28/28 pass ở đầu vào, nhưng nhiều nhánh trọng yếu chưa phủ.
 - **Vị trí:** `app/src/test/java/.../services/` (7 lớp test khi rà soát).
-- **Bằng chứng:** Phân tích đã chạy `./gradlew testDebugUnitTest --console=plain` → BUILD SUCCESSFUL, XML tổng hợp: 1+4+3+6+5+2+5+2 = 28 test, 0 failure/0 skip. Khoảng trống đối chiếu test với source: (1) `OrderServiceTest.kt` chỉ 2 test — cancelOrder chỉ test nhánh "không hủy được đơn COMPLETED" (dòng 63-66), chưa test PENDING→cancel=true hay `require` ở `OrderServiceImpl.kt:23-24`, `getCustomerOrders` không test; (2) `MenuServiceTest.kt` (5 test) không có test `updateMenuItem` dù `AdminActivity.kt:184` gọi nó, `require` ở `MenuServiceImpl.kt:39-40, 55-56` chưa phủ; (3) `CartServiceTest.kt` không test guard `require` ở `CartServiceImpl.kt:12-13`; (4) `AuthenticationServiceTest.kt` chưa test đăng nhập bằng email (`AuthenticationServiceImpl.kt:62-66`) và các nhánh lỗi loginAdmin; (5) `AIChatbotServiceTest.kt:55` dùng hint không chứa từ khóa có dấu nên chỉ đi nhánh fallback — các nhánh khớp "tôm/gà/ếch…" chưa từng được test.
+- **Bằng chứng:** Phân tích đã chạy `./gradlew testDebugUnitTest --console=plain` → BUILD SUCCESSFUL, XML tổng hợp: 1+4+3+6+5+2+5+2 = 28 test, 0 failure/0 skip. Khoảng trống đối chiếu test với source: (1) `OrderServiceTest.kt` chỉ 2 test — cancelOrder chỉ test nhánh "không hủy được đơn COMPLETED" (dòng 63-66), chưa test PENDING→cancel=true hay `require` ở `OrderServiceImpl.kt:23-24`, `getCustomerOrders` không test; (2) `MenuServiceTest.kt` (5 test) không có test `updateMenuItem` dù `AdminActivity.kt:184` gọi nó, `require` ở `MenuServiceImpl.kt:39-40, 55-56` chưa phủ; (3) `CartServiceTest.kt` không test guard `require` ở `CartServiceImpl.kt:12-13`; (4) `AuthenticationServiceTest.kt` chưa test đăng nhập bằng email (`AuthenticationServiceImpl.kt:62-66`) và các nhánh lỗi loginAdmin; (5) `ChatbotServiceTest.kt:55` dùng hint không chứa từ khóa có dấu nên chỉ đi nhánh fallback — các nhánh khớp "tôm/gà/ếch…" chưa từng được test.
 - **Phần đã bổ sung:** +39 test (chi tiết Mục 4, 5). **Còn thiếu:** cancelOrder PENDING→true, `updateMenuItem` (đổi giá + giá ≤0 ném lỗi), guard `addItem` (quantity 0, món hết hàng), loginCustomer bằng email, analyzeFoodImage với hint chứa "tôm" có dấu.
 
 **KT-2 · Trung bình · ✅ ĐÃ SỬA (U6) — Mã đơn trùng/ghi đè (cùng gốc với ĐH-4)**
@@ -301,17 +301,17 @@ Mỗi nâng cấp ghi kèm phát hiện được khắc phục và vị trí mã
 - Thêm 2 test: mã mới = #ORD-1026 khi seed sẵn 1023/1025 và 3 đơn liên tiếp không trùng/không mất đơn; saveOrder khác case cập nhật thay vì nhân bản.
 - ✅ Đối chiếu mã nguồn: cả hai thay đổi xác nhận có mặt.
 
-### U7. Xử lý biên Trợ lý AI: ngân sách không món hợp, VND 7 chữ số, chuỗi rỗng, ảnh không khớp
-**Khắc phục:** AI-1, AI-2, AI-5, AI-6. **File:** `AIChatbotServiceImpl.kt`, `AIChatbotServiceTest.kt`
-- (1) Nhánh ngân sách có else (`AIChatbotServiceImpl.kt:117-131` hiện hành): khi không món nào ≤ ngân sách trả lời thẳng "không có món dưới Xk" kèm món rẻ nhất, thay vì rơi về gợi ý mặc định đắt hơn ngân sách.
+### U7. Xử lý biên Trợ lý gợi ý: ngân sách không món hợp, VND 7 chữ số, chuỗi rỗng, ảnh không khớp
+**Khắc phục:** TL-1, TL-2, TL-5, TL-6. **File:** `ChatbotServiceImpl.kt`, `ChatbotServiceTest.kt`
+- (1) Nhánh ngân sách có else (`ChatbotServiceImpl.kt:117-131` hiện hành): khi không món nào ≤ ngân sách trả lời thẳng "không có món dưới Xk" kèm món rẻ nhất, thay vì rơi về gợi ý mặc định đắt hơn ngân sách.
 - (2) `parseBudget` mới (dòng 186-195): hậu tố k/nghìn/nghin nhân 1000 có negative lookahead `(?!\w)` để chữ "k" đầu của "không" không bị nuốt; số thường chỉ nhận khi đủ 4 chữ số trở lên — "1000000" giờ là 1.000.000đ thay vì 1.000đ.
 - (3) `sendMessage` với chuỗi rỗng/toàn khoảng trắng (dòng 26-37) không thêm bubble người dùng rỗng vào history, chỉ trả lời nhắc nhập nội dung.
 - (4) `analyzeFoodImage` khi không khớp từ khóa nói thật "chưa nhận diện được" (dòng 74-78), khi thực đơn trống báo rõ (dòng 68-70).
 - Thêm 4 test mới; 4 test cũ giữ nguyên và vẫn khớp hành vi mới. ✅ Đối chiếu mã nguồn: cả 4 nhánh xác nhận có mặt đúng vị trí.
 
-### U8. Chặn điểm gợi ý AI vượt thang 1.0 và lý do rỗng ở getSimilarDishes
-**Khắc phục:** AI-8 (một phần). **File:** `AIRecommendationServiceImpl.kt`, `AIRecommendationServiceTest.kt`
-- Điểm cá nhân hóa bị `coerceAtMost(1.0)` trước khi làm tròn (tổng trọng số thô tối đa 0.35+0.45+0.20+0.10 = 1.10 nên trước đây có thể vượt thang) — hiện hành qua `MAX_SCORE = 1.0` ở `AIRecommendationServiceImpl.kt:62-63, 89-90, 110-113`.
+### U8. Chặn điểm gợi ý vượt thang 1.0 và lý do rỗng ở getSimilarDishes
+**Khắc phục:** TL-8 (một phần). **File:** `RecommendationServiceImpl.kt`, `RecommendationServiceTest.kt`
+- Điểm cá nhân hóa bị `coerceAtMost(1.0)` trước khi làm tròn (tổng trọng số thô tối đa 0.35+0.45+0.20+0.10 = 1.10 nên trước đây có thể vượt thang) — hiện hành qua `MAX_SCORE = 1.0` ở `RecommendationServiceImpl.kt:62-63, 89-90, 110-113`.
 - `getSimilarDishes` có reason fallback "Món được khách yêu thích tại nhà hàng" khi món không cùng nhóm và không chung vị (trước đây `joinToString` của list rỗng trả chuỗi rỗng).
 - Thêm 2 test mới (test dựng đúng ca 1.092 → chặn còn 1.0); 3 test cũ không đổi và vẫn pass.
 
@@ -326,7 +326,7 @@ Mỗi nâng cấp ghi kèm phát hiện được khắc phục và vị trí mã
 - Test viết theo thuộc tính (không khóa số lượng/mã cụ thể) nên không vỡ khi seed được bổ sung.
 
 ### U11. Bổ sung MenuRepositoryImplTest — khóa chuẩn hóa dấu của tìm kiếm thực đơn
-**Liên quan:** AI-3 (khóa hợp đồng chuẩn hóa đã có). **File:** `MenuRepositoryImplTest.kt` (mới)
+**Liên quan:** TL-3 (khóa hợp đồng chuẩn hóa đã có). **File:** `MenuRepositoryImplTest.kt` (mới)
 - **10 test** dùng fixture tường minh (không dựa default seed) — đếm trực tiếp từ file (10 hàm `@Test`) và kết quả chạy; *lưu ý: mô tả thay đổi ghi "11 test", đối chiếu thực tế là 10*:
   - search không dấu khớp tên có dấu ("ga nuong" → Gà Nướng), đ→d ("banh duc" → Bánh Đúc), query có dấu vẫn khớp, khớp theo mô tả ("mat lanh") và displayName danh mục ("nuoc uong"), query blank trả tất cả / không khớp trả rỗng, lọc danh mục, `getMenuItemById` null với id lạ, `saveMenuItem` cấp id tự tăng max+1 khi id ≤ 0 và cập nhật tại chỗ khi id đã có, `deleteMenuItem` true-then-false.
 - Logic chuẩn hóa đã được kiểm chứng bằng Node mô phỏng đúng `removeDiacritics` (NFD + strip combining marks + đ→d tương đương `MenuRepositoryImpl.kt:58-62`): cả 7 kỳ vọng tìm kiếm đều khớp.
@@ -341,7 +341,7 @@ Mỗi nâng cấp ghi kèm phát hiện được khắc phục và vị trí mã
 
 ### 5.1 Đầu vào (baseline, trước nâng cấp)
 
-Pha phân tích chạy `./gradlew testDebugUnitTest --console=plain` → **BUILD SUCCESSFUL**, báo cáo XML tổng hợp **28 test / 0 failure / 0 skip** trên 8 suite (1+4+3+6+5+2+5+2 — bằng chứng phát hiện KT-1). Các lần chạy theo lớp (AuthenticationServiceTest 6/6; AIChatbotServiceTest + AIRecommendationServiceTest) cũng BUILD SUCCESSFUL.
+Pha phân tích chạy `./gradlew testDebugUnitTest --console=plain` → **BUILD SUCCESSFUL**, báo cáo XML tổng hợp **28 test / 0 failure / 0 skip** trên 8 suite (1+4+3+6+5+2+5+2 — bằng chứng phát hiện KT-1). Các lần chạy theo lớp (AuthenticationServiceTest 6/6; ChatbotServiceTest + RecommendationServiceTest) cũng BUILD SUCCESSFUL.
 
 ### 5.2 Sau nâng cấp — tôi chạy lại để xác minh (25/10/2026)
 
@@ -355,8 +355,8 @@ Kết quả chi tiết theo lớp (đọc trực tiếp từ XML `app/build/test
 
 | Lớp test | Số test | Lỗi | Bỏ qua | Ghi chú |
 |---|---|---|---|---|
-| AIChatbotServiceTest | 8 | 0 | 0 | 4 cũ + 4 mới (U7) |
-| AIRecommendationServiceTest | 5 | 0 | 0 | 3 cũ + 2 mới (U8) |
+| ChatbotServiceTest | 8 | 0 | 0 | 4 cũ + 4 mới (U7) |
+| RecommendationServiceTest | 5 | 0 | 0 | 3 cũ + 2 mới (U8) |
 | AuthenticationServiceTest | 6 | 0 | 0 | |
 | CartServiceTest | 5 | 0 | 0 | |
 | DashboardServiceTest | 2 | 0 | 0 | |
@@ -386,7 +386,7 @@ Kết quả chi tiết theo lớp (đọc trực tiếp từ XML `app/build/test
 1. **Render ảnh QR trong app** (phần còn lại của ĐH-1): AndroidManifest chưa khai báo quyền INTERNET và version catalog (`gradle/libs.versions.toml`) chưa có thư viện tải ảnh — cả hai file ngoài phạm vi được giao của lượt sửa. Giải pháp tạm thời đã làm: hiển thị URL dạng text + nút mở trình duyệt (U4).
 2. **UI dialog trạng thái ở AdminActivity** (phần còn lại của ĐH-3): lượt sửa chỉ được giao tầng service (U5); dialog vẫn hiện đủ 4 lựa chọn và toast "thành công" bất kể service trả `false`.
 3. **Đơn PENDING sót lại** (hành vi mới phát sinh từ U4): khách bấm "Tạo Đơn & Hiện Mã QR" rồi đóng dialog không xác nhận sẽ để lại đơn PENDING; lần mở sau có thể tạo đơn khác.
-4. **13 phát hiện chưa được sửa:** BC-2, BC-3, BC-4, BC-5, BC-6, ĐH-5, ĐH-6, AI-3, AI-7, KT-3, KT-4, KT-5, KT-7. **Phần dở của 5 phát hiện sửa một phần:** wiring UI getSimilarDishes (AI-8), dialog admin (ĐH-3), render ảnh QR (ĐH-1), các test biên còn thiếu của AI-4/KT-1 (chi tiết ở từng phát hiện Mục 3).
+4. **13 phát hiện chưa được sửa:** BC-2, BC-3, BC-4, BC-5, BC-6, ĐH-5, ĐH-6, TL-3, TL-7, KT-3, KT-4, KT-5, KT-7. **Phần dở của 5 phát hiện sửa một phần:** wiring UI getSimilarDishes (TL-8), dialog admin (ĐH-3), render ảnh QR (ĐH-1), các test biên còn thiếu của TL-4/KT-1 (chi tiết ở từng phát hiện Mục 3).
 5. **Chưa commit:** toàn bộ 12 nâng cấp đang nằm trong working tree nhánh `phong` (11 file sửa + 4 file test mới) — nên xem lại và commit để không mất.
 
 ### 6.2 Đề xuất tiếp theo (theo thứ tự ưu tiên)
@@ -395,10 +395,10 @@ Kết quả chi tiết theo lớp (đọc trực tiếp từ XML `app/build/test
 2. **Đăng xuất + "Đơn của tôi" (BC-3 + ĐH-5):** dialog tài khoản có nút "Đăng xuất" gọi `authService.logout()`; bottom sheet "Đơn của tôi" dùng `getCustomerOrders` hiển thị mã đơn/tổng tiền/chip trạng thái, kèm đường hủy đơn phía khách (đi qua `cancelOrder` để hưởng guard đã có).
 3. **Nâng PBKDF2 có salt (BC-4):** `SecurityHelperTest` (U9) đã được thiết kế không khóa chi tiết triển khai nên nâng cấp không vỡ test — đổi một chỗ, nhất quán trong một lần chạy.
 4. **Chuỗi đăng nhập/đăng ký (BC-2, BC-5, BC-6):** chặn đăng ký khi để trống SĐT/email; thống nhất thông báo lỗi đăng nhập; bỏ trim mật khẩu (hoặc báo lỗi rõ ràng).
-5. **Chatbot không dấu + làm mới chat (AI-3, AI-7):** nâng `removeDiacritics` thành util dùng chung, normalize query + tag + keyword; thêm nút "Làm mới" gọi `clearChat()`.
-6. **Wiring getSimilarDishes (AI-8):** gắn vào click món (dialog "Món tương tự").
+5. **Chatbot không dấu + làm mới chat (TL-3, TL-7):** nâng `removeDiacritics` thành util dùng chung, normalize query + tag + keyword; thêm nút "Làm mới" gọi `clearChat()`.
+6. **Wiring getSimilarDishes (TL-8):** gắn vào click món (dialog "Món tương tự").
 7. **Dọn tầng nghiệp vụ (KT-4, KT-5, KT-7):** đẩy filter `isAvailable` vào `MenuServiceImpl.searchMenuItems`; quyết định đơn hủy có tính vào "bán chạy" không rồi sửa service + test tương ứng; bỏ default args repository hoặc ghi KDoc.
-8. **Bổ sung test còn thiếu (KT-1, AI-4, KT-3):** cancelOrder PENDING→true + orderId lạ, createOrder giỏ rỗng/bàn trống ném IllegalArgumentException, updateMenuItem đổi giá + giá ≤0 ném lỗi, addItem quantity 0/món hết hàng, loginCustomer bằng email, analyzeFoodImage hint chứa "tôm" có dấu, nhánh query không khớp → default, clearChat còn đúng 1 tin welcome.
+8. **Bổ sung test còn thiếu (KT-1, TL-4, KT-3):** cancelOrder PENDING→true + orderId lạ, createOrder giỏ rỗng/bàn trống ném IllegalArgumentException, updateMenuItem đổi giá + giá ≤0 ném lỗi, addItem quantity 0/món hết hàng, loginCustomer bằng email, analyzeFoodImage hint chứa "tôm" có dấu, nhánh query không khớp → default, clearChat còn đúng 1 tin welcome.
 9. **Render QR thật (ĐH-1 trọn vẹn):** thêm quyền INTERNET + thư viện ảnh (Coil) qua version catalog, rồi nạp `order.qrPayloadUrl` vào `imgQrCode`; cân nhắc dọn đơn PENDING bỏ hoang khi mở lại dialog thanh toán.
 
 ---

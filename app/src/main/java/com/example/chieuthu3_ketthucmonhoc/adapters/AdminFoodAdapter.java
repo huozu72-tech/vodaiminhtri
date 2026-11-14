@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chieuthu3_ketthucmonhoc.R;
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemAdminFoodBinding;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
+import com.example.chieuthu3_ketthucmonhoc.utils.FoodImageLoader;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class AdminFoodAdapter extends RecyclerView.Adapter<AdminFoodAdapter.Admi
         MenuItem food = foodList.get(position);
         Context context = holder.itemView.getContext();
 
-        holder.binding.imgAdminFood.setImageResource(FoodImageResolver.resolveImage(food));
+        FoodImageLoader.loadFoodImage(holder.binding.imgAdminFood, food);
         holder.binding.tvAdminFoodName.setText(food.getName());
         holder.binding.tvAdminFoodCategory.setText(food.getCategory().getDisplayName());
         holder.binding.tvAdminFoodPrice.setText(food.getFormattedPrice());

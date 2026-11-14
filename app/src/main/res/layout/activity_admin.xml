@@ -352,7 +352,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="15"
-                                    android:textColor="@color/ai_button_orange"
+                                    android:textColor="@color/accent_button_orange"
                                     android:textSize="24sp"
                                     android:textStyle="bold" />
 

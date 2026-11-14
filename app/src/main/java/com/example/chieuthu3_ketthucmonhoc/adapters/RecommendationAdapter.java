@@ -6,15 +6,15 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.chieuthu3_ketthucmonhoc.databinding.ItemAiRecommendationCardBinding;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.AIRecommendation;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
+import com.example.chieuthu3_ketthucmonhoc.databinding.ItemRecommendationCardBinding;
+import com.example.chieuthu3_ketthucmonhoc.utils.FoodImageLoader;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.Recommendation;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendationAdapter.RecViewHolder> {
+public class RecommendationAdapter extends RecyclerView.Adapter<RecommendationAdapter.RecViewHolder> {
 
     public interface OnAddToCartListener {
         void onAddToCart(MenuItem item);
@@ -24,16 +24,16 @@ public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendati
         void onFoodItemClick(MenuItem item);
     }
 
-    private List<AIRecommendation> recommendationList;
+    private List<Recommendation> recommendationList;
     private final OnAddToCartListener onAddToCartListener;
     private final OnFoodItemClickListener onFoodItemClickListener;
 
-    public AIRecommendationAdapter(List<AIRecommendation> recommendationList, OnAddToCartListener onAddToCartListener) {
+    public RecommendationAdapter(List<Recommendation> recommendationList, OnAddToCartListener onAddToCartListener) {
         this(recommendationList, onAddToCartListener, null);
     }
 
-    public AIRecommendationAdapter(
-            List<AIRecommendation> recommendationList,
+    public RecommendationAdapter(
+            List<Recommendation> recommendationList,
             OnAddToCartListener onAddToCartListener,
             OnFoodItemClickListener onFoodItemClickListener
     ) {
@@ -43,9 +43,9 @@ public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendati
     }
 
     public static class RecViewHolder extends RecyclerView.ViewHolder {
-        final ItemAiRecommendationCardBinding binding;
+        final ItemRecommendationCardBinding binding;
 
-        public RecViewHolder(ItemAiRecommendationCardBinding binding) {
+        public RecViewHolder(ItemRecommendationCardBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -54,7 +54,7 @@ public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendati
     @NonNull
     @Override
     public RecViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemAiRecommendationCardBinding binding = ItemAiRecommendationCardBinding.inflate(
+        ItemRecommendationCardBinding binding = ItemRecommendationCardBinding.inflate(
                 LayoutInflater.from(parent.getContext()), parent, false
         );
         return new RecViewHolder(binding);
@@ -62,12 +62,12 @@ public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendati
 
     @Override
     public void onBindViewHolder(@NonNull RecViewHolder holder, int position) {
-        AIRecommendation item = recommendationList.get(position);
+        Recommendation item = recommendationList.get(position);
 
-        holder.binding.imgAiDish.setImageResource(FoodImageResolver.resolveImage(item.getMenuItem()));
-        holder.binding.tvAiReasonBadge.setText(item.getReason());
-        holder.binding.tvAiDishName.setText(item.getMenuItem().getName());
-        holder.binding.tvAiDishPrice.setText(item.getMenuItem().getFormattedPrice());
+        FoodImageLoader.loadFoodImage(holder.binding.imgRecommendedDish, item.getMenuItem());
+        holder.binding.tvReasonBadge.setText(item.getReason());
+        holder.binding.tvRecommendedDishName.setText(item.getMenuItem().getName());
+        holder.binding.tvRecommendedDishPrice.setText(item.getMenuItem().getFormattedPrice());
 
         holder.itemView.setOnClickListener(v -> {
             if (onFoodItemClickListener != null) {
@@ -75,7 +75,7 @@ public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendati
             }
         });
 
-        holder.binding.btnAiAddToCart.setOnClickListener(v -> {
+        holder.binding.btnRecAddToCart.setOnClickListener(v -> {
             if (onAddToCartListener != null) {
                 onAddToCartListener.onAddToCart(item.getMenuItem());
             }
@@ -87,7 +87,7 @@ public class AIRecommendationAdapter extends RecyclerView.Adapter<AIRecommendati
         return recommendationList.size();
     }
 
-    public void updateList(List<AIRecommendation> newList) {
+    public void updateList(List<Recommendation> newList) {
         this.recommendationList = newList != null ? newList : new ArrayList<>();
         notifyDataSetChanged();
     }

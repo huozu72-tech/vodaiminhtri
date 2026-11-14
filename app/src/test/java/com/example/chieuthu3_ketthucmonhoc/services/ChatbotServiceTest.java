@@ -6,7 +6,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.ChatMessage;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
-import com.example.chieuthu3_ketthucmonhoc.domain.services.AIChatbotServiceImpl;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.ChatbotServiceImpl;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.ChatbotMLModel;
 
 import org.junit.Before;
@@ -21,9 +21,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class AIChatbotServiceTest {
+public class ChatbotServiceTest {
 
-    private AIChatbotServiceImpl chatbotService;
+    private ChatbotServiceImpl chatbotService;
     private MenuRepositoryImpl menuRepository;
 
     private final MenuItem dishSpicy = new MenuItem(
@@ -42,7 +42,7 @@ public class AIChatbotServiceTest {
     @Before
     public void setup() {
         menuRepository = new MenuRepositoryImpl(Arrays.asList(dishSpicy, dishCrispy, dishCheap));
-        chatbotService = new AIChatbotServiceImpl(menuRepository);
+        chatbotService = new ChatbotServiceImpl(menuRepository);
     }
 
     @Test
@@ -171,7 +171,7 @@ public class AIChatbotServiceTest {
 
     @Test
     public void unaccentedVietnameseQueriesWorkForTasteCategoryAndDishSearch() {
-        AIChatbotServiceImpl fullMenuChatbot = new AIChatbotServiceImpl(
+        ChatbotServiceImpl fullMenuChatbot = new ChatbotServiceImpl(
                 new MenuRepositoryImpl(InitialDataFactory.createInitialMenuItems())
         );
 
@@ -190,7 +190,7 @@ public class AIChatbotServiceTest {
 
     @Test
     public void comboGroupConsultationAndOutOfScopeGuardrailWorkCorrectly() {
-        AIChatbotServiceImpl fullMenuChatbot = new AIChatbotServiceImpl(
+        ChatbotServiceImpl fullMenuChatbot = new ChatbotServiceImpl(
                 new MenuRepositoryImpl(InitialDataFactory.createInitialMenuItems())
         );
 
@@ -207,7 +207,7 @@ public class AIChatbotServiceTest {
 
     @Test
     public void imageAnalysisRecognizesCookingStyleAndDishHints() {
-        AIChatbotServiceImpl fullMenuChatbot = new AIChatbotServiceImpl(
+        ChatbotServiceImpl fullMenuChatbot = new ChatbotServiceImpl(
                 new MenuRepositoryImpl(InitialDataFactory.createInitialMenuItems())
         );
 

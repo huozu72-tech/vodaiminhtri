@@ -19,6 +19,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -37,6 +39,7 @@ import com.example.chieuthu3_ketthucmonhoc.di.AppServiceLocator;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.AdminAccount;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Customer;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.LoyaltyProfile;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
@@ -54,6 +57,7 @@ import com.example.chieuthu3_ketthucmonhoc.domain.services.IMenuService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IOrderService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IRestaurantOperationsService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.TopSellingItem;
+import com.example.chieuthu3_ketthucmonhoc.utils.FoodImageLoader;
 import com.example.chieuthu3_ketthucmonhoc.utils.VietnameseTelexHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -75,6 +79,27 @@ public class AdminActivity extends AppCompatActivity {
     private IDashboardService dashboardService;
     private IAuthenticationService authService;
     private IRestaurantOperationsService opsService;
+
+    private interface OnFoodImagePickedCallback {
+        void onImagePicked(String savedPath);
+    }
+
+    private OnFoodImagePickedCallback activeImagePickedCallback;
+
+    private final ActivityResultLauncher<String> pickFoodImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri == null) {
+                    return;
+                }
+                String savedPath = FoodImageLoader.savePickedImageToInternalStorage(this, uri);
+                if (savedPath == null || savedPath.isEmpty()) {
+                    Toast.makeText(this, "Không thể đọc tệp ảnh đã chọn. Vui lòng thử ảnh khác!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (activeImagePickedCallback != null) {
+                    activeImagePickedCallback.onImagePicked(savedPath);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -892,9 +917,77 @@ public class AdminActivity extends AppCompatActivity {
             dialogBinding.tvDialogTitle.setText("➕ Thêm Món Ăn Mới");
         }
 
+        final String[] selectedImagePathHolder = new String[]{isEditing ? food.getImagePath() : ""};
+
+        Runnable refreshImagePreview = () -> {
+            String customPath = selectedImagePathHolder[0];
+            FoodCategory previewCat = resolveDialogCategory(dialogBinding);
+            String typedName = dialogBinding.etFoodName.getText() != null
+                    ? dialogBinding.etFoodName.getText().toString().trim()
+                    : "";
+            int fallbackResId = isEditing
+                    ? (food.getImageResId() != 0 ? food.getImageResId() : FoodImageResolver.resolveByName(typedName.isEmpty() ? food.getName() : typedName, previewCat))
+                    : FoodImageResolver.resolveByName(typedName, previewCat);
+
+            FoodImageLoader.loadImagePathOrFallback(dialogBinding.imgFoodPreview, customPath, fallbackResId);
+
+            boolean hasCustom = customPath != null && !customPath.trim().isEmpty();
+            if (hasCustom) {
+                dialogBinding.tvSelectedImageStatus.setText("✅ Đã chọn ảnh từ điện thoại");
+                dialogBinding.tvSelectedImageStatus.setTextColor(ContextCompat.getColor(this, R.color.admin_status_complete));
+                dialogBinding.btnResetFoodImage.setVisibility(View.VISIBLE);
+            } else {
+                dialogBinding.tvSelectedImageStatus.setText("🖼️ Đang dùng ảnh mặc định theo tên món");
+                dialogBinding.tvSelectedImageStatus.setTextColor(ContextCompat.getColor(this, R.color.gray_text));
+                dialogBinding.btnResetFoodImage.setVisibility(View.GONE);
+            }
+        };
+
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogBinding.getRoot())
                 .create();
+
+        refreshImagePreview.run();
+
+        dialogBinding.etFoodName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (selectedImagePathHolder[0] == null || selectedImagePathHolder[0].trim().isEmpty()) {
+                    refreshImagePreview.run();
+                }
+            }
+        });
+
+        dialogBinding.chipGroupAddCategory.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (selectedImagePathHolder[0] == null || selectedImagePathHolder[0].trim().isEmpty()) {
+                refreshImagePreview.run();
+            }
+        });
+
+        dialogBinding.btnPickFoodImage.setOnClickListener(v -> {
+            activeImagePickedCallback = savedPath -> {
+                selectedImagePathHolder[0] = savedPath;
+                refreshImagePreview.run();
+                Toast.makeText(AdminActivity.this, "Đã tải ảnh món ăn lên!", Toast.LENGTH_SHORT).show();
+            };
+            pickFoodImageLauncher.launch("image/*");
+        });
+
+        dialogBinding.btnResetFoodImage.setOnClickListener(v -> {
+            selectedImagePathHolder[0] = "";
+            refreshImagePreview.run();
+            Toast.makeText(AdminActivity.this, "Đã chuyển về ảnh mặc định", Toast.LENGTH_SHORT).show();
+        });
+
+        dialog.setOnDismissListener(d -> activeImagePickedCallback = null);
 
         dialogBinding.btnSaveFood.setOnClickListener(v -> {
             String name = dialogBinding.etFoodName.getText() != null
@@ -924,15 +1017,7 @@ public class AdminActivity extends AppCompatActivity {
                 return;
             }
 
-            FoodCategory category;
-            int checkedId = dialogBinding.chipGroupAddCategory.getCheckedChipId();
-            if (checkedId == R.id.chipAddSide) {
-                category = FoodCategory.SIDE_DISH;
-            } else if (checkedId == R.id.chipAddDrink) {
-                category = FoodCategory.BEVERAGE;
-            } else {
-                category = FoodCategory.MAIN_DISH;
-            }
+            FoodCategory category = resolveDialogCategory(dialogBinding);
 
             List<TasteAttribute> selectedTastes = new ArrayList<>();
             if (dialogBinding.chipTasteSavory.isChecked()) selectedTastes.add(TasteAttribute.SAVORY);
@@ -947,6 +1032,8 @@ public class AdminActivity extends AppCompatActivity {
                 selectedTastes.add(TasteAttribute.SAVORY);
             }
 
+            String chosenImagePath = selectedImagePathHolder[0] != null ? selectedImagePathHolder[0].trim() : "";
+
             if (isEditing) {
                 MenuItem updated = new MenuItem(
                         food.getId(),
@@ -958,7 +1045,8 @@ public class AdminActivity extends AppCompatActivity {
                         food.isAvailable(),
                         food.getRating(),
                         food.getOrderCount(),
-                        food.getImageResId()
+                        food.getImageResId(),
+                        chosenImagePath
                 );
                 menuService.updateMenuItem(updated);
                 Toast.makeText(AdminActivity.this, "Đã cập nhật món '" + updated.getName() + "'!", Toast.LENGTH_SHORT).show();
@@ -968,7 +1056,8 @@ public class AdminActivity extends AppCompatActivity {
                         desc,
                         price,
                         category,
-                        selectedTastes
+                        selectedTastes,
+                        chosenImagePath
                 );
                 Toast.makeText(AdminActivity.this, "Đã thêm món mới thành công!", Toast.LENGTH_SHORT).show();
             }
@@ -979,6 +1068,17 @@ public class AdminActivity extends AppCompatActivity {
         });
 
         dialog.show();
+    }
+
+    private FoodCategory resolveDialogCategory(DialogAddEditFoodBinding dialogBinding) {
+        int checkedId = dialogBinding.chipGroupAddCategory.getCheckedChipId();
+        if (checkedId == R.id.chipAddSide) {
+            return FoodCategory.SIDE_DISH;
+        }
+        if (checkedId == R.id.chipAddDrink) {
+            return FoodCategory.BEVERAGE;
+        }
+        return FoodCategory.MAIN_DISH;
     }
 
     private void confirmDeleteFood(MenuItem food) {

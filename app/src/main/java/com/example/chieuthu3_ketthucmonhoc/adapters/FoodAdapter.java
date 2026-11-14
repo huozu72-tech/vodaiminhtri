@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.chieuthu3_ketthucmonhoc.R;
 import com.example.chieuthu3_ketthucmonhoc.databinding.ItemFoodCardBinding;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
+import com.example.chieuthu3_ketthucmonhoc.utils.FoodImageLoader;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 
 import java.util.ArrayList;
@@ -69,7 +69,7 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         MenuItem item = foodList.get(position);
         Context context = holder.itemView.getContext();
 
-        holder.binding.imgFood.setImageResource(FoodImageResolver.resolveImage(item));
+        FoodImageLoader.loadFoodImage(holder.binding.imgFood, item);
         holder.binding.tvFoodName.setText(item.getName());
         holder.binding.tvFoodDesc.setText(item.getDescription());
         holder.binding.tvFoodRatingSold.setText(

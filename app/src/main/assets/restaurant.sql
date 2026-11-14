@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS `menu_items` (
     `isAvailable` INTEGER NOT NULL DEFAULT 1,
     `rating` REAL NOT NULL DEFAULT 5.0,
     `orderCount` INTEGER NOT NULL DEFAULT 0,
-    `image_res_id` INTEGER NOT NULL DEFAULT 0
+    `image_res_id` INTEGER NOT NULL DEFAULT 0,
+    `image_path` TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS `orders` (

@@ -28,8 +28,12 @@ public class MenuItemEntity {
     @ColumnInfo(name = "image_res_id")
     private int imageResId;
 
+    @ColumnInfo(name = "image_path")
+    private String imagePath;
+
     public MenuItemEntity(int id, String name, String description, long price, String category,
-                          String tasteAttributes, boolean isAvailable, double rating, int orderCount, int imageResId) {
+                          String tasteAttributes, boolean isAvailable, double rating, int orderCount,
+                          int imageResId, String imagePath) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -40,6 +44,7 @@ public class MenuItemEntity {
         this.rating = rating;
         this.orderCount = orderCount;
         this.imageResId = imageResId;
+        this.imagePath = imagePath != null ? imagePath : "";
     }
 
     public int getId() {
@@ -122,6 +127,14 @@ public class MenuItemEntity {
         this.imageResId = imageResId;
     }
 
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath != null ? imagePath : "";
+    }
+
     public MenuItem toDomain() {
         List<TasteAttribute> tastes = new ArrayList<>();
         if (tasteAttributes != null && !tasteAttributes.trim().isEmpty()) {
@@ -154,7 +167,8 @@ public class MenuItemEntity {
                 isAvailable,
                 rating,
                 orderCount,
-                imageResId
+                imageResId,
+                imagePath != null ? imagePath : ""
         );
     }
 
@@ -176,7 +190,8 @@ public class MenuItemEntity {
                 item.isAvailable(),
                 item.getRating(),
                 item.getOrderCount(),
-                item.getImageResId()
+                item.getImageResId(),
+                item.getImagePath()
         );
     }
 }

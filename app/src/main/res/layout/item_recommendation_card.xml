@@ -10,7 +10,7 @@
     app:cardBackgroundColor="@color/white"
     app:cardCornerRadius="14dp"
     app:cardElevation="2dp"
-    app:strokeColor="@color/ai_border_orange"
+    app:strokeColor="@color/accent_border_orange"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -21,7 +21,7 @@
 
         <!-- Top Badge -->
         <TextView
-            android:id="@+id/tvAiReasonBadge"
+            android:id="@+id/tvReasonBadge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_badge_mon_phu"
@@ -29,14 +29,14 @@
             android:maxLines="1"
             android:paddingHorizontal="6dp"
             android:paddingVertical="3dp"
-            android:textColor="@color/ai_badge_text"
+            android:textColor="@color/highlight_badge_text"
             android:textSize="10sp"
             android:textStyle="bold"
             tools:text="Hợp khẩu vị • Bán chạy nhất" />
 
         <!-- Dish Image -->
         <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/imgAiDish"
+            android:id="@+id/imgRecommendedDish"
             android:layout_width="match_parent"
             android:layout_height="90dp"
             android:layout_marginTop="6dp"
@@ -46,7 +46,7 @@
 
         <!-- Dish Title -->
         <TextView
-            android:id="@+id/tvAiDishName"
+            android:id="@+id/tvRecommendedDishName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -66,7 +66,7 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/tvAiDishPrice"
+                android:id="@+id/tvRecommendedDishPrice"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -76,7 +76,7 @@
                 tools:text="120.000 đ" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAiAddToCart"
+                android:id="@+id/btnRecAddToCart"
                 style="@style/Widget.Material3.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"

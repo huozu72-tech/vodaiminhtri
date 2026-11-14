@@ -21,7 +21,7 @@
         android:textSize="13sp"
         tools:text="Xin chào! Tôi có thể giúp bạn chọn món ngon phù hợp hôm nay." />
 
-    <!-- Container for dynamic AI suggested food cards inside the chat bubble -->
+    <!-- Container for dynamic suggested food cards inside the chat bubble -->
     <LinearLayout
         android:id="@+id/layoutSuggestedItems"
         android:layout_width="wrap_content"

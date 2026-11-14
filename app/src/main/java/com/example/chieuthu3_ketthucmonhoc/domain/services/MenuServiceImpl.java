@@ -58,6 +58,12 @@ public class MenuServiceImpl implements IMenuService {
 
     @Override
     public MenuItem createMenuItem(String name, String description, long price, FoodCategory category, List<TasteAttribute> tasteAttributes) {
+        return createMenuItem(name, description, price, category, tasteAttributes, "");
+    }
+
+    @Override
+    public MenuItem createMenuItem(String name, String description, long price, FoodCategory category,
+                                   List<TasteAttribute> tasteAttributes, String imagePath) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Tên món ăn không được để trống");
         }
@@ -75,14 +81,15 @@ public class MenuServiceImpl implements IMenuService {
                 true,
                 4.8,
                 0,
-                0
+                0,
+                imagePath != null ? imagePath.trim() : ""
         );
         return menuRepository.saveMenuItem(newItem);
     }
 
     @Override
     public MenuItem createMenuItem(String name, String description, long price, FoodCategory category) {
-        return createMenuItem(name, description, price, category, Collections.emptyList());
+        return createMenuItem(name, description, price, category, Collections.emptyList(), "");
     }
 
     @Override
@@ -117,7 +124,8 @@ public class MenuServiceImpl implements IMenuService {
                 !item.isAvailable(),
                 item.getRating(),
                 item.getOrderCount(),
-                item.getImageResId()
+                item.getImageResId(),
+                item.getImagePath()
         );
         return menuRepository.saveMenuItem(updated);
     }
@@ -146,7 +154,8 @@ public class MenuServiceImpl implements IMenuService {
                 item.isAvailable(),
                 newRating,
                 item.getOrderCount(),
-                item.getImageResId()
+                item.getImageResId(),
+                item.getImagePath()
         );
         return menuRepository.saveMenuItem(updated);
     }

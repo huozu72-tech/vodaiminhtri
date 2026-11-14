@@ -32,30 +32,30 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.example.chieuthu3_ketthucmonhoc.adapters.AIRecommendationAdapter;
 import com.example.chieuthu3_ketthucmonhoc.adapters.CartAdapter;
 import com.example.chieuthu3_ketthucmonhoc.adapters.ChatAdapter;
 import com.example.chieuthu3_ketthucmonhoc.adapters.FoodAdapter;
+import com.example.chieuthu3_ketthucmonhoc.adapters.RecommendationAdapter;
 import com.example.chieuthu3_ketthucmonhoc.databinding.ActivityMainBinding;
-import com.example.chieuthu3_ketthucmonhoc.databinding.DialogAiChatBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCartBottomSheetBinding;
+import com.example.chieuthu3_ketthucmonhoc.databinding.DialogChatBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogCustomerProfileBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogFoodDetailBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogLoginBinding;
 import com.example.chieuthu3_ketthucmonhoc.databinding.DialogPaymentQrBinding;
 import com.example.chieuthu3_ketthucmonhoc.di.AppServiceLocator;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.AIRecommendation;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.AdminAccount;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.CartItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Customer;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodCategory;
-import com.example.chieuthu3_ketthucmonhoc.domain.models.FoodImageResolver;
+import com.example.chieuthu3_ketthucmonhoc.utils.FoodImageLoader;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.LoyaltyProfile;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.MenuItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.Order;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderItem;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.OrderStatus;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.PromoVoucher;
+import com.example.chieuthu3_ketthucmonhoc.domain.models.Recommendation;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.RestaurantTable;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.SmartComboProposal;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TableServiceRequest;
@@ -63,12 +63,12 @@ import com.example.chieuthu3_ketthucmonhoc.domain.models.TableStatus;
 import com.example.chieuthu3_ketthucmonhoc.domain.models.TasteAttribute;
 import com.example.chieuthu3_ketthucmonhoc.utils.VietnameseTelexHelper;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.AuthResult;
-import com.example.chieuthu3_ketthucmonhoc.domain.services.IAIChatbotService;
-import com.example.chieuthu3_ketthucmonhoc.domain.services.IAIRecommendationService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IAuthenticationService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.ICartService;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.IChatbotService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IMenuService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IOrderService;
+import com.example.chieuthu3_ketthucmonhoc.domain.services.IRecommendationService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.IRestaurantOperationsService;
 import com.example.chieuthu3_ketthucmonhoc.domain.services.QrBitmapGenerator;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -82,15 +82,15 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private FoodAdapter foodAdapter;
-    private AIRecommendationAdapter aiRecAdapter;
+    private RecommendationAdapter recAdapter;
 
     // Services via AppServiceLocator (Clean OOP Architecture)
     private IMenuService menuService;
     private ICartService cartService;
     private IOrderService orderService;
     private IAuthenticationService authService;
-    private IAIRecommendationService aiRecService;
-    private IAIChatbotService aiChatService;
+    private IRecommendationService recService;
+    private IChatbotService chatService;
     private IRestaurantOperationsService opsService;
 
     @Override
@@ -105,8 +105,8 @@ public class MainActivity extends AppCompatActivity {
         cartService = AppServiceLocator.getCartService();
         orderService = AppServiceLocator.getOrderService();
         authService = AppServiceLocator.getAuthService();
-        aiRecService = AppServiceLocator.getAiRecommendationService();
-        aiChatService = AppServiceLocator.getAiChatbotService();
+        recService = AppServiceLocator.getRecommendationService();
+        chatService = AppServiceLocator.getChatbotService();
         opsService = AppServiceLocator.getOperationsService();
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         setupFoodGrid();
-        setupAiRecommendations();
+        setupRecommendations();
         setupSearchAndFilters();
         setupListeners();
         updateCartBadge();
@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         refreshFoodList();
-        refreshAiRecommendations();
+        refreshRecommendations();
         updateCartBadge();
         updateUserHeader();
         updateTableButtonLabel();
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                 item -> {
                     cartService.addItem(item, 1);
                     updateCartBadge();
-                    refreshAiRecommendations();
+                    refreshRecommendations();
                     Toast.makeText(MainActivity.this, "Đã thêm '" + item.getName() + "' vào giỏ!", Toast.LENGTH_SHORT).show();
                 },
                 this::showFoodDetailDialog
@@ -157,11 +157,11 @@ public class MainActivity extends AppCompatActivity {
         binding.rvFoodGrid.setAdapter(foodAdapter);
     }
 
-    private void setupAiRecommendations() {
+    private void setupRecommendations() {
         Customer currentCustomer = authService.getCurrentCustomer();
         Integer customerId = currentCustomer != null ? currentCustomer.getId() : null;
-        aiRecAdapter = new AIRecommendationAdapter(
-                aiRecService.getPersonalizedRecommendations(customerId, 5),
+        recAdapter = new RecommendationAdapter(
+                recService.getPersonalizedRecommendations(customerId, 5),
                 item -> {
                     cartService.addItem(item, 1);
                     updateCartBadge();
@@ -169,10 +169,10 @@ public class MainActivity extends AppCompatActivity {
                 },
                 this::showFoodDetailDialog
         );
-        binding.rvAiRecommendations.setLayoutManager(
+        binding.rvRecommendations.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         );
-        binding.rvAiRecommendations.setAdapter(aiRecAdapter);
+        binding.rvRecommendations.setAdapter(recAdapter);
     }
 
     private void refreshFoodList() {
@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
         foodAdapter.updateList(items);
     }
 
-    private void refreshAiRecommendations() {
+    private void refreshRecommendations() {
         Customer currentCustomer = authService.getCurrentCustomer();
         Integer customerId = currentCustomer != null ? currentCustomer.getId() : null;
         List<CartItem> cartItems = cartService.getCartItems();
@@ -243,9 +243,9 @@ public class MainActivity extends AppCompatActivity {
             for (CartItem ci : cartItems) {
                 inCartDishes.add(ci.getMenuItem());
             }
-            aiRecAdapter.updateList(aiRecService.getCartComplementaryRecommendations(inCartDishes, 5));
+            recAdapter.updateList(recService.getCartComplementaryRecommendations(inCartDishes, 5));
         } else {
-            aiRecAdapter.updateList(aiRecService.getPersonalizedRecommendations(customerId, 5));
+            recAdapter.updateList(recService.getPersonalizedRecommendations(customerId, 5));
         }
     }
 
@@ -282,12 +282,12 @@ public class MainActivity extends AppCompatActivity {
         binding.btnHeaderUser.setOnClickListener(v -> handleUserClick());
 
         binding.btnQuickTableMap.setOnClickListener(v -> showTableReservationDialog());
-        binding.btnQuickAiCombo.setOnClickListener(v -> showAiSmartComboBuilderDialog());
+        binding.btnQuickSmartCombo.setOnClickListener(v -> showSmartComboBuilderDialog());
         binding.btnQuickVouchers.setOnClickListener(v -> showVoucherWalletDialog(null));
         binding.btnQuickCallWaiter.setOnClickListener(v -> showCallWaiterDialog());
 
-        binding.btnAiUploadPhoto.setOnClickListener(v -> showImageRecognitionDialog());
-        binding.fabAiChatbot.setOnClickListener(v -> showAiChatDialog());
+        binding.btnUploadFoodPhoto.setOnClickListener(v -> showImageRecognitionDialog());
+        binding.fabChatbot.setOnClickListener(v -> showChatDialog());
 
         binding.bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
@@ -295,8 +295,8 @@ public class MainActivity extends AppCompatActivity {
                 binding.chipAll.setChecked(true);
                 foodAdapter.updateList(menuService.getAvailableMenuItems());
                 return true;
-            } else if (itemId == R.id.nav_ai) {
-                showAiChatDialog();
+            } else if (itemId == R.id.nav_chatbot) {
+                showChatDialog();
                 return true;
             } else if (itemId == R.id.nav_cart) {
                 showCartBottomSheet();
@@ -330,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Xem chi tiết món ăn (Hình 10 Activity Diagram) + Đánh giá món ăn (UC-07) + Dinh dưỡng Calo + Yêu thích + Món tương tự AI
+     * Xem chi tiết món ăn (Hình 10 Activity Diagram) + Đánh giá món ăn (UC-07) + Dinh dưỡng Calo + Yêu thích + Món tương tự gợi ý
      */
     private void showFoodDetailDialog(MenuItem initialItem) {
         MenuItem latest = menuService.getMenuItemById(initialItem.getId());
@@ -345,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
 
         Runnable bindDishData = () -> {
             MenuItem dish = dishHolder[0];
-            dialogBinding.imgDetailFood.setImageResource(FoodImageResolver.resolveImage(dish));
+            FoodImageLoader.loadFoodImage(dialogBinding.imgDetailFood, dish);
             dialogBinding.tvDetailCategoryBadge.setText(dish.getCategory().getDisplayName());
             dialogBinding.tvDetailFoodName.setText(dish.getName());
             dialogBinding.tvDetailFoodPrice.setText(dish.getFormattedPrice());
@@ -354,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
             );
             dialogBinding.tvDetailFoodDesc.setText(dish.getDescription());
 
-            int kcal = aiRecService.estimateDishCalories(dish);
+            int kcal = recService.estimateDishCalories(dish);
             String servingHint = dish.getCategory() == FoodCategory.MAIN_DISH
                     ? "Khẩu phần 2–3 người"
                     : (dish.getCategory() == FoodCategory.SIDE_DISH ? "Khẩu phần 1–2 người" : "Giải khát cá nhân");
@@ -419,7 +419,7 @@ public class MainActivity extends AppCompatActivity {
             MenuItem dish = dishHolder[0];
             cartService.addItem(dish, quantityHolder[0]);
             updateCartBadge();
-            refreshAiRecommendations();
+            refreshRecommendations();
             dialog.dismiss();
             Toast.makeText(
                     MainActivity.this,
@@ -442,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
                 dishHolder[0] = updated;
                 bindDishData.run();
                 refreshFoodList();
-                refreshAiRecommendations();
+                refreshRecommendations();
                 dialogBinding.tvRatingFeedback.setText(
                         String.format(Locale.US, "✅ Cảm ơn bạn đã chấm %d★! Điểm hiện tại: ⭐ %.1f/5.0", stars, updated.getRating())
                 );
@@ -454,10 +454,10 @@ public class MainActivity extends AppCompatActivity {
         dialogBinding.btnRate4.setOnClickListener(rateClickListener);
         dialogBinding.btnRate5.setOnClickListener(rateClickListener);
 
-        // AI Similar Dishes (Hình 10: Món tương tự từ Hệ thống AI)
-        List<AIRecommendation> similarDishes = aiRecService.getSimilarDishes(dishHolder[0].getId(), 3);
+        // Similar Dishes (Hình 10: Món tương tự từ Hệ thống gợi ý)
+        List<Recommendation> similarDishes = recService.getSimilarDishes(dishHolder[0].getId(), 3);
         dialogBinding.layoutSimilarDishesContainer.removeAllViews();
-        for (AIRecommendation rec : similarDishes) {
+        for (Recommendation rec : similarDishes) {
             MenuItem simItem = rec.getMenuItem();
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
@@ -485,7 +485,7 @@ public class MainActivity extends AppCompatActivity {
             btnQuickAdd.setOnClickListener(v -> {
                 cartService.addItem(simItem, 1);
                 updateCartBadge();
-                refreshAiRecommendations();
+                refreshRecommendations();
                 Toast.makeText(MainActivity.this, "Đã thêm '" + simItem.getName() + "' vào giỏ!", Toast.LENGTH_SHORT).show();
             });
 
@@ -686,9 +686,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Tính năng mới 2: AI Thiết kế Mâm cơm / Combo tự động theo Số người & Ngân sách
+     * Tính năng mới 2: Thiết kế Mâm cơm / Combo tự động theo Số người & Ngân sách
      */
-    private void showAiSmartComboBuilderDialog() {
+    private void showSmartComboBuilderDialog() {
         String[] presetConfigs = new String[]{
                 "👫 2 Người • Ngân sách ~200.000 đ • Cân bằng Đủ vị",
                 "👨‍👩‍👧‍👦 4 Người • Ngân sách ~400.000 đ • Đặc sản Bán chạy",
@@ -698,7 +698,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         new AlertDialog.Builder(this)
-                .setTitle("🍱 AI Thiết Kế Mâm Cơm Theo Ngân Sách")
+                .setTitle("🍱 Thiết Kế Mâm Cơm Theo Ngân Sách")
                 .setItems(presetConfigs, (d, which) -> {
                     int guests = 2;
                     long budget = 200000L;
@@ -715,7 +715,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showGeneratedComboProposalsDialog(int guests, long budget, String style) {
-        List<SmartComboProposal> proposals = aiRecService.generateSmartCombos(guests, budget, style);
+        List<SmartComboProposal> proposals = recService.generateSmartCombos(guests, budget, style);
         ScrollView scrollView = new ScrollView(this);
         LinearLayout container = new LinearLayout(this);
         container.setOrientation(LinearLayout.VERTICAL);
@@ -723,7 +723,7 @@ public class MainActivity extends AppCompatActivity {
         scrollView.addView(container);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("✨ AI Đề Xuất Mâm Cơm (" + guests + " người)")
+                .setTitle("✨ Đề Xuất Mâm Cơm (" + guests + " người)")
                 .setView(scrollView)
                 .setNegativeButton("Đóng", null)
                 .create();
@@ -786,7 +786,7 @@ public class MainActivity extends AppCompatActivity {
                     cartService.setAppliedVoucherCode("CHIEUTHU3");
                 }
                 updateCartBadge();
-                refreshAiRecommendations();
+                refreshRecommendations();
                 dialog.dismiss();
                 Toast.makeText(
                         MainActivity.this,
@@ -1098,7 +1098,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                         updateCartBadge();
-                        refreshAiRecommendations();
+                        refreshRecommendations();
                         dialog.dismiss();
                         Toast.makeText(
                                 MainActivity.this,
@@ -1174,7 +1174,7 @@ public class MainActivity extends AppCompatActivity {
         dialogBinding.btnLogoutCustomer.setOnClickListener(v -> {
             authService.logout();
             updateUserHeader();
-            refreshAiRecommendations();
+            refreshRecommendations();
             dialog.dismiss();
             Toast.makeText(MainActivity.this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show();
         });
@@ -1197,13 +1197,13 @@ public class MainActivity extends AppCompatActivity {
                 List<CartItem> items = cartService.getCartItems();
                 cartAdapterHolder[0].updateList(items);
                 updateCartBadge();
-                refreshAiRecommendations();
+                refreshRecommendations();
                 calculateCartTotal(dialogBinding);
 
                 if (items.isEmpty()) {
                     dialogBinding.tvEmptyCartHint.setVisibility(View.VISIBLE);
                     dialogBinding.rvCartItems.setVisibility(View.GONE);
-                    dialogBinding.layoutCartAiUpsellSection.setVisibility(View.GONE);
+                    dialogBinding.layoutCartUpsellSection.setVisibility(View.GONE);
                 } else {
                     dialogBinding.tvEmptyCartHint.setVisibility(View.GONE);
                     dialogBinding.rvCartItems.setVisibility(View.VISIBLE);
@@ -1212,13 +1212,13 @@ public class MainActivity extends AppCompatActivity {
                     for (CartItem ci : items) {
                         currentDishes.add(ci.getMenuItem());
                     }
-                    List<AIRecommendation> upsells = aiRecService.getCartComplementaryRecommendations(currentDishes, 2);
-                    dialogBinding.layoutCartAiUpsellItems.removeAllViews();
+                    List<Recommendation> upsells = recService.getCartComplementaryRecommendations(currentDishes, 2);
+                    dialogBinding.layoutCartUpsellItems.removeAllViews();
                     if (upsells.isEmpty()) {
-                        dialogBinding.layoutCartAiUpsellSection.setVisibility(View.GONE);
+                        dialogBinding.layoutCartUpsellSection.setVisibility(View.GONE);
                     } else {
-                        dialogBinding.layoutCartAiUpsellSection.setVisibility(View.VISIBLE);
-                        for (AIRecommendation rec : upsells) {
+                        dialogBinding.layoutCartUpsellSection.setVisibility(View.VISIBLE);
+                        for (Recommendation rec : upsells) {
                             MenuItem upDish = rec.getMenuItem();
                             LinearLayout row = new LinearLayout(MainActivity.this);
                             row.setOrientation(LinearLayout.HORIZONTAL);
@@ -1243,7 +1243,7 @@ public class MainActivity extends AppCompatActivity {
 
                             row.addView(tvUp);
                             row.addView(btnAddUp);
-                            dialogBinding.layoutCartAiUpsellItems.addView(row);
+                            dialogBinding.layoutCartUpsellItems.addView(row);
                         }
                     }
                 }
@@ -1329,7 +1329,7 @@ public class MainActivity extends AppCompatActivity {
 
         int totalCalories = 0;
         for (CartItem ci : cartService.getCartItems()) {
-            totalCalories += aiRecService.estimateDishCalories(ci.getMenuItem()) * ci.getQuantity();
+            totalCalories += recService.estimateDishCalories(ci.getMenuItem()) * ci.getQuantity();
         }
         int suggestedPeople = Math.max(1, (totalCalories + 450) / 600);
         dialogBinding.tvCartNutritionSummary.setText(
@@ -1696,7 +1696,7 @@ public class MainActivity extends AppCompatActivity {
             cartService.clearCart();
             updateCartBadge();
             refreshFoodList();
-            refreshAiRecommendations();
+            refreshRecommendations();
             dialog.dismiss();
 
             showPaymentSuccessReceiptDialog(createdOrder, payable, discountSaved, cashGiven, cashChange);
@@ -1772,15 +1772,15 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void showAiChatDialog() {
-        DialogAiChatBinding dialogBinding = DialogAiChatBinding.inflate(LayoutInflater.from(this));
+    private void showChatDialog() {
+        DialogChatBinding dialogBinding = DialogChatBinding.inflate(LayoutInflater.from(this));
 
         ChatAdapter chatAdapter = new ChatAdapter(
-                aiChatService.getChatHistory(),
+                chatService.getChatHistory(),
                 item -> {
                     cartService.addItem(item, 1);
                     updateCartBadge();
-                    refreshAiRecommendations();
+                    refreshRecommendations();
                     Toast.makeText(MainActivity.this, "Đã thêm '" + item.getName() + "' vào giỏ hàng!", Toast.LENGTH_SHORT).show();
                 }
         );
@@ -1788,9 +1788,9 @@ public class MainActivity extends AppCompatActivity {
         dialogBinding.rvChatMessages.setAdapter(chatAdapter);
 
         Runnable refreshAndScrollChat = () -> {
-            chatAdapter.updateList(aiChatService.getChatHistory());
-            if (!aiChatService.getChatHistory().isEmpty()) {
-                dialogBinding.rvChatMessages.scrollToPosition(aiChatService.getChatHistory().size() - 1);
+            chatAdapter.updateList(chatService.getChatHistory());
+            if (!chatService.getChatHistory().isEmpty()) {
+                dialogBinding.rvChatMessages.scrollToPosition(chatService.getChatHistory().size() - 1);
             }
         };
         refreshAndScrollChat.run();
@@ -1802,38 +1802,38 @@ public class MainActivity extends AppCompatActivity {
         dialogBinding.btnCloseChat.setOnClickListener(v -> dialog.dismiss());
 
         dialogBinding.tvClearChatHistory.setOnClickListener(v -> {
-            aiChatService.clearChat();
+            chatService.clearChat();
             refreshAndScrollChat.run();
-            Toast.makeText(MainActivity.this, "Đã làm mới cuộc trò chuyện AI!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Đã làm mới cuộc trò chuyện!", Toast.LENGTH_SHORT).show();
         });
 
         dialogBinding.chipQuickSpicyBudget.setOnClickListener(v -> {
-            aiChatService.sendMessage("Tìm món cay ngon dưới 100k");
+            chatService.sendMessage("Tìm món cay ngon dưới 100k");
             refreshAndScrollChat.run();
         });
         dialogBinding.chipQuickBestseller.setOnClickListener(v -> {
-            aiChatService.sendMessage("Gợi ý món đặc sản bán chạy nhất của quán");
+            chatService.sendMessage("Gợi ý món đặc sản bán chạy nhất của quán");
             refreshAndScrollChat.run();
         });
         dialogBinding.chipQuickCombo.setOnClickListener(v -> {
-            aiChatService.sendMessage("Đi 4 người nên gọi combo món gì");
+            chatService.sendMessage("Đi 4 người nên gọi combo món gì");
             refreshAndScrollChat.run();
         });
         dialogBinding.chipQuickCrispy.setOnClickListener(v -> {
-            aiChatService.sendMessage("Mình muốn ăn món nướng và món giòn rụm");
+            chatService.sendMessage("Mình muốn ăn món nướng và món giòn rụm");
             refreshAndScrollChat.run();
         });
         dialogBinding.chipQuickDrinks.setOnClickListener(v -> {
-            aiChatService.sendMessage("Cho xem danh mục nước uống giải khát");
+            chatService.sendMessage("Cho xem danh mục nước uống giải khát");
             refreshAndScrollChat.run();
         });
 
         dialogBinding.btnChatCamera.setOnClickListener(v -> {
             String[] sampleImages = getSampleFoodImages();
             new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("📷 Chọn Ảnh Món Ăn Cần AI Nhận Diện")
+                    .setTitle("📷 Chọn Ảnh Món Ăn Cần Nhận Diện")
                     .setItems(sampleImages, (imgDialog, which) -> {
-                        aiChatService.analyzeFoodImage(sampleImages[which]);
+                        chatService.analyzeFoodImage(sampleImages[which]);
                         refreshAndScrollChat.run();
                     })
                     .setNegativeButton("Đóng", null)
@@ -1863,7 +1863,7 @@ public class MainActivity extends AppCompatActivity {
             if (telexEnabledHolder[0] && !userText.isEmpty()) {
                 userText = VietnameseTelexHelper.convertTelexSentence(userText);
             }
-            aiChatService.sendMessage(userText);
+            chatService.sendMessage(userText);
             if (dialogBinding.etChatMessage.getText() != null) {
                 dialogBinding.etChatMessage.getText().clear();
             }
@@ -1907,8 +1907,8 @@ public class MainActivity extends AppCompatActivity {
                 .setTitle("📷 Chọn Ảnh Món Ăn Cần Nhận Diện")
                 .setItems(sampleImages, (dialog, which) -> {
                     String selectedHint = sampleImages[which];
-                    aiChatService.analyzeFoodImage(selectedHint);
-                    showAiChatDialog();
+                    chatService.analyzeFoodImage(selectedHint);
+                    showChatDialog();
                 })
                 .setNegativeButton("Đóng", null)
                 .show();
@@ -1932,7 +1932,7 @@ public class MainActivity extends AppCompatActivity {
             AuthResult<Customer> result = authService.loginCustomer(phoneOrEmail, password);
             if (result.isSuccess()) {
                 updateUserHeader();
-                refreshAiRecommendations();
+                refreshRecommendations();
                 dialog.dismiss();
                 Toast.makeText(MainActivity.this, "Đăng nhập thành công! Chào " + result.getData().getFullName(), Toast.LENGTH_SHORT).show();
             } else {
@@ -1966,7 +1966,7 @@ public class MainActivity extends AppCompatActivity {
             AuthResult<Customer> result = authService.register(fullName, email, phone, password);
             if (result.isSuccess()) {
                 updateUserHeader();
-                refreshAiRecommendations();
+                refreshRecommendations();
                 dialog.dismiss();
                 Toast.makeText(MainActivity.this, "Đăng ký thành công! Chào " + result.getData().getFullName(), Toast.LENGTH_SHORT).show();
             } else {
